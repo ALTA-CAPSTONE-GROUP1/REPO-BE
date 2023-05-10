@@ -1,0 +1,1464 @@
+openapi: 3.0.0
+info:
+  title: E-Proposal
+  description: This is API for Group Project By Alterra Academy
+  version: 1.0.0
+  contact:
+    email: adiyudapranata@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/123ADIYUDA/E-Proposal/1.0.0
+  # Main Url
+  - description: Main URL
+    url: URL will be update soon
+
+paths:
+  /sign-validation:
+    post:
+      tags:
+        - Authentication
+      summary: Used to check sign ID in any data
+      description: check the sign id is original by check if it was generated through our system that created when approver is approve a specifig data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sign_id:
+                  type: string
+                  example: S12293719
+      responses:
+        '200':
+          description: Success to get validation data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      submission_title:
+                        type: string
+                        example: Pengadaan mobil sales
+                      official_name:
+                        type: string
+                        example: John Wick
+                      official_position:
+                        type: string
+                        example: National Marketing Manager
+                      date:
+                        type: string
+                        example: 2023-05-10 14:30
+                  code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Success to get validation data, data is valid
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login
+      description: Features login for users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "PO01"
+                password:
+                  type: string
+                  example: qwert123
+      responses:
+        '200':
+          description: login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VySUQiOjR9.QTZxERh4CwC_UnL_eJvTi_A_qdLeBZ-IjR4nqoxjodk"
+                code: 200
+                message: "login success"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /users:
+    post:
+      tags:
+        - Admin
+          - User
+      summary: Register a new user by admin
+      description: Feature admin for register a new user
+      security:
+        - JWTAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSchema'
+      responses:
+        '201':
+          description: succes insert user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: Success Create Account
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    get:
+      tags:
+        - Admin
+          - User
+      summary: Get all user data by admin
+      description: Feature admin for get all user data 
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: search
+          description: general search in all column
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Robin Hood
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - user_id: "PO01"
+                    name: "Robin Hood"
+                    email: "robin@mail.com"
+                    hp: 08123456789
+                    position: Product
+                    office: Product Designer
+                code: 200
+                message: "success show users"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /users/{user_id}:
+    get:
+      tags:
+        - Admin
+          - User
+      summary: Get user profile by admin to update
+      description: Feature admin for show detail user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  name: Robin Hood
+                  email: robin@mail.com
+                  hp: 08123456789
+                  position: Designer Staff
+                  office: Bandung
+                  password: alta123
+                code: 200
+                message: "success show profile"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - Admin
+          - User
+      summary: Update user data by admin
+      description: Feature admin for update user data
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/responseObject' 
+            example:
+              data:
+                name: Robin Hood
+                email: robin@mail.com
+                hp: 08123456789
+                position: Designer Staff
+                office: Bandung
+                password: alta123
+              code: 200
+              message: "success show profile"
+      responses:
+        '200':
+          description: update user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Update Data
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    delete:
+      tags:
+        - Admin
+          - User
+      summary: Deactive user account by admin
+      description: Feature admin for deactive user account
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      responses:
+        '200':
+          description: deactive user account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Deactive User Account
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /position:
+    get:
+      tags:
+        - Admin
+          - position
+      summary: admin's menu for positions
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: search
+          description: general search in all column
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Robin Hood
+        - name: offset
+          in: query
+          description: The number of items to skip before stating to collect the data
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          description: the maximum number of items to return in the response data
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: list of positions that appears
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - position: Branch Manager
+                    tag: BrM
+                  - position: Sales Supervisor
+                    tag: SSpv
+                code: 200
+                message: succes to get positions data
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    post:
+      tags:
+        - Admin
+          - position
+      summary: to add position
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                position:
+                  type: string
+                  example: Marketing Coordinator
+                tag:
+                  type: string
+                  example: MktC
+              required:
+                - position
+                - tag
+      responses:
+        '201':
+          description: position added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 201
+                message: "succes to create position"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    delete:
+      tags:
+        - Admin
+          - position
+      summary: to add position
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: position
+          in: query
+          schema:
+            type: string
+            example: Marketing Coordinator
+          required: true
+        - name: tag
+          in: query
+          schema:
+            type: string
+            example: Mktc
+          required: true
+      responses:
+        '200':
+          description: position succesfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 201
+                message: "succes to create position"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /office:
+    get:
+      tags:
+        - Admin
+          - Office
+      summary: admin's menu for office
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: search
+          description: general search in all column
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Robin Hood
+        - name: offset
+          in: query
+          description: The number of items to skip before stating to collect the data
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          description: the maximum number of items to return in the response data
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: list of positions that appears
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  office: [Head Office, Jakarta]
+                code: 200
+                message: succes to get positions data
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    post:
+      tags:
+        - Admin
+          - Office
+      summary: to add office
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                office:
+                  type: string
+                  example: Jakarta
+              required:
+                - office
+      responses:
+        '201':
+          description: office added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 201
+                message: "succes to create office"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    delete:
+      tags:
+        - Admin
+          - Office
+      summary: to delete office
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: office
+          in: query
+          schema:
+            type: string
+            example: Banten
+          required: true
+      responses:
+        '200':
+          description: office succesfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 201
+                message: "succes to delete office"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /submission-type:
+    get:
+      tags:
+        - Admin
+          - Submission_type
+      summary: admin's menu for submission_type
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: search
+          description: general search in all column
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Robin Hood
+        - name: offset
+          in: query
+          description: The number of items to skip before stating to collect the data
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          description: the maximum number of items to return in the response data
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: list of positions that appears
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  submission_type: [Program, Penawaran]
+                code: 200
+                message: succes to get submission types
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    post:
+      tags:
+        - Admin
+          - Submission_type
+      summary: to add submission_type
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_type:
+                  type: string
+                  example: program
+              required:
+                - submission_type
+      responses:
+        '201':
+          description: submission_type added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 201
+                message: "succes to create submission_type"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    delete:
+      tags:
+        - Admin
+          - Submission_type
+      summary: to delete submission_type
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: submission_type
+          in: query
+          schema:
+            type: string
+            example: program
+          required: true
+      responses:
+        '200':
+          description: submission_type succesfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 201
+                message: "succes to delete submission_type"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /hyper-approval:
+    post:
+      tags:
+        - Admin
+          - Hyper-approval
+      summary: to add hyper-approval
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_id:
+                  type: integer
+                  example: 123
+                token:
+                  type: string
+                  example: ss#561618sadadadsw
+              required:
+                - submission-id
+                - token
+      responses:
+        '200':
+          description: succes to get submission data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  submission-title: Penambahan Karyawan Jakarta untuk Project Launching Detergent Daia
+                  applicant_name: Batman
+                  applicant_position: Marketing Supervisor
+                  approver_action: 
+                  - action: approve
+                    approver_name: Nur
+                    approver_position: Area Marketing Supervisor
+                  - action: approve
+                    approver_name: Eko
+                    approver_position: Area Marketing Manager
+                  - action: revise
+                    approver_name: Jaka
+                    approver_position: Nasional Marketing Manager
+                  message_body: Dear Pak Joko, mohon dibantu approval terkait penambahan karyawan Jakarta dalam rangka launching product detergent daia, besar harapan saya pengajuan ini dapat disetujui. Hormat saya, Batman.
+                  submission_type: Penambahan Karyawan
+                  attachment: cloudinary.com/sjadoauwdioadawd/
+                code: 200
+                message: succes to get submission data
+        '404':
+          $ref: '#/components/responses/Response404'
+        '401':
+          $ref: '#/components/responses/Response401'
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - Admin
+          - Hyper-approval
+      summary: to bypass the submission status
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_id:
+                  type: string
+                  example: S010294
+                new_status:
+                  type: string
+                  example: approve
+              required:
+                - submission_id
+                - new_status
+      responses:
+        '200':
+          description: submission status succesfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 200
+                message: "succes to updated status"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /profile/{user_id}:
+    get:
+      tags:
+        - User
+          - Profile
+      summary: Get user profile
+      description: Feature user for show detail user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  id: "PO01"
+                  name: "Robin Hood"
+                  email: "robin@mail.com"
+                  hp: 08123456789
+                code: 200
+                message: "success show profile"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - User
+          - Profile
+      summary: Update user data
+      description: Feature user for update user data
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSchema'
+      responses:
+        '200':
+          description: update user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Update Data
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /submission:
+    post:
+      tags:
+        - User
+          - Submission
+      summary: Add submission by user
+      description: Feature user for add new submission
+      security:
+        - JWTAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionSchema'
+      responses:
+        '201':
+          description: succes insert submission data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: Success Create Submission
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    get:
+      tags:
+        - User
+          - Submission
+      summary: Get all submission by user
+      description: Feature user for show all submission
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: title
+          description: search in column title
+          required: false
+          in: query
+          schema:
+            type: string
+            example: title
+        - name: to
+          description: search in column to
+          required: false
+          in: query
+          schema:
+            type: string
+            example: National Sales Manager
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: show all submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - id: 1
+                    to: 
+                        - approver_position: Product Designer
+                          approver_name: Joko
+                        - approver_position: Product Manager
+                          approver_name: Batman
+                    cc:
+                        - cc_position: Back Engineer
+                          cc_name: Jack
+                        - cc_position: Front Engineer
+                          cc_name: Sambo
+                        - cc_position: Quality Engineer
+                          cc_name: Bohang
+                    title: title
+                    status: approved
+                    attachment: file.pdf
+                    receive_date: 2023-05-10 14:30
+                    opened: false
+                  - id: 57
+                    to: 
+                        - approver_position: Product Designer
+                          approver_name: Joko
+                        - approver_position: Product Manager
+                          approver_name: Batman
+                    cc:
+                        - cc_position: Back Engineer
+                          cc_name: Jack
+                        - cc_position: Front Engineer
+                          cc_name: Sambo
+                        - cc_position: Quality Engineer
+                          cc_name: Bohang
+                    title: title
+                    status: rejected
+                    attachment: file.pdf
+                    receive_date: 2023-05-10 14:30
+                    opened: true
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /submission/{submission_id}:
+    get:
+      tags:
+        - User
+          - Submission
+      summary: Get detail submission by user
+      description: Feature user for show detail submission
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  to: 
+                    - approver_position: Product Designer
+                      approver_name: Joko
+                    - approver_position: Product Manager
+                      approver_name: Batman
+                  cc:
+                    - cc_position: Back Engineer
+                      cc_name: Jack
+                    - cc_position: Front Engineer
+                      cc_name: Sambo
+                    - cc_position: Quality Engineer
+                      cc_name: Bohang
+                  submission_type: Program
+                  title: title
+                  message: message
+                  approver_action: 
+                  - action: approve
+                    approver_name: Nur
+                    approver_position: Area Marketing Supervisor
+                  - action: approve
+                    approver_name: Eko
+                    approver_position: Area Marketing Manager
+                  - action: revise
+                    approver_name: Jaka
+                    approver_position: Nasional Marketing Manager
+                  action_message: please give me the transactions data
+                  attachment: file.pdf
+                code: 200
+                message: "success show profile"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - User
+          - Submission
+      summary: Update submission by user
+      description: Feature user for update submission during revision
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 3
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionSchema'
+      responses:
+        '200':
+          description: update submission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Update Submission
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    delete:
+      tags:
+        - User
+          - Submission
+      summary: Delete submission by user
+      description: Feature user for delete submission before approved
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: delete submission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Delete Submission
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /approver:
+    get:
+      tags:
+        - User
+          - Approver
+      summary: Get all submission to be approved by user
+      description: feature that facilitate user to get all submissions that sumbitted to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: title
+          description: search in column title
+          required: false
+          in: query
+          schema:
+            type: string
+            example: title
+        - name: from
+          description: search in column from
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Tax Officer
+        - name: type
+          description: search in column submission type
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Pengadaan
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: show all submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - submision_id: 1
+                    from: Designer Staff
+                    title: title
+                    submission_type: Program
+                    status: approved
+                    receive_date: 2023-05-10 14:30
+                    opened: false
+                  - submission_id: 12
+                    from: Purchasing Staff
+                    title: title
+                    submission_type: Program
+                    status: Waiting
+                    receive_date: 2023-05-10 14:30
+                    opened: true
+                code: 200
+                message: "success show all submissions to be approved"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /approver/{submission_id}:
+    put:
+      tags:
+        - User
+          - Approver
+      summary: Get submission to be approved by user
+      description: feature that facilitate user to get submission that sumbitted to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approval_action:
+                  type: object
+                  properties:
+                    action: 
+                      type: string
+                      example: reject
+                    approval_message:
+                      type: string
+                      example: "untuk saat ini, perusahaan tidak memiliki kebtuuhan untuk melakukan hal tersebut"
+      responses:
+        '200':
+          description: update succes response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 200
+                message: "succes to update submission status"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    get:
+      tags:
+        - User
+          - Approver
+      summary: Get submission to be approved by user
+      description: feature that facilitate user to get submission that sumbitted to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 2
+          required: true
+      responses:
+        '200':
+          description: get submission belong to the approver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - submision_id: 1
+                    from: {name: Keke, position: Designer Staff}
+                    to: [{
+                      name: Joko,
+                      position: Designer Manager 
+                      },{
+                      name: Batman,
+                      position: Regional Manager
+                      }
+                    ]
+                    cc: [{
+                      name: Jessica,
+                      position: Tax Officer 
+                      },{
+                      name: Prianti,
+                      position: Finance Manager
+                      }
+                    ]
+                    title: title
+                    submission_type: Program
+                    status_by: [{status: approve, by: HS01}]
+                    message_body: "Dear Pak Batman, mohon dibantu approvalnya mengenai Program Training karyawan pada department Design, berikut saya lampirkan data pendukungnya. Besar harapan saya pengajuan ini dapat di approve. Hormat saya, Designer Staff"
+                code: 200
+                message: "success show all submissions to be approved"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /cc:
+    get:
+      tags:
+        - User
+          - CCs
+      summary: Get submission cc to the user
+      description: feature that facilitate user to get submission that cc to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: title
+          description: search in column title
+          required: false
+          in: query
+          schema:
+            type: string
+            example: title
+        - name: to
+          description: search in column to
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Regional Manager
+        - name: from
+          description: search in column from
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Administration Staff
+        - name: type
+          description: search in column submission type
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Reimbursement
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: get submission cc to the approver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - submision_id: 1
+                    from: {name: Keke, position: Designer Staff}
+                    to: {
+                      name: Joko,
+                      position: Designer Manager 
+                      }
+                    title: title
+                    submission_type: Program
+                    attachment: cloudinary.com/sjadoauwdioadawd/
+                code: 200
+                message: "success show all submissions to be approved"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "user token"
+  responses:
+    Response400:
+      description: error from user
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: number
+                example: 400
+              message:
+                type: string
+                example: Bad Request
+    Response401:
+      description: token input is not the super admin input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: number
+                example: 401
+              message:
+                type: string
+                example: Unauthorized token
+    Response404:
+      description: data not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: number
+                example: 404
+              message:
+                type: string
+                example: Data not found
+    Response500:
+      description: error from server
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: number
+                example: 500
+              message:
+                type: string
+                example: Internal server error
+  schemas:
+    responseObject:
+      type: object
+      properties:
+        data:
+          type: object
+        code:
+          type: number
+        message:
+          type: string
+    UsersSchema:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Robin Hood
+        email:
+          type: string
+          format: email
+          example: robin@mail.com
+        hp:
+          type: integer
+          example: 08123456789
+        position:
+          type: string
+          example: Product
+        office:
+          type: string
+          example: Jakarta
+    SubmissionSchema:
+      type: object
+      properties:
+        to:
+          type: array
+          items:
+            type: object
+          properties:
+            approver_position:
+              type: string
+            approver_name:
+              type: string
+          example: 
+            - approver_position: Product Designer
+              approver_name: Jaka
+            - approver_position: Product Manager
+              approver_name: Joko
+        cc:
+          type: array
+          items:
+            type: object
+          properties:
+            cc_position:
+              type: string
+            cc_name:
+              type: string
+          example: 
+            - cc_position: Back Engineer
+              cc_name: Saka
+            - cc_position: Front Engineer
+              cc_name: Soko
+            - cc_position: Quality Engineer
+              cc_name: Suku
+        submission_type:
+          type: string
+          example: Program
+        title:
+          type: string
+          example: title
+        message:
+          type: string
+          example: message
+        attachment:
+          type: string
+          format: binary
+          example: file.pdf
