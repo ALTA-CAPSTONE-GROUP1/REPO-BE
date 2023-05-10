@@ -659,6 +659,674 @@ paths:
           $ref: '#/components/responses/Response404'
         '500':
           $ref: '#/components/responses/Response500'
+  /hyper-approval:
+    post:
+      tags:
+        - Admin
+          - Hyper-approval
+      summary: to add hyper-approval
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_id:
+                  type: integer
+                  example: 123
+                token:
+                  type: string
+                  example: ss#561618sadadadsw
+              required:
+                - submission-id
+                - token
+      responses:
+        '200':
+          description: succes to get submission data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  submission-title: Penambahan Karyawan Jakarta untuk Project Launching Detergent Daia
+                  applicant_name: Batman
+                  applicant_position: Marketing Supervisor
+                  approver_action: 
+                  - action: approve
+                    approver_name: Nur
+                    approver_position: Area Marketing Supervisor
+                  - action: approve
+                    approver_name: Eko
+                    approver_position: Area Marketing Manager
+                  - action: revise
+                    approver_name: Jaka
+                    approver_position: Nasional Marketing Manager
+                  message_body: Dear Pak Joko, mohon dibantu approval terkait penambahan karyawan Jakarta dalam rangka launching product detergent daia, besar harapan saya pengajuan ini dapat disetujui. Hormat saya, Batman.
+                  submission_type: Penambahan Karyawan
+                  attachment: cloudinary.com/sjadoauwdioadawd/
+                code: 200
+                message: succes to get submission data
+        '404':
+          $ref: '#/components/responses/Response404'
+        '401':
+          $ref: '#/components/responses/Response401'
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - Admin
+          - Hyper-approval
+      summary: to bypass the submission status
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_id:
+                  type: string
+                  example: S010294
+                new_status:
+                  type: string
+                  example: approve
+              required:
+                - submission_id
+                - new_status
+      responses:
+        '200':
+          description: submission status succesfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 200
+                message: "succes to updated status"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '404':
+          $ref: '#/components/responses/Response404'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /profile/{user_id}:
+    get:
+      tags:
+        - User
+          - Profile
+      summary: Get user profile
+      description: Feature user for show detail user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  id: "PO01"
+                  name: "Robin Hood"
+                  email: "robin@mail.com"
+                  hp: 08123456789
+                code: 200
+                message: "success show profile"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - User
+          - Profile
+      summary: Update user data
+      description: Feature user for update user data
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            example: PO01
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSchema'
+      responses:
+        '200':
+          description: update user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Update Data
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+
+  /submission:
+    post:
+      tags:
+        - User
+          - Submission
+      summary: Add submission by user
+      description: Feature user for add new submission
+      security:
+        - JWTAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionSchema'
+      responses:
+        '201':
+          description: succes insert submission data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: Success Create Submission
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    get:
+      tags:
+        - User
+          - Submission
+      summary: Get all submission by user
+      description: Feature user for show all submission
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: title
+          description: search in column title
+          required: false
+          in: query
+          schema:
+            type: string
+            example: title
+        - name: to
+          description: search in column to
+          required: false
+          in: query
+          schema:
+            type: string
+            example: National Sales Manager
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: show all submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - id: 1
+                    to: 
+                        - approver_position: Product Designer
+                          approver_name: Joko
+                        - approver_position: Product Manager
+                          approver_name: Batman
+                    cc:
+                        - cc_position: Back Engineer
+                          cc_name: Jack
+                        - cc_position: Front Engineer
+                          cc_name: Sambo
+                        - cc_position: Quality Engineer
+                          cc_name: Bohang
+                    title: title
+                    status: approved
+                    attachment: file.pdf
+                    receive_date: 2023-05-10 14:30
+                    opened: false
+                  - id: 57
+                    to: 
+                        - approver_position: Product Designer
+                          approver_name: Joko
+                        - approver_position: Product Manager
+                          approver_name: Batman
+                    cc:
+                        - cc_position: Back Engineer
+                          cc_name: Jack
+                        - cc_position: Front Engineer
+                          cc_name: Sambo
+                        - cc_position: Quality Engineer
+                          cc_name: Bohang
+                    title: title
+                    status: rejected
+                    attachment: file.pdf
+                    receive_date: 2023-05-10 14:30
+                    opened: true
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /submission/{submission_id}:
+    get:
+      tags:
+        - User
+          - Submission
+      summary: Get detail submission by user
+      description: Feature user for show detail submission
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  to: 
+                    - approver_position: Product Designer
+                      approver_name: Joko
+                    - approver_position: Product Manager
+                      approver_name: Batman
+                  cc:
+                    - cc_position: Back Engineer
+                      cc_name: Jack
+                    - cc_position: Front Engineer
+                      cc_name: Sambo
+                    - cc_position: Quality Engineer
+                      cc_name: Bohang
+                  submission_type: Program
+                  title: title
+                  message: message
+                  approver_action: 
+                  - action: approve
+                    approver_name: Nur
+                    approver_position: Area Marketing Supervisor
+                  - action: approve
+                    approver_name: Eko
+                    approver_position: Area Marketing Manager
+                  - action: revise
+                    approver_name: Jaka
+                    approver_position: Nasional Marketing Manager
+                  action_message: please give me the transactions data
+                  attachment: file.pdf
+                code: 200
+                message: "success show profile"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    put:
+      tags:
+        - User
+          - Submission
+      summary: Update submission by user
+      description: Feature user for update submission during revision
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 3
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionSchema'
+      responses:
+        '200':
+          description: update submission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Update Submission
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    delete:
+      tags:
+        - User
+          - Submission
+      summary: Delete submission by user
+      description: Feature user for delete submission before approved
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: delete submission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: Success Delete Submission
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /approver:
+    get:
+      tags:
+        - User
+          - Approver
+      summary: Get all submission to be approved by user
+      description: feature that facilitate user to get all submissions that sumbitted to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: title
+          description: search in column title
+          required: false
+          in: query
+          schema:
+            type: string
+            example: title
+        - name: from
+          description: search in column from
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Tax Officer
+        - name: type
+          description: search in column submission type
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Pengadaan
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: show all submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - submision_id: 1
+                    from: Designer Staff
+                    title: title
+                    submission_type: Program
+                    status: approved
+                    receive_date: 2023-05-10 14:30
+                    opened: false
+                  - submission_id: 12
+                    from: Purchasing Staff
+                    title: title
+                    submission_type: Program
+                    status: Waiting
+                    receive_date: 2023-05-10 14:30
+                    opened: true
+                code: 200
+                message: "success show all submissions to be approved"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /approver/{submission_id}:
+    put:
+      tags:
+        - User
+          - Approver
+      summary: Get submission to be approved by user
+      description: feature that facilitate user to get submission that sumbitted to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approval_action:
+                  type: object
+                  properties:
+                    action: 
+                      type: string
+                      example: reject
+                    approval_message:
+                      type: string
+                      example: "untuk saat ini, perusahaan tidak memiliki kebtuuhan untuk melakukan hal tersebut"
+      responses:
+        '200':
+          description: update succes response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                code: 200
+                message: "succes to update submission status"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+    get:
+      tags:
+        - User
+          - Approver
+      summary: Get submission to be approved by user
+      description: feature that facilitate user to get submission that sumbitted to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - in: path
+          name: submission_id
+          schema:
+            type: integer
+            example: 2
+          required: true
+      responses:
+        '200':
+          description: get submission belong to the approver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - submision_id: 1
+                    from: {name: Keke, position: Designer Staff}
+                    to: [{
+                      name: Joko,
+                      position: Designer Manager 
+                      },{
+                      name: Batman,
+                      position: Regional Manager
+                      }
+                    ]
+                    cc: [{
+                      name: Jessica,
+                      position: Tax Officer 
+                      },{
+                      name: Prianti,
+                      position: Finance Manager
+                      }
+                    ]
+                    title: title
+                    submission_type: Program
+                    status_by: [{status: approve, by: HS01}]
+                    message_body: "Dear Pak Batman, mohon dibantu approvalnya mengenai Program Training karyawan pada department Design, berikut saya lampirkan data pendukungnya. Besar harapan saya pengajuan ini dapat di approve. Hormat saya, Designer Staff"
+                code: 200
+                message: "success show all submissions to be approved"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /cc:
+    get:
+      tags:
+        - User
+          - CCs
+      summary: Get submission cc to the user
+      description: feature that facilitate user to get submission that cc to user
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: title
+          description: search in column title
+          required: false
+          in: query
+          schema:
+            type: string
+            example: title
+        - name: to
+          description: search in column to
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Regional Manager
+        - name: from
+          description: search in column from
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Administration Staff
+        - name: type
+          description: search in column submission type
+          required: false
+          in: query
+          schema:
+            type: string
+            example: Reimbursement
+        - name: limit
+          description: limit
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          description: offset
+          required: true
+          in: query
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: get submission cc to the approver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  - submision_id: 1
+                    from: {name: Keke, position: Designer Staff}
+                    to: {
+                      name: Joko,
+                      position: Designer Manager 
+                      }
+                    title: title
+                    submission_type: Program
+                    attachment: cloudinary.com/sjadoauwdioadawd/
+                code: 200
+                message: "success show all submissions to be approved"
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
 components:
   securitySchemes:
     JWTAuth:
