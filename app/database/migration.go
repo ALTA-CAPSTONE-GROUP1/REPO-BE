@@ -15,5 +15,4 @@ func Migrate(db *gorm.DB) {
 	db.AutoMigrate(auRepo.Auth{})
 	db.AutoMigrate(aRepo.Admin{})
 	db.AutoMigrate(apRepo.Approver{})
-
 }
