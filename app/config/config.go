@@ -13,8 +13,6 @@ var (
 	CloudinaryApiKey       string
 	CloudinaryApiScret     string
 	CloudinaryUploadFolder string
-	MidtransServerKey      string
-	MidtransClientKey      string
 	TokenSuperAdmin        string
 )
 
@@ -76,15 +74,6 @@ func ReadEnv() *AppConfig {
 		CloudinaryUploadFolder = val
 		isRead = false
 	}
-	if val, found := os.LookupEnv("MIDTRANS_SERVERKEY"); found {
-		MidtransServerKey = val
-		isRead = false
-	}
-
-	if val, found := os.LookupEnv("MIDTRANS_CLIENTKEY"); found {
-		MidtransClientKey = val
-		isRead = false
-	}
 
 	if val, found := os.LookupEnv("TOKEN_SUPER_ADMIN"); found {
 		TokenSuperAdmin = val
@@ -114,9 +103,6 @@ func ReadEnv() *AppConfig {
 		CloudinaryApiKey = viper.Get("CLOUDINARY_API_KEY").(string)
 		CloudinaryApiScret = viper.Get("CLOUDINARY_API_SECRET").(string)
 		CloudinaryUploadFolder = viper.Get("CLOUDINARY_UPLOAD_FOLDER").(string)
-
-		MidtransServerKey = viper.Get("MIDTRANS_SERVERKEY").(string)
-		MidtransClientKey = viper.Get("MIDTRANS_CLIENTKEY").(string)
 		TokenSuperAdmin = viper.Get("TOKEN_SUPER_ADMIN").(string)
 
 	}
