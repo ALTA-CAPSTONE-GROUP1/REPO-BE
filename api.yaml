@@ -590,6 +590,11 @@ paths:
               example:
                 data:
                   submission_type: [Program, Penawaran]
+                  position:
+                        - position_name: Area Manager
+                          position_tag: ARM
+                        - position_name: Regional Manager
+                          position_tag: RM
                 code: 200
                 message: succes to get submission types
         '400':
@@ -610,11 +615,52 @@ paths:
             schema:
               type: object
               properties:
-                submission_type:
+                submission_name:
                   type: string
-                  example: program
+                  example: Super Promo
+                position:
+                  type: array
+                  items:
+                    type: string
+                    example:
+                      - SLS
+                      - SSPV
+                      - ARM
+                submission_value:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      value:
+                        type: integer
+                        example: 100000000
+                      position_to:
+                        type: array
+                        items:
+                          type: string
+                          example:
+                            - ARM
+                            - RM
+                            - NM
+                      position_cc:
+                        type: array
+                        items:
+                          type: string
+                          example:
+                            - AASPV
+                            - ATSPV
+                            - CHS
+                            - RASPV
+                            - RTSPV 
+                            - NASPV
+                            - NTSPV   
+                requirement:
+                  type: string
+                  example: KTP, NPWP, FILE PENDUKUNG
               required:
                 - submission_type
+                - position
+                - submission_value
       responses:
         '201':
           description: submission_type added successfully
@@ -928,6 +974,12 @@ paths:
                     attachment: file.pdf
                     receive_date: 2023-05-10 14:30
                     opened: false
+                    submission_type: 
+                      - submission_name: Program Promo
+                        submission_value:
+                          - 30000000
+                          - 50000000
+                          - 100000000
                   - id: 57
                     to: 
                         - approver_position: Product Designer
@@ -946,6 +998,65 @@ paths:
                     attachment: file.pdf
                     receive_date: 2023-05-10 14:30
                     opened: true
+                    submission_type: 
+                      - submission_name: Program Promo
+                        submission_value:
+                          - 30000000
+                          - 50000000
+                          - 100000000
+        '400':
+          $ref: '#/components/responses/Response400'
+        '500':
+          $ref: '#/components/responses/Response500'
+  /submission/requirements:
+    post:
+      tags:
+        - User
+          - Submission
+      summary: Get detail to, cc and requirement by submission type and value
+      description: Feature for get detail to, cc and requirement by submission type and value
+      security:
+        - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_type:
+                  type: string
+                  example: Program Promo
+                submission_value:
+                  type: integer
+                  example: 30000000
+              required:
+                - submission_type
+                - submision_value
+      responses:
+        '200':
+          description: show detail user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseObject' 
+              example:
+                data:
+                  to: 
+                    - approver_position: Product Designer
+                      approver_name: Joko
+                    - approver_position: Product Manager
+                      approver_name: Batman
+                  cc:
+                    - cc_position: Back Engineer
+                      cc_name: Jack
+                    - cc_position: Front Engineer
+                      cc_name: Sambo
+                    - cc_position: Quality Engineer
+                      cc_name: Bohang
+                  requirement: KTP, NPWP, FILE PENDUKUNG
+                code: 200
+                message: "success get submission requirement"
         '400':
           $ref: '#/components/responses/Response400'
         '500':
@@ -1452,6 +1563,9 @@ components:
         submission_type:
           type: string
           example: Program
+        submission_value:
+          type: integer
+          example: 30000000
         title:
           type: string
           example: title
