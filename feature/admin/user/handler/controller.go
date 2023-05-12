@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -16,6 +17,53 @@ type userController struct {
 func New(u user.UseCase) user.Handler {
 	return &userController{
 		service: u,
+	}
+}
+
+// UpdateUserHandler implements user.Handler
+func (uc *userController) UpdateUserHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		updateInput := InputUpdate{}
+		userId := helper.DecodeToken(c)
+		if userId == "" {
+			c.Logger().Error("decode token is blank")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
+		}
+		userPath, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Logger().Error("cannot use path param", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		}
+
+		if userId != string(userPath) {
+			c.Logger().Error("userpath is not equal with userId")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "user are not authorized to delete other user account", nil))
+		}
+
+		updateUser := user.Core{
+			ID:          updateInput.ID,
+			OfficeID:    updateInput.OfficeID,
+			PositionID:  updateInput.PositionID,
+			Name:        updateInput.Name,
+			Email:       updateInput.Email,
+			PhoneNumber: updateInput.PhoneNumber,
+			Password:    updateInput.Password,
+		}
+
+		if err := uc.service.UpdateUser(userId, updateUser); err != nil {
+			c.Logger().Error("failed on calling updateprofile log")
+			if strings.Contains(err.Error(), "hashing password") {
+				c.Logger().Error("hashing password error")
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "new password are invalid", nil))
+			} else if strings.Contains(err.Error(), "affected") {
+				c.Logger().Error("no rows affected on update user")
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "data is up to date", nil))
+			}
+
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "internal server error", nil))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to update user data", nil))
 	}
 }
 
