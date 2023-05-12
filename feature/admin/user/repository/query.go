@@ -18,6 +18,17 @@ func New(db *gorm.DB) user.Repository {
 	}
 }
 
+// GetUserById implements user.Repository
+func (um *usersModel) GetUserById(id string) (user.Core, error) {
+	var res user.Core
+	if err := um.db.Where("id = ?", id).First(&res).Error; err != nil {
+		log.Error("error occurs in finding user profile", err.Error())
+		return user.Core{}, err
+	}
+
+	return res, nil
+}
+
 // SelectAllUser implements user.Repository
 func (um *usersModel) SelectAllUser(limit int, offset int, name string) ([]user.Core, error) {
 	nameSearch := "%" + name + "%"

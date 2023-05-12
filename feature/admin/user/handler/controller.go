@@ -19,6 +19,31 @@ func New(u user.UseCase) user.Handler {
 	}
 }
 
+// GetUserByIdHandler implements user.Handler
+func (uc *userController) GetUserByIdHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := helper.DecodeToken(c)
+		if userId == "" {
+			c.Logger().Error("decode token is blank")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
+		}
+
+		userPath, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Logger().Error("cannot use path param", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		}
+
+		data, err := uc.service.GetUserById(string(userPath))
+		if err != nil {
+			c.Logger().Error("error on calling user by id logic")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
+		}
+		dataResponse := CoreToUserResponse(data)
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get user by id", dataResponse))
+	}
+}
+
 // GetAllUserHandler implements user.Handler
 func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -37,6 +62,7 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 		nameParam := c.QueryParam("name")
 		data, err := uc.service.GetAllUser(pageNumber, nameParam)
 		if err != nil {
+			c.Logger().Error("error on calling get all user logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, error read data", nil))
 		}
 		dataResponse := CoreToGetAllUserResponse(data)
