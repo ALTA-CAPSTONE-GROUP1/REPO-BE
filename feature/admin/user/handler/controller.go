@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -15,6 +16,31 @@ type userController struct {
 func New(u user.UseCase) user.Handler {
 	return &userController{
 		service: u,
+	}
+}
+
+// GetAllUserHandler implements user.Handler
+func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var pageNumber int = 1
+		pageParam := c.QueryParam("page")
+		if pageParam != "" {
+			pageConv, errConv := strconv.Atoi(pageParam)
+			if errConv != nil {
+				c.Logger().Error("cannot read data")
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, page must number", nil))
+			} else {
+				pageNumber = pageConv
+			}
+		}
+
+		nameParam := c.QueryParam("name")
+		data, err := uc.service.GetAllUser(pageNumber, nameParam)
+		if err != nil {
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, error read data", nil))
+		}
+		dataResponse := CoreToGetAllUserResponse(data)
+		return c.JSON(helper.ResponseFormat(http.StatusCreated, "get all user successfully", dataResponse))
 	}
 }
 

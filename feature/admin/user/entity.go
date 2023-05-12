@@ -22,12 +22,15 @@ type Core struct {
 
 type Handler interface {
 	RegisterHandler() echo.HandlerFunc
+	GetAllUserHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	RegisterUser(newUser Core) error
+	GetAllUser(page int, name string) ([]Core, error)
 }
 
 type Repository interface {
 	InsertUser(newUser Core) error
+	SelectAllUser(limit, offset int, name string) ([]Core, error)
 }

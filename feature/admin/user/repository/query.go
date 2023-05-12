@@ -18,6 +18,18 @@ func New(db *gorm.DB) user.Repository {
 	}
 }
 
+// SelectAllUser implements user.Repository
+func (um *usersModel) SelectAllUser(limit int, offset int, name string) ([]user.Core, error) {
+	nameSearch := "%" + name + "%"
+	var res []user.Core
+	if err := um.db.Limit(limit).Offset(offset).Where("users.name LIKE ?", nameSearch).Select("users.id, users.email, users.phone_number, users.office_id, users.position_id").Find(&res).Error; err != nil {
+		log.Error("error occurs in finding all user", err.Error())
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // InsertUser implements user.Repository
 func (um *usersModel) InsertUser(newUser user.Core) error {
 	inputUser := admin.Users{}
