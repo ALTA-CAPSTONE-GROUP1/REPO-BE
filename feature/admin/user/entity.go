@@ -1,4 +1,4 @@
-package position
+package user
 
 import (
 	"time"
@@ -14,6 +14,7 @@ type Core struct {
 	Name        string
 	Email       string
 	PhoneNumber string
+	Password    string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt
