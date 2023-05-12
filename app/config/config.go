@@ -94,7 +94,7 @@ func ReadEnv() *AppConfig {
 		app.DBUSER = viper.Get("DBUSER").(string)
 		app.DBPASSWORD = viper.Get("DBPASSWORD").(string)
 		app.DBHOST = viper.Get("DBHOST").(string)
-		app.DBPORT, _ = viper.Get("DBPORT").(string)
+		app.DBPORT = viper.Get("DBPORT").(string)
 		app.DBNAME = viper.Get("DBNAME").(string)
 
 		JWT = viper.Get("JWT").(string)

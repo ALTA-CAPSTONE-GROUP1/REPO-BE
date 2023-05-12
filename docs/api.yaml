@@ -182,7 +182,7 @@ paths:
                     email: "robin@mail.com"
                     hp: 08123456789
                     position: Product
-                    office: Product Designer
+                    office: Jakarta
                 code: 200
                 message: "success show users"
         '400':
@@ -350,9 +350,11 @@ paths:
                 $ref: '#/components/schemas/responseObject' 
               example:
                 data:
-                  - position: Branch Manager
+                  - position_id: 12
+                    position: Branch Manager
                     tag: BrM
-                  - position: Sales Supervisor
+                  - position_id: 13
+                    position: Sales Supervisor
                     tag: SSpv
                 code: 200
                 message: succes to get positions data
@@ -405,17 +407,11 @@ paths:
       security:
         - JWTAuth: []
       parameters:
-        - name: position
+        - name: position_id
           in: query
           schema:
-            type: string
-            example: Marketing Coordinator
-          required: true
-        - name: tag
-          in: query
-          schema:
-            type: string
-            example: Mktc
+            type: integer
+            example: 1
           required: true
       responses:
         '200':
@@ -476,7 +472,10 @@ paths:
                 $ref: '#/components/schemas/responseObject' 
               example:
                 data:
-                  office: [Head Office, Jakarta]
+                  - office_id: 1
+                    office_name: Head Office
+                  - office_id: 2
+                    office_name: Jakarta
                 code: 200
                 message: succes to get positions data
         '400':
@@ -524,11 +523,11 @@ paths:
       security:
         - JWTAuth: []
       parameters:
-        - name: office
+        - name: office_id
           in: query
           schema:
-            type: string
-            example: Banten
+            type: integer
+            example: 1
           required: true
       responses:
         '200':
@@ -589,8 +588,20 @@ paths:
                 $ref: '#/components/schemas/responseObject' 
               example:
                 data:
-                  submission_type: [Program, Penawaran]
-                  position:
+                  submission_type:
+                    - submission_type_name: Penawaran
+                      submission_detail:
+                      - submission_value: 3000000
+                        submission_requirement: KTP, NPWP, File Pedukung
+                      - submission_value: 5000000
+                        submission_requirement: KTP, NPWP, File Pedukung
+                    - submission_type_name: Pengadaan
+                      submission_detail:
+                      - submission_value: 3000000
+                        submission_requirement: KTP, NPWP, File Pedukung
+                      - submission_value: 5000000
+                        submission_requirement: KTP, NPWP, File Pedukung
+                  positions:
                         - position_name: Area Manager
                           position_tag: ARM
                         - position_name: Regional Manager
@@ -615,7 +626,7 @@ paths:
             schema:
               type: object
               properties:
-                submission_name:
+                submission_type_name:
                   type: string
                   example: Super Promo
                 position:
@@ -888,10 +899,38 @@ paths:
       security:
         - JWTAuth: []
       requestBody:
+        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/SubmissionSchema'
+              type: object
+              properties:
+                to:
+                  type: array
+                  items:
+                    type: string
+                    example: P0001
+                cc:
+                  type: array
+                  items:
+                    type: string
+                    example: M00029
+                submission_type:
+                  type: string
+                  example: Penawaran
+                submission_value:
+                  type: integer
+                  example: 300000
+                title:
+                  type: string
+                  example: Pengajuan penambahan karyawan
+                message:
+                  type: string
+                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed at velit dolor. Proin congue odio id urna laoreet, vitae porttitor tellus suscipit. Pellentesque nec bibendum ante, eu tincidunt massa. Praesent vel nunc vel odio placerat interdum. Nam quis sapien sit amet justo pellentesque tincidunt. Morbi euismod augue eu elit pulvinar hendrerit.
+                attachment:
+                  type: string
+                  format: binary
+                  description: The file to be uploaded (PDF format)
       responses:
         '201':
           description: succes insert submission data
@@ -1044,16 +1083,21 @@ paths:
                 data:
                   to: 
                     - approver_position: Product Designer
+                      approver_id: PD0001
                       approver_name: Joko
                     - approver_position: Product Manager
+                      approver_id: PM0003
                       approver_name: Batman
                   cc:
                     - cc_position: Back Engineer
                       cc_name: Jack
+                      cc_id: BE0003
                     - cc_position: Front Engineer
                       cc_name: Sambo
+                      cc_id: FE0003
                     - cc_position: Quality Engineer
                       cc_name: Bohang
+                      cc_id: QE0003
                   requirement: KTP, NPWP, FILE PENDUKUNG
                 code: 200
                 message: "success get submission requirement"
@@ -1540,10 +1584,8 @@ components:
             approver_name:
               type: string
           example: 
-            - approver_position: Product Designer
-              approver_name: Jaka
-            - approver_position: Product Manager
-              approver_name: Joko
+            - approver_id: PD0001
+            - approver_id: PD0002
         cc:
           type: array
           items:
