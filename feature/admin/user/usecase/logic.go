@@ -18,6 +18,17 @@ func New(u user.Repository) user.UseCase {
 	}
 }
 
+// GetUserById implements user.UseCase
+func (ul *userLogic) GetUserById(id string) (user.Core, error) {
+	result, err := ul.u.GetUserById(id)
+	if err != nil {
+		log.Error("failed to find user", err.Error())
+		return user.Core{}, errors.New("internal server error")
+	}
+
+	return result, nil
+}
+
 // GetAllUser implements user.UseCase
 func (ul *userLogic) GetAllUser(page int, name string) ([]user.Core, error) {
 	limit := 10
