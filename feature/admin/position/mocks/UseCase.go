@@ -26,6 +26,20 @@ func (_m *UseCase) AddPositionLogic(newPosition position.Core) error {
 	return r0
 }
 
+// DeletePositionLogic provides a mock function with given fields: _a0, tag
+func (_m *UseCase) DeletePositionLogic(_a0 string, tag string) error {
+	ret := _m.Called(_a0, tag)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(_a0, tag)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetPositionsLogic provides a mock function with given fields: limit, offset, search
 func (_m *UseCase) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) {
 	ret := _m.Called(limit, offset, search)

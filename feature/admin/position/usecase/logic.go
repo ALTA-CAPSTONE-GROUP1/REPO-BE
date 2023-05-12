@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
@@ -35,10 +36,29 @@ func (pl *positionLogic) AddPositionLogic(newPosition position.Core) error {
 func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) {
 
 	positions, err := pl.pl.GetPositions(limit, offset, search)
-	if err != nil{
+	if err != nil {
 		log.Error("error on getpositions query")
 		return nil, err
 	}
 
 	return positions, nil
+}
+
+func (pl *positionLogic) DeletePositionLogic(position string, tag string) error {
+	if err := pl.pl.DeletePosition(position, tag); err != nil {
+		if strings.Contains(err.Error(), "count query error") {
+			log.Error("errors occurs when countin the datas for delete")
+			return fmt.Errorf("count position query error %w", err)
+		}
+
+		if strings.Contains(err.Error(), "data found") {
+			log.Error("no position data found for deletion")
+			return fmt.Errorf("no data found for deletion %w", err)
+		}
+
+		log.Error("data found, but delete query error")
+		return err
+	}
+
+	return nil
 }

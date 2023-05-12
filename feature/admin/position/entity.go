@@ -16,14 +16,17 @@ type Core struct {
 type Handler interface {
 	AddPositionHandler() echo.HandlerFunc
 	GetAllPositionHandler() echo.HandlerFunc
+	DeletePositionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	AddPositionLogic(newPosition Core) error
 	GetPositionsLogic(limit int, offset int, search string) ([]Core, error)
+	DeletePositionLogic(position string, tag string) error
 }
 
 type Repository interface {
 	InsertPosition(newPosition Core) error
 	GetPositions(limit int, offset int, search string) ([]Core, error)
+	DeletePosition(position string, tag string) error
 }
