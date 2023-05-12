@@ -18,6 +18,22 @@ func New(u user.Repository) user.UseCase {
 	}
 }
 
+// UpdateUser implements user.UseCase
+func (ul *userLogic) UpdateUser(id string, updateUser user.Core) error {
+	if err := ul.u.UpdateUser(id, updateUser); err != nil {
+		log.Error("failed on calling updateprofile query")
+		if strings.Contains(err.Error(), "hashing password") {
+			log.Error("hashing password error")
+			return errors.New("is invalid")
+		} else if strings.Contains(err.Error(), "affected") {
+			log.Error("no rows affected on update user")
+			return errors.New("data is up to date")
+		}
+		return err
+	}
+	return nil
+}
+
 // GetUserById implements user.UseCase
 func (ul *userLogic) GetUserById(id string) (user.Core, error) {
 	result, err := ul.u.GetUserById(id)
