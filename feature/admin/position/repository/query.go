@@ -17,7 +17,7 @@ func New(db *gorm.DB) position.Repository {
 	}
 }
 
-func (pm positionModel) InsertPositionHandler(position position.Core) error {
+func (pm positionModel) InsertPosition(position position.Core) error {
 	newPosition := admin.Position{
 		Name: position.Name,
 		Tag:  position.Tag,

@@ -22,5 +22,5 @@ type UseCase interface {
 }
 
 type Repository interface {
-	InsertPositionHandler(newPosition Core) error
+	InsertPosition(newPosition Core) error
 }
