@@ -3,7 +3,6 @@ package admin
 import (
 	"time"
 
-	subRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/repository"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +16,6 @@ type Users struct {
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
-	SubMissions []subRepo.Submission
 }
 
 type Office struct {
@@ -45,9 +43,11 @@ type Type struct {
 
 type PositionHasType struct {
 	ID         int            `gorm:"primaryKey;autoIncrement"`
-	TypeID     int            `gorm:"index"`
-	PositionID int            `gorm:"index"`
+	PositionID int            `gorm:"primaryKey"`
+	TypeID     int            `gorm:"primaryKey"`
 	As         string         `gorm:"size:10;not null"`
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	Position   Position       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Type       Type           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

@@ -9,8 +9,13 @@ import (
 func Migrate(db *gorm.DB) {
 	db.AutoMigrate(adminRepo.Users{})
 	db.AutoMigrate(adminRepo.Office{})
-	db.AutoMigrate(adminRepo.Position{})
-	db.AutoMigrate(adminRepo.PositionHasType{})
+
+	err := db.SetupJoinTable(&adminRepo.Type{}, "Positions", &adminRepo.PositionHasType{})
+	if err != nil {
+		panic(err)
+	}
+	db.AutoMigrate(adminRepo.Type{})
+	
 	db.AutoMigrate(subRepo.Submission{})
 	db.AutoMigrate(subRepo.Cc{})
 	db.AutoMigrate(subRepo.File{})
