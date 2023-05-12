@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -85,5 +86,37 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 		}
 
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get positions data", positions))
+	}
+}
+
+func (pc *positionController) DeletePositionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			log.Error("user are not admin try to acces add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		}
+		position := c.QueryParam("position")
+		tag := c.QueryParam("tag")
+
+		if position == "" || tag == "" {
+			log.Error("position or tag are empty string")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "data to delete are empty", nil))
+		}
+
+		if err := pc.service.DeletePositionLogic(position, tag); err != nil {
+			if strings.Contains(err.Error(), "count position query error") {
+				log.Error("errors occurs when counting the datas for delete")
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
+			}
+			if strings.Contains(err.Error(), "no data found for deletion") {
+				log.Error("no position data found for deletion")
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "position data not found", nil))
+			}
+			log.Error("unexpected error")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "unexpected server error", nil))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to delete position data", nil))
 	}
 }

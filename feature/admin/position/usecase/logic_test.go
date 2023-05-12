@@ -77,3 +77,51 @@ func TestGetPositionLogic(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestDeletePositionLogic(t *testing.T) {
+	repo := mocks.NewRepository(t)
+	pl := usecase.New(repo)
+
+	t.Run("Delete position successfully", func(t *testing.T) {
+		position := "manager"
+		tag := "finance"
+		repo.On("DeletePosition", position, tag).Return(nil)
+		err := pl.DeletePositionLogic(position, tag)
+		assert.NoError(t, err)
+
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("Count position query error", func(t *testing.T) {
+		position := "staff"
+		tag := "ST"
+		repo.On("DeletePosition", position, tag).Return(errors.New("count position query error"))
+		err := pl.DeletePositionLogic(position, tag)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "count position query error")
+
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("No data found for deletion", func(t *testing.T) {
+		position := "Supervisor"
+		tag := "Spv"
+		repo.On("DeletePosition", position, tag).Return(errors.New("data found"))
+		err := pl.DeletePositionLogic(position, tag)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "no data found for deletion")
+
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("Data found, but delete query error", func(t *testing.T) {
+		position := "Directore"
+		tag := "Dr"
+		repo.On("DeletePosition", position, tag).Return(errors.New("delete query error"))
+		err := pl.DeletePositionLogic(position, tag)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "delete query error")
+
+		repo.AssertExpectations(t)
+	})
+}

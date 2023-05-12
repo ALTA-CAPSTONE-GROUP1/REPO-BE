@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/labstack/gommon/log"
@@ -73,4 +75,25 @@ func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]p
 	}
 
 	return positions, nil
+}
+
+func (pm *positionModel) DeletePosition(position string, tag string) error {
+	var count int64
+	tx := pm.db.Model(&admin.Position{}).Where(&admin.Position{Name: position, Tag: tag}).Count(&count)
+	if tx.Error != nil {
+		log.Error("count position query error")
+		return fmt.Errorf("count position query error: %w", tx.Error)
+	}
+
+	if count == 0 {
+		log.Warn("no position data found for deletion")
+		return fmt.Errorf("no position data found for deletion with name %s and tag %s", position, tag)
+	}
+
+	tx = pm.db.Delete(&admin.Position{Name: position, Tag: tag})
+	if tx.Error != nil {
+		log.Error("delete position query error")
+		return fmt.Errorf("delete position query error: %w", tx.Error)
+	}
+	return nil
 }

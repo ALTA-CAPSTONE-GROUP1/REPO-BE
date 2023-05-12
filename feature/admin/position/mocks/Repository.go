@@ -12,6 +12,20 @@ type Repository struct {
 	mock.Mock
 }
 
+// DeletePosition provides a mock function with given fields: _a0, tag
+func (_m *Repository) DeletePosition(_a0 string, tag string) error {
+	ret := _m.Called(_a0, tag)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(_a0, tag)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetPositions provides a mock function with given fields: limit, offset, search
 func (_m *Repository) GetPositions(limit int, offset int, search string) ([]position.Core, error) {
 	ret := _m.Called(limit, offset, search)
