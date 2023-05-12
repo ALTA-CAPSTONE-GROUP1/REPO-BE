@@ -26,6 +26,32 @@ func (_m *UseCase) AddPositionLogic(newPosition position.Core) error {
 	return r0
 }
 
+// GetPositionsLogic provides a mock function with given fields: limit, offset, search
+func (_m *UseCase) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) {
+	ret := _m.Called(limit, offset, search)
+
+	var r0 []position.Core
+	var r1 error
+	if rf, ok := ret.Get(0).(func(int, int, string) ([]position.Core, error)); ok {
+		return rf(limit, offset, search)
+	}
+	if rf, ok := ret.Get(0).(func(int, int, string) []position.Core); ok {
+		r0 = rf(limit, offset, search)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]position.Core)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int, int, string) error); ok {
+		r1 = rf(limit, offset, search)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewUseCase interface {
 	mock.TestingT
 	Cleanup(func())
