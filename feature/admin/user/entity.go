@@ -31,12 +31,12 @@ type UseCase interface {
 	RegisterUser(newUser Core) error
 	GetAllUser(page int, name string) ([]Core, error)
 	GetUserById(id string) (Core, error)
-	UpdateUser(userId uint, id uint, updateEvent Core) error
+	UpdateUser(id string, updateUser Core) error
 }
 
 type Repository interface {
 	InsertUser(newUser Core) error
 	SelectAllUser(limit, offset int, name string) ([]Core, error)
 	GetUserById(id string) (Core, error)
-	UpdateUser(userId uint, id uint, input Core) error
+	UpdateUser(id string, input Core) error
 }

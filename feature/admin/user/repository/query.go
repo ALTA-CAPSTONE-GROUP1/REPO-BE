@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -16,6 +18,37 @@ func New(db *gorm.DB) user.Repository {
 	return &usersModel{
 		db: db,
 	}
+}
+
+// UpdateUser implements user.Repository
+func (um *usersModel) UpdateUser(id string, input user.Core) error {
+	var UpdateUser admin.Users
+
+	hashedPassword, err := helper.HashPassword(input.Password)
+	if err != nil {
+		log.Error("error occurs on hashing password", err.Error())
+		return errors.New("hashing password failed")
+	}
+
+	UpdateUser.ID = input.ID
+	UpdateUser.Name = input.Name
+	UpdateUser.Email = input.Email
+	UpdateUser.PhoneNumber = input.PhoneNumber
+	UpdateUser.Password = hashedPassword
+	UpdateUser.OfficeID = input.OfficeID
+	UpdateUser.PositionID = input.PositionID
+
+	tx := um.db.Model(&admin.Users{}).Where("id = ?", id).Updates(&UpdateUser)
+	if tx.RowsAffected < 1 {
+		log.Error("there is no column to change on update user")
+		return errors.New("no data affected")
+	}
+	if tx.Error != nil {
+		log.Error("error on update user")
+		return tx.Error
+	}
+
+	return nil
 }
 
 // GetUserById implements user.Repository
