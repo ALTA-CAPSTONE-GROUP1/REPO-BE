@@ -18,6 +18,19 @@ func New(u user.Repository) user.UseCase {
 	}
 }
 
+// GetAllUser implements user.UseCase
+func (ul *userLogic) GetAllUser(id uint, page int, name string) ([]user.Core, error) {
+	limit := 10
+	offset := (page - 1) * limit
+	result, err := ul.u.SelectAllUser(id, limit, offset, name)
+	if err != nil {
+		log.Error("failed to find all user", err.Error())
+		return []user.Core{}, errors.New("internal server error")
+	}
+
+	return result, nil
+}
+
 // RegisterUser implements user.UseCase
 func (ul *userLogic) RegisterUser(newUser user.Core) error {
 	if err := ul.u.InsertUser(newUser); err != nil {
