@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -27,7 +28,7 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 			log.Error("user are not admin try to acces add position")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
-		
+
 		if err := c.Bind(req); err != nil {
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
@@ -47,5 +48,42 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 		}
 
 		return c.JSON(helper.ResponseFormat(http.StatusCreated, "succes to create position", nil))
+	}
+}
+
+func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			log.Error("user are not admin try to acces add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		}
+
+		limit := c.QueryParam("limit")
+		offset := c.QueryParam("offset")
+		search := c.QueryParam("search")
+
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil {
+			log.Errorf("limit are not a number %v", limit)
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Server Error, limit are NaN", nil))
+		}
+		offsetInt, err := strconv.Atoi(offset)
+		if err != nil {
+			log.Errorf("offset are not a number %v", offset)
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error, offset are NaN", nil))
+		}
+		if limitInt < 0 || offsetInt < 0 {
+			c.Logger().Error("error occurs because limit/offset are negatif")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "limit and offset cannot negative", nil))
+		}
+
+		positions, err := pc.service.GetPositionsLogic(limitInt, offsetInt, search)
+		if err != nil {
+			c.Logger().Error("error occurs when calling GetPositionsLogic")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error", nil))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get positions data", positions))
 	}
 }

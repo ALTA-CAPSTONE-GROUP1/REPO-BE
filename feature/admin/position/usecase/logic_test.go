@@ -48,3 +48,32 @@ func TestAddPosition(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestGetPositionLogic(t *testing.T) {
+	repo := mocks.NewRepository(t)
+	ul := usecase.New(repo)
+
+	t.Run("Success Get Positions", func(t *testing.T) {
+		expectedPositions := []position.Core{{Name: "Position 1", Tag: "Tag 1"}, {Name: "Position 2", Tag: "Tag 2"}}
+		repo.On("GetPositions", 10, 2, "").Return(expectedPositions, nil)
+
+		positions, err := ul.GetPositionsLogic(10, 2, "")
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedPositions, positions)
+
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("Error Get Positions", func(t *testing.T) {
+		expectedErr := errors.New("get positions error")
+		repo.On("GetPositions", 2, 1, "").Return(nil, expectedErr)
+
+		positions, err := ul.GetPositionsLogic(2, 1, "")
+
+		assert.Error(t, err)
+		assert.Nil(t, positions)
+
+		repo.AssertExpectations(t)
+	})
+}

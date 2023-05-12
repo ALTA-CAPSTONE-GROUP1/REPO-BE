@@ -18,7 +18,7 @@ func New(pr position.Repository) position.UseCase {
 	}
 }
 
-func (pl positionLogic) AddPositionLogic(newPosition position.Core) error {
+func (pl *positionLogic) AddPositionLogic(newPosition position.Core) error {
 	if err := pl.pl.InsertPosition(newPosition); err != nil {
 		if strings.Contains(err.Error(), "column") {
 			log.Error("insert position error, COLUMN issue")
@@ -30,4 +30,15 @@ func (pl positionLogic) AddPositionLogic(newPosition position.Core) error {
 	}
 
 	return nil
+}
+
+func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) {
+
+	positions, err := pl.pl.GetPositions(limit, offset, search)
+	if err != nil{
+		log.Error("error on getpositions query")
+		return nil, err
+	}
+
+	return positions, nil
 }

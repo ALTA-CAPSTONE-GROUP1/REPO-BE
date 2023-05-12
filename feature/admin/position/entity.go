@@ -15,12 +15,15 @@ type Core struct {
 
 type Handler interface {
 	AddPositionHandler() echo.HandlerFunc
+	GetAllPositionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	AddPositionLogic(newPosition Core) error
+	GetPositionsLogic(limit int, offset int, search string) ([]Core, error)
 }
 
 type Repository interface {
 	InsertPosition(newPosition Core) error
+	GetPositions(limit int, offset int, search string) ([]Core, error)
 }
