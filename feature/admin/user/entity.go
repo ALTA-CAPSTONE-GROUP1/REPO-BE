@@ -24,16 +24,19 @@ type Handler interface {
 	RegisterHandler() echo.HandlerFunc
 	GetAllUserHandler() echo.HandlerFunc
 	GetUserByIdHandler() echo.HandlerFunc
+	UpdateUserHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	RegisterUser(newUser Core) error
 	GetAllUser(page int, name string) ([]Core, error)
 	GetUserById(id string) (Core, error)
+	UpdateUser(userId uint, id uint, updateEvent Core) error
 }
 
 type Repository interface {
 	InsertUser(newUser Core) error
 	SelectAllUser(limit, offset int, name string) ([]Core, error)
 	GetUserById(id string) (Core, error)
+	UpdateUser(userId uint, id uint, input Core) error
 }
