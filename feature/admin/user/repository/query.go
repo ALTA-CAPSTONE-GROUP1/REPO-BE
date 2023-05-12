@@ -19,7 +19,7 @@ func New(db *gorm.DB) user.Repository {
 }
 
 // SelectAllUser implements user.Repository
-func (um *usersModel) SelectAllUser(id uint, limit int, offset int, name string) ([]user.Core, error) {
+func (um *usersModel) SelectAllUser(limit int, offset int, name string) ([]user.Core, error) {
 	nameSearch := "%" + name + "%"
 	var res []user.Core
 	if err := um.db.Limit(limit).Offset(offset).Where("users.name LIKE ?", nameSearch).Select("users.id, users.email, users.phone_number, users.office_id, users.position_id").Find(&res).Error; err != nil {

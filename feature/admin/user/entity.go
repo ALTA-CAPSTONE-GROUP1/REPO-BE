@@ -27,10 +27,10 @@ type Handler interface {
 
 type UseCase interface {
 	RegisterUser(newUser Core) error
-	GetAllUser(id uint, page int, name string) ([]Core, error)
+	GetAllUser(page int, name string) ([]Core, error)
 }
 
 type Repository interface {
 	InsertUser(newUser Core) error
-	SelectAllUser(id uint, limit, offset int, name string) ([]Core, error)
+	SelectAllUser(limit, offset int, name string) ([]Core, error)
 }
