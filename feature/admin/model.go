@@ -43,12 +43,14 @@ type Type struct {
 }
 
 type PositionHasType struct {
-	ID         int            `gorm:"primaryKey;autoIncrement"`
-	PositionID int            `gorm:"primaryKey"`
-	TypeID     int            `gorm:"primaryKey"`
-	As         string         `gorm:"size:10;not null"`
+	ID         int    `gorm:"primaryKey;autoIncrement"`
+	PositionID int    `gorm:"primaryKey"`
+	TypeID     int    `gorm:"primaryKey"`
+	As         string `gorm:"size:10;not null"`
+	ToLevel    int
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
-	Position   Position       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Type       Type           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Value      int
+	Position   Position `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Type       Type     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

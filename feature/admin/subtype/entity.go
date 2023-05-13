@@ -1,14 +1,33 @@
 package subtype
 
 import (
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/labstack/echo/v4"
 )
 
 type Core struct {
-	Name        string
-	Requirement string
-	Positions   []admin.Position
+	SubmissionTypeName string
+	PositionTag        []string
+	SubmissionValues   []ValueDetails
+	Requirement        string
+}
+
+type ValueDetails struct {
+	Value         int
+	TagPositionTo []string
+	TagPositionCC []string
+}
+
+type RepoData struct {
+	TypeName               string
+	TypeRequirement        string
+	OwnersTag              []string
+	SubTypeInterdependence []RepoDataInterdependence
+}
+
+type RepoDataInterdependence struct {
+	Value  int
+	TosTag []string
+	CcsTag []string
 }
 
 type Handler interface {
@@ -20,5 +39,5 @@ type UseCase interface {
 }
 
 type Repository interface {
-	InsertSubType(newType Core) error
+	InsertSubType(req RepoData) error
 }
