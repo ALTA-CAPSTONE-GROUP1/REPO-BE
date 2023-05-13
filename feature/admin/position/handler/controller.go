@@ -8,7 +8,6 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 )
 
 type positionController struct {
@@ -26,7 +25,7 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 		req := new(AddPositionRequest)
 		userID := helper.DecodeToken(c)
 		if userID != "admin" {
-			log.Error("user are not admin try to acces add position")
+			c.Logger().Error("user are not admin try to acces add position")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 
@@ -35,7 +34,7 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 		}
 
 		if err := c.Validate(req); err != nil {
-			log.Error("errror in validate input" + err.Error())
+			c.Logger().Error("errror in validate input" + err.Error())
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
 		}
 		newPosition := position.Core{
@@ -44,7 +43,7 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 		}
 
 		if err := pc.service.AddPositionLogic(newPosition); err != nil {
-			log.Errorf("error occurs on calling Position logic with data %v, %v", newPosition.Name, newPosition.Tag)
+			c.Logger().Errorf("error occurs on calling Position logic with data %v, %v", newPosition.Name, newPosition.Tag)
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "internal server error", nil))
 		}
 
@@ -56,7 +55,7 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
 		if userID != "admin" {
-			log.Error("user are not admin try to acces add position")
+			c.Logger().Error("user are not admin try to acces add position")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 
@@ -66,12 +65,12 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 
 		limitInt, err := strconv.Atoi(limit)
 		if err != nil {
-			log.Errorf("limit are not a number %v", limit)
+			c.Logger().Errorf("limit are not a number %v", limit)
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Server Error, limit are NaN", nil))
 		}
 		offsetInt, err := strconv.Atoi(offset)
 		if err != nil {
-			log.Errorf("offset are not a number %v", offset)
+			c.Logger().Errorf("offset are not a number %v", offset)
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error, offset are NaN", nil))
 		}
 		if limitInt < 0 || offsetInt < 0 {
@@ -93,27 +92,27 @@ func (pc *positionController) DeletePositionHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
 		if userID != "admin" {
-			log.Error("user are not admin try to acces add position")
+			c.Logger().Error("user are not admin try to acces add position")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 		position := c.QueryParam("position")
 		tag := c.QueryParam("tag")
 
 		if position == "" || tag == "" {
-			log.Error("position or tag are empty string")
+			c.Logger().Error("position or tag are empty string")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "data to delete are empty", nil))
 		}
 
 		if err := pc.service.DeletePositionLogic(position, tag); err != nil {
 			if strings.Contains(err.Error(), "count position query error") {
-				log.Error("errors occurs when counting the datas for delete")
+				c.Logger().Error("errors occurs when counting the datas for delete")
 				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
 			}
 			if strings.Contains(err.Error(), "no data found for deletion") {
-				log.Error("no position data found for deletion")
+				c.Logger().Error("no position data found for deletion")
 				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "position data not found", nil))
 			}
-			log.Error("unexpected error")
+			c.Logger().Error("unexpected error")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "unexpected server error", nil))
 		}
 
