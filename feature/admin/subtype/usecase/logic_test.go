@@ -4,124 +4,191 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position/mocks"
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position/usecase"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype/mocks"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype/usecase"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddPosition(t *testing.T) {
-	repo := mocks.NewRepository(t)
-	ul := usecase.New(repo)
-	rightPosition := position.Core{
-		Name: "Purchasing Manager",
-		Tag:  "PURM",
+func TestAddSubTypeLogic(t *testing.T) {
+	mockRepo := mocks.NewRepository(t)
+	sl := usecase.New(mockRepo)
+	succesData := subtype.RepoData{
+		TypeName:        "Test",
+		TypeRequirement: "Test Requirement",
+		OwnersTag:       []string{"owner-1"},
+		SubTypeInterdependence: []subtype.RepoDataInterdependence{
+			{
+				Value:  5000000,
+				TosTag: []string{"to-1"},
+				CcsTag: []string{"cc-1"},
+			},
+		},
 	}
 	t.Run("Succes Create Position", func(t *testing.T) {
-		repo.On("InsertPosition", rightPosition).Return(nil)
-		err := ul.AddPositionLogic(rightPosition)
+		mockRepo.On("InsertSubType", succesData).Return(nil).Once()
+
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
 
 		assert.NoError(t, err)
-		repo.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Failed Create Position - Server Error", func(t *testing.T) {
-		errPosition := position.Core{}
-		repo.On("InsertPosition", errPosition).Return(errors.New("column"))
-		err := ul.AddPositionLogic(errPosition)
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("failed to insert type data")).Once()
 
-		assert.Error(t, err)
-		assert.EqualError(t, err, "server error")
-		repo.AssertExpectations(t)
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
+
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "failed to insert submission type data")
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Failed Create Position - Unexpected Error", func(t *testing.T) {
-		errPosition := position.Core{
-			Name: "dsiandia",
-			Tag:  "SJBAU",
-		}
-		repo.On("InsertPosition", errPosition).Return(errors.New("too many arguments for record"))
-		err := ul.AddPositionLogic(errPosition)
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("owners position not found")).Once()
 
-		assert.Error(t, err)
-		assert.EqualError(t, err, "too many arguments for record")
-		repo.AssertExpectations(t)
-	})
-}
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
 
-func TestGetPositionLogic(t *testing.T) {
-	repo := mocks.NewRepository(t)
-	ul := usecase.New(repo)
-
-	t.Run("Success Get Positions", func(t *testing.T) {
-		expectedPositions := []position.Core{{Name: "Position 1", Tag: "Tag 1"}, {Name: "Position 2", Tag: "Tag 2"}}
-		repo.On("GetPositions", 10, 2, "").Return(expectedPositions, nil)
-
-		positions, err := ul.GetPositionsLogic(10, 2, "")
-
-		assert.NoError(t, err)
-		assert.Equal(t, expectedPositions, positions)
-
-		repo.AssertExpectations(t)
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "failed to add user as authorized to make")
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Error Get Positions", func(t *testing.T) {
-		expectedErr := errors.New("get positions error")
-		repo.On("GetPositions", 2, 1, "").Return(nil, expectedErr)
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("cannot find authorized officials approver by tag")).Once()
 
-		positions, err := ul.GetPositionsLogic(2, 1, "")
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
 
-		assert.Error(t, err)
-		assert.Nil(t, positions)
-
-		repo.AssertExpectations(t)
-	})
-}
-
-func TestDeletePositionLogic(t *testing.T) {
-	repo := mocks.NewRepository(t)
-	pl := usecase.New(repo)
-
-	t.Run("Delete position successfully", func(t *testing.T) {
-		position := "manager"
-		tag := "finance"
-		repo.On("DeletePosition", position, tag).Return(nil)
-		err := pl.DeletePositionLogic(position, tag)
-		assert.NoError(t, err)
-
-		repo.AssertExpectations(t)
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "failed to add approver to the database")
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Count position query error", func(t *testing.T) {
-		position := "staff"
-		tag := "ST"
-		repo.On("DeletePosition", position, tag).Return(errors.New("count position query error"))
-		err := pl.DeletePositionLogic(position, tag)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "count position query error")
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("failed to insert position has type data")).Once()
 
-		repo.AssertExpectations(t)
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
+
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "failed to add roles to data type")
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("No data found for deletion", func(t *testing.T) {
-		position := "Supervisor"
-		tag := "Spv"
-		repo.On("DeletePosition", position, tag).Return(errors.New("data found"))
-		err := pl.DeletePositionLogic(position, tag)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "no data found for deletion")
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("failed to commit transaction")).Once()
 
-		repo.AssertExpectations(t)
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
+
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "failed to save all data to database (commit error)")
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Data found, but delete query error", func(t *testing.T) {
-		position := "Directore"
-		tag := "Dr"
-		repo.On("DeletePosition", position, tag).Return(errors.New("delete query error"))
-		err := pl.DeletePositionLogic(position, tag)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "delete query error")
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("some error that doesnt used 4545487887")).Once()
 
-		repo.AssertExpectations(t)
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
+
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "unexpected error")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("Succes Create Position", func(t *testing.T) {
+		mockRepo.On("InsertSubType", succesData).Return(errors.New("cannot find authorized officials ccs by tag")).Once()
+
+		err := sl.AddSubTypeLogic(subtype.Core{
+			SubmissionTypeName: "Test",
+			Requirement:        "Test Requirement",
+			PositionTag:        []string{"owner-1"},
+			SubmissionValues: []subtype.ValueDetails{
+				{
+					Value:         5000000,
+					TagPositionTo: []string{"to-1"},
+					TagPositionCC: []string{"cc-1"},
+				},
+			},
+		})
+
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "failed to add cc to the database")
+		mockRepo.AssertExpectations(t)
 	})
 }
