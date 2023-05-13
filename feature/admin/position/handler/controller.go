@@ -30,6 +30,7 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 		}
 
 		if err := c.Bind(req); err != nil {
+			c.Logger().Error("error on binding user input")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
