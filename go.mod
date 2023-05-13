@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/crypto v0.6.0
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
