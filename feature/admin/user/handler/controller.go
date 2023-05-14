@@ -20,6 +20,46 @@ func New(u user.UseCase) user.Handler {
 	}
 }
 
+// DeleteUserHandler implements user.Handler
+func (uc *userController) DeleteUserHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := helper.DecodeToken(c)
+		if userId == "" {
+			c.Logger().Error("decode token is blank")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
+		}
+
+		userPath, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Logger().Error("cannot use path param", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		}
+
+		if userId != string(userPath) {
+			c.Logger().Error("userpath is not equal with userId")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "user are not authorized to delete other user account", nil))
+		}
+
+		if err = uc.service.DeleteUser(string(userPath)); err != nil {
+			c.Logger().Error("error in calling DeletUserLogic")
+			if strings.Contains(err.Error(), "user not found") {
+				c.Logger().Error("error in calling DeletUserLogic, user not found")
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "user not found", nil))
+
+			} else if strings.Contains(err.Error(), "cannot delete") {
+				c.Logger().Error("error in calling DeletUserLogic, cannot delete")
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error in delete user", nil))
+			}
+
+			c.Logger().Error("error in calling DeletUserLogic, cannot delete")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error in delete user", nil))
+
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to delete user", nil))
+	}
+}
+
 // UpdateUserHandler implements user.Handler
 func (uc *userController) UpdateUserHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {

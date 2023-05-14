@@ -25,6 +25,7 @@ type Handler interface {
 	GetAllUserHandler() echo.HandlerFunc
 	GetUserByIdHandler() echo.HandlerFunc
 	UpdateUserHandler() echo.HandlerFunc
+	DeleteUserHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
@@ -32,6 +33,7 @@ type UseCase interface {
 	GetAllUser(page int, name string) ([]Core, error)
 	GetUserById(id string) (Core, error)
 	UpdateUser(id string, updateUser Core) error
+	DeleteUser(id string) error
 }
 
 type Repository interface {
@@ -39,4 +41,5 @@ type Repository interface {
 	SelectAllUser(limit, offset int, name string) ([]Core, error)
 	GetUserById(id string) (Core, error)
 	UpdateUser(id string, input Core) error
+	DeleteUser(id string) error
 }
