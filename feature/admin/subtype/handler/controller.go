@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -72,5 +73,97 @@ func (sc *subTypeController) AddTypeHandler() echo.HandlerFunc {
 		}
 
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to create submission type", nil))
+	}
+}
+
+func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		res := new(GetSubmissionTypeResponse)
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user are not admin try to acces add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		}
+
+		limit := c.QueryParam("limit")
+		offset := c.QueryParam("offset")
+		search := c.QueryParam("search")
+
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil {
+			c.Logger().Errorf("limit are not a number %v", limit)
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Server Error, limit are NaN", nil))
+		}
+		offsetInt, err := strconv.Atoi(offset)
+		if err != nil {
+			c.Logger().Errorf("offset are not a number %v", offset)
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error, offset are NaN", nil))
+		}
+		if limitInt < 0 || offsetInt < 0 {
+			c.Logger().Error("error occurs because limit/offset are negatif")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "limit and offset cannot negative", nil))
+		}
+
+		subTypesData, positionsData, err := sc.service.GetSubTypesLogic(limitInt, offsetInt, search)
+		if err != nil {
+			if strings.Contains(err.Error(), "retrieve positions") {
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to retrieve positions", nil))
+			}
+			if strings.Contains(err.Error(), "retrieve submission types") {
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to retrieve submission types", nil))
+			}
+			if strings.Contains(err.Error(), "retrieve position_has_types") {
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to retrieve position_has_types", nil))
+			}
+			c.Logger().Error("unexpected error on calling all submisioon type data")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to get submission types with unexpected error", nil))
+		}
+
+		for _, p := range positionsData {
+			position := Position{
+				PositionName: p.PositionName,
+				PositionTag:  p.PositionTag,
+			}
+			res.Position = append(res.Position, position)
+		}
+
+		for _, std := range subTypesData {
+			found := false
+			for i, r := range res.SubmissionType {
+				if r.SubmissionTypeName == std.SubmissionTypeName {
+					tmpsd := SubmissionDetail{
+						SubmissionValue:       std.Value,
+						SubmissionRequirement: std.Requirement,
+					}
+					tmpSubDetail := []SubmissionDetail{}
+					for _, sd := range r.SubmissionDetail {
+						if sd.SubmissionValue == tmpsd.SubmissionValue && sd.SubmissionRequirement == tmpsd.SubmissionRequirement {
+							found = true
+							break
+						}
+						tmpSubDetail = append(tmpSubDetail, sd)
+					}
+					tmpSubDetail = append(tmpSubDetail, tmpsd)
+					res.SubmissionType[i].SubmissionDetail = tmpSubDetail
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				newSubmissionType := SubmissionType{
+					SubmissionTypeName: std.SubmissionTypeName,
+					SubmissionDetail: []SubmissionDetail{
+						{
+							SubmissionValue:       std.Value,
+							SubmissionRequirement: std.Requirement,
+						},
+					},
+				}
+				res.SubmissionType = append(res.SubmissionType, newSubmissionType)
+			}
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submission types data", res))
 	}
 }

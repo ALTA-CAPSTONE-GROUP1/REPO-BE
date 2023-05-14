@@ -2,6 +2,8 @@ package repository
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -128,4 +130,72 @@ func (st *subTypeModel) getPositionByTag(tx *gorm.DB, positionTags []string) ([]
 	}
 
 	return positionData, nil
+}
+
+func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error) {
+	var dbpositions []admin.Position
+	var resPositions []subtype.GetPosition
+	var submissionTypeCoreData []subtype.GetSubmissionTypeCore
+	var types []admin.Type
+	var hasTypes []admin.PositionHasType
+
+	if limit < 1 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	if err := st.db.Find(&dbpositions).Error; err != nil {
+		log.Errorf("failed on finding all positions %w", err)
+		return nil, nil, fmt.Errorf("error on finding all positions in get all submission type %w", err)
+	}
+
+	for _, dbposition := range dbpositions {
+		tmpPosition := subtype.GetPosition{
+			PositionName: dbposition.Name,
+			PositionTag:  dbposition.Tag,
+		}
+		resPositions = append(resPositions, tmpPosition)
+	}
+
+	if err := st.db.Find(&types).Error; err != nil {
+		log.Errorf("failed on finding all submission types %w", err)
+		return nil, nil, fmt.Errorf("error when get all submission type %w", err)
+	}
+
+	if err := st.db.Find(&hasTypes).Error; err != nil {
+		log.Errorf("failed on finding all position_has_types for getall submission types %w", err)
+		return nil, nil, fmt.Errorf("error when get all positions_has_types %w", err)
+	}
+
+	for _, t := range types {
+		for _, h := range hasTypes {
+			if t.ID == h.TypeID && h.As == "Owner" {
+				tmp := subtype.GetSubmissionTypeCore{
+					SubmissionTypeName: t.Name,
+					Value:              h.Value,
+					Requirement:        t.Requirement,
+				}
+				submissionTypeCoreData = append(submissionTypeCoreData, tmp)
+			}
+		}
+	}
+	if search != "" {
+		var filteredData []subtype.GetSubmissionTypeCore
+		for _, data := range submissionTypeCoreData {
+			if strings.Contains(strings.ToLower(data.SubmissionTypeName), strings.ToLower(search)) || strings.Contains(strings.ToLower(data.Requirement), strings.ToLower(search)) || strings.Contains(strconv.Itoa(data.Value), strings.ToLower(search)) {
+				filteredData = append(filteredData, data)
+			}
+		}
+		submissionTypeCoreData = filteredData
+	}
+
+	end := offset + limit
+	if end > len(submissionTypeCoreData) {
+		end = len(submissionTypeCoreData)
+	}
+
+	submissionTypeCoreData = submissionTypeCoreData[offset:end]
+	return submissionTypeCoreData, resPositions, nil
 }

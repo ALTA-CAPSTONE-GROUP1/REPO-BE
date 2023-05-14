@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
+	"github.com/labstack/gommon/log"
 )
 
 type subTypeLogic struct {
@@ -54,4 +55,32 @@ func (stl *subTypeLogic) AddSubTypeLogic(newType subtype.Core) error {
 	}
 
 	return nil
+}
+
+func (stl *subTypeLogic) GetSubTypesLogic(limit int, offset int, search string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error) {
+	if limit <= 0 {
+		log.Errorf("cannot accept negative value of limit query")
+		return nil, nil, fmt.Errorf("cannot accept limit value = %d", limit)
+	}
+
+	subtypeData, positionData, err := stl.st.GetSubTypes(limit, offset, search)
+	if err != nil {
+		if strings.Contains(err.Error(), "finding all positions") {
+			log.Errorf("Failed to retrieve positions: %v", err)
+			return nil, nil, fmt.Errorf("failed to retrieve positions. %v", err)
+		}
+		if strings.Contains(err.Error(), "all submission types") {
+			log.Errorf("Failed to retrieve submission types: %v", err)
+			return nil, nil, fmt.Errorf("failed to retrieve submission types. %v", err)
+		}
+		if strings.Contains(err.Error(), "all position_has_types") {
+			log.Errorf("Failed to retrieve position_shas_types: %v", err)
+			return nil, nil, fmt.Errorf("failed to retrieve position_has_types. %v", err)
+		}
+
+		log.Errorf("Failed to get submission types (unexpected error): %v", err)
+		return nil, nil, fmt.Errorf("failed to get submission types with unexpected error. %v", err)
+	}
+
+	return subtypeData, positionData, nil
 }
