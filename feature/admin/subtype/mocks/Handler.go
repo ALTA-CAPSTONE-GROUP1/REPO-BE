@@ -28,6 +28,22 @@ func (_m *Handler) AddTypeHandler() echo.HandlerFunc {
 	return r0
 }
 
+// GetTypesHandler provides a mock function with given fields:
+func (_m *Handler) GetTypesHandler() echo.HandlerFunc {
+	ret := _m.Called()
+
+	var r0 echo.HandlerFunc
+	if rf, ok := ret.Get(0).(func() echo.HandlerFunc); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(echo.HandlerFunc)
+		}
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewHandler interface {
 	mock.TestingT
 	Cleanup(func())

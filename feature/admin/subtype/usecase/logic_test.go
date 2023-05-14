@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -189,6 +190,131 @@ func TestAddSubTypeLogic(t *testing.T) {
 
 		assert.NotNil(t, err)
 		assert.ErrorContains(t, err, "failed to add cc to the database")
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestGetSubTypesLogic(t *testing.T) {
+	mockRepo := mocks.NewRepository(t)
+	sl := usecase.New(mockRepo)
+
+	// Mock data
+	limit := 10
+	offset := 0
+	search := "test"
+	subtypeData := []subtype.GetSubmissionTypeCore{
+		{
+			SubmissionTypeName: "Test1",
+			Value:              5000000,
+			Requirement:        "Test Requirement 1",
+		},
+		{
+			SubmissionTypeName: "Test2",
+			Value:              7500000,
+			Requirement:        "Test Requirement 2",
+		},
+	}
+	positionData := []subtype.GetPosition{
+		{
+			PositionName: "Owner1",
+			PositionTag:  "owner-1",
+		},
+		{
+			PositionName: "Owner2",
+			PositionTag:  "owner-2",
+		},
+	}
+
+	t.Run("Success", func(t *testing.T) {
+		// Mock repository function calls
+		mockRepo.On("GetSubTypes", limit, offset, search).Return(subtypeData, positionData, nil)
+
+		// Call the function
+		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(limit, offset, search)
+
+		// Verify the results
+		assert.NoError(t, err)
+		assert.Equal(t, subtypeData, resultSubtypeData)
+		assert.Equal(t, positionData, resultPositionData)
+
+		// Verify that the mock repository functions were called
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("NegativeLimit", func(t *testing.T) {
+		// Call the function with negative limit
+		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(-1, offset, search)
+
+		// Verify the error
+		assert.EqualError(t, err, "cannot accept limit value = -1")
+		assert.Nil(t, resultSubtypeData)
+		assert.Nil(t, resultPositionData)
+
+		// Verify that the mock repository functions were not called
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("FailedToRetrievePositions", func(t *testing.T) {
+		// Mock repository function calls
+		mockRepo.On("GetSubTypes", 2, 3, "test2").Return(nil, nil, fmt.Errorf("finding all positions")).Once()
+
+		// Call the function
+		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(2, 3, "test2")
+
+		// Verify the error
+		assert.ErrorContains(t, err, "failed to retrieve positions. finding all positions")
+		assert.Nil(t, resultSubtypeData)
+		assert.Nil(t, resultPositionData)
+
+		// Verify that the mock repository functions were called
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("FailedToRetrieveSubmissionTypes", func(t *testing.T) {
+		// Mock repository function calls
+		mockRepo.On("GetSubTypes", 1, 10, "search3").Return(nil, nil, fmt.Errorf("all submission types")).Once()
+
+		// Call the function
+		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(1, 10, "search3")
+
+		// Verify the error
+		assert.EqualError(t, err, "failed to retrieve submission types. all submission types")
+		assert.Nil(t, resultSubtypeData)
+		assert.Nil(t, resultPositionData)
+
+		// Verify that the mock repository functions were called
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("FailedToRetrievePositionHasTypes", func(t *testing.T) {
+		// Mock repository function calls
+		mockRepo.On("GetSubTypes", 5, 10, "search4").Return(nil, nil, fmt.Errorf("all position_has_types")).Once()
+
+		// Call the function
+		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(5, 10, "search4")
+
+		// Verify the error
+		assert.EqualError(t, err, "failed to retrieve position_has_types. all position_has_types")
+		assert.Nil(t, resultSubtypeData)
+		assert.Nil(t, resultPositionData)
+
+		// Verify that the mock repository functions were called
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("FailedToRetrievePositionHasTypes", func(t *testing.T) {
+		// Mock repository function calls
+		mockRepo.On("GetSubTypes", 2, 3, "searchlain").Return(nil, nil, fmt.Errorf("unexpected whatever it is")).Once()
+
+		// Call the function
+		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(2, 3, "searchlain")
+
+		// Verify the error
+		assert.EqualError(t, err, "failed to get submission types with unexpected error. unexpected whatever it is")
+		assert.Nil(t, resultSubtypeData)
+		assert.Nil(t, resultPositionData)
+
+		// Verify that the mock repository functions were called
 		mockRepo.AssertExpectations(t)
 	})
 }

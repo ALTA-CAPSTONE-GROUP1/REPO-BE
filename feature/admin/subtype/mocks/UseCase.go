@@ -26,6 +26,41 @@ func (_m *UseCase) AddSubTypeLogic(newType subtype.Core) error {
 	return r0
 }
 
+// GetSubTypesLogic provides a mock function with given fields: limit, offset, search
+func (_m *UseCase) GetSubTypesLogic(limit int, offset int, search string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error) {
+	ret := _m.Called(limit, offset, search)
+
+	var r0 []subtype.GetSubmissionTypeCore
+	var r1 []subtype.GetPosition
+	var r2 error
+	if rf, ok := ret.Get(0).(func(int, int, string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error)); ok {
+		return rf(limit, offset, search)
+	}
+	if rf, ok := ret.Get(0).(func(int, int, string) []subtype.GetSubmissionTypeCore); ok {
+		r0 = rf(limit, offset, search)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]subtype.GetSubmissionTypeCore)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int, int, string) []subtype.GetPosition); ok {
+		r1 = rf(limit, offset, search)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]subtype.GetPosition)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(int, int, string) error); ok {
+		r2 = rf(limit, offset, search)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 type mockConstructorTestingTNewUseCase interface {
 	mock.TestingT
 	Cleanup(func())
