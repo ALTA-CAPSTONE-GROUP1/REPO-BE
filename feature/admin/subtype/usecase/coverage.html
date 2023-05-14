@@ -76,6 +76,7 @@ import (
         "strings"
 
         "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
+        "github.com/labstack/gommon/log"
 )
 
 type subTypeLogic struct {
@@ -125,6 +126,34 @@ func (stl *subTypeLogic) AddSubTypeLogic(newType subtype.Core) error <span class
         }
 
         <span class="cov8" title="1">return nil</span>
+}
+
+func (stl *subTypeLogic) GetSubTypesLogic(limit int, offset int, search string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error) <span class="cov8" title="1">{
+        if limit &lt;= 0 </span><span class="cov8" title="1">{
+                log.Errorf("cannot accept negative value of limit query")
+                return nil, nil, fmt.Errorf("cannot accept limit value = %d", limit)
+        }</span>
+
+        <span class="cov8" title="1">subtypeData, positionData, err := stl.st.GetSubTypes(limit, offset, search)
+        if err != nil </span><span class="cov8" title="1">{
+                if strings.Contains(err.Error(), "finding all positions") </span><span class="cov8" title="1">{
+                        log.Errorf("Failed to retrieve positions: %v", err)
+                        return nil, nil, fmt.Errorf("failed to retrieve positions. %v", err)
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "all submission types") </span><span class="cov8" title="1">{
+                        log.Errorf("Failed to retrieve submission types: %v", err)
+                        return nil, nil, fmt.Errorf("failed to retrieve submission types. %v", err)
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "all position_has_types") </span><span class="cov8" title="1">{
+                        log.Errorf("Failed to retrieve position_shas_types: %v", err)
+                        return nil, nil, fmt.Errorf("failed to retrieve position_has_types. %v", err)
+                }</span>
+
+                <span class="cov8" title="1">log.Errorf("Failed to get submission types (unexpected error): %v", err)
+                return nil, nil, fmt.Errorf("failed to get submission types with unexpected error. %v", err)</span>
+        }
+
+        <span class="cov8" title="1">return subtypeData, positionData, nil</span>
 }
 </pre>
 		
