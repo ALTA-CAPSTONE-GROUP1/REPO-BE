@@ -44,14 +44,17 @@ type RepoDataInterdependence struct {
 type Handler interface {
 	AddTypeHandler() echo.HandlerFunc
 	GetTypesHandler() echo.HandlerFunc
+	DeleteTypeHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	AddSubTypeLogic(newType Core) error
 	GetSubTypesLogic(limit int, offset int, search string) ([]GetSubmissionTypeCore, []GetPosition, error)
+	DeleteSubTypeLogic(subTypeName string) error
 }
 
 type Repository interface {
 	InsertSubType(req RepoData) error
 	GetSubTypes(limit int, offset int, search string) ([]GetSubmissionTypeCore, []GetPosition, error)
+	DeleteSubType(subTypeName string) error
 }

@@ -167,3 +167,27 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submission types data", res))
 	}
 }
+
+func (sc *subTypeController) DeleteTypeHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user are not admin try to acces add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		}
+
+		subTypeName := c.QueryParam("submission_type")
+
+		if err := sc.service.DeleteSubTypeLogic(subTypeName); err != nil {
+			c.Logger().Errorf("error on delete subtype", err)
+			if strings.Contains(err.Error(), "empty set") {
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "subtype not found please refresh and try again", nil))
+			} else {
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
+			}
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to delete submission type data", nil))
+	}
+
+}
