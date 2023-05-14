@@ -97,6 +97,7 @@ paths:
               example:
                 data:
                   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VySUQiOjR9.QTZxERh4CwC_UnL_eJvTi_A_qdLeBZ-IjR4nqoxjodk"
+                  user_position: Manager Marketing
                 code: 200
                 message: "login success"
         '400':
@@ -649,22 +650,22 @@ paths:
                         type: array
                         items:
                           type: string
-                          example:
-                            - ARM
-                            - RM
-                            - NM
+                        example:
+                          - ARM
+                          - RM
+                          - NM
                       position_cc:
                         type: array
                         items:
                           type: string
-                          example:
-                            - AASPV
-                            - ATSPV
-                            - CHS
-                            - RASPV
-                            - RTSPV 
-                            - NASPV
-                            - NTSPV   
+                        example:
+                          - AASPV
+                          - ATSPV
+                          - CHS
+                          - RASPV
+                          - RTSPV 
+                          - NASPV
+                          - NTSPV   
                 requirement:
                   type: string
                   example: KTP, NPWP, FILE PENDUKUNG
@@ -987,66 +988,82 @@ paths:
             type: integer
             example: 1
       responses:
-        '200':
-          description: show all submission
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/responseObject' 
-              example:
-                data:
-                  - id: 1
-                    to: 
-                        - approver_position: Product Designer
-                          approver_name: Joko
-                        - approver_position: Product Manager
-                          approver_name: Batman
-                    cc:
-                        - cc_position: Back Engineer
-                          cc_name: Jack
-                        - cc_position: Front Engineer
-                          cc_name: Sambo
-                        - cc_position: Quality Engineer
-                          cc_name: Bohang
-                    title: title
-                    status: approved
-                    attachment: file.pdf
-                    receive_date: 2023-05-10 14:30
-                    opened: false
-                    submission_type: 
-                      - submission_name: Program Promo
-                        submission_value:
-                          - 30000000
-                          - 50000000
-                          - 100000000
-                  - id: 57
-                    to: 
-                        - approver_position: Product Designer
-                          approver_name: Joko
-                        - approver_position: Product Manager
-                          approver_name: Batman
-                    cc:
-                        - cc_position: Back Engineer
-                          cc_name: Jack
-                        - cc_position: Front Engineer
-                          cc_name: Sambo
-                        - cc_position: Quality Engineer
-                          cc_name: Bohang
-                    title: title
-                    status: rejected
-                    attachment: file.pdf
-                    receive_date: 2023-05-10 14:30
-                    opened: true
-                    submission_type: 
-                      - submission_name: Program Promo
-                        submission_value:
-                          - 30000000
-                          - 50000000
-                          - 100000000
-        '400':
-          $ref: '#/components/responses/Response400'
-        '500':
-          $ref: '#/components/responses/Response500'
+          '200':
+            description: Success response
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        submissions:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 1
+                              to:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    approver_position:
+                                      type: string
+                                      example: Product Designer
+                                    approver_name:
+                                      type: string
+                                      example: Joko
+                              cc:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    cc_position:
+                                      type: string
+                                      example: Back Engineer
+                                    cc_name:
+                                      type: string
+                                      example: Jack
+                              title:
+                                type: string
+                                example: title
+                              status:
+                                type: string
+                                example: approved
+                              attachment:
+                                type: string
+                                example: file.pdf
+                              receive_date:
+                                type: string
+                                format: date-time
+                                example: 2023-05-10 14:30
+                              opened:
+                                type: boolean
+                                example: false
+                              submission_type:
+                                type: string
+                                example: Program Promo
+                        submission_type_choices:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: Program Promo
+                              values:
+                                type: array
+                                items:
+                                  type: number
+                                  example: 20000000, 22020301310
+          '400':
+            $ref: '#/components/responses/Response400'
+          '500':
+            $ref: '#/components/responses/Response500'
   /submission/requirements:
     post:
       tags:
@@ -1378,7 +1395,7 @@ paths:
                 $ref: '#/components/schemas/responseObject' 
               example:
                 data:
-                  - submision_id: 1
+                    submision_id: 1
                     from: {name: Keke, position: Designer Staff}
                     to: [{
                       name: Joko,
@@ -1400,6 +1417,7 @@ paths:
                     submission_type: Program
                     status_by: [{status: approve, by: HS01}]
                     message_body: "Dear Pak Batman, mohon dibantu approvalnya mengenai Program Training karyawan pada department Design, berikut saya lampirkan data pendukungnya. Besar harapan saya pengajuan ini dapat di approve. Hormat saya, Designer Staff"
+                    attacment: file.pdf
                 code: 200
                 message: "success show all submissions to be approved"
         '400':
