@@ -20,6 +20,20 @@ func New(db *gorm.DB) user.Repository {
 	}
 }
 
+// DeleteUser implements user.Repository
+func (um *usersModel) DeleteUser(id string) error {
+	tx := um.db.Where("user_id = ?", id).Delete(&admin.Users{})
+	if tx.RowsAffected < 1 {
+		log.Error("Terjadi error")
+		return errors.New("no data deleted")
+	}
+	if tx.Error != nil {
+		log.Error("User tidak ditemukan")
+		return tx.Error
+	}
+	return nil
+}
+
 // UpdateUser implements user.Repository
 func (um *usersModel) UpdateUser(id string, input user.Core) error {
 	var UpdateUser admin.Users
