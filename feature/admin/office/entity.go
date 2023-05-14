@@ -12,12 +12,15 @@ type Core struct {
 
 type Handler interface {
 	AddOfficeHandler() echo.HandlerFunc
+	GetAllOfficeHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	AddOfficeLogic(newOffice Core) error
+	GetAllOfficeLogic(limit int, offset int, search string) ([]Core, error)
 }
 
 type Repository interface {
 	InsertOffice(newOffice Core) error
+	GetAllOffice(limit int, offset int, search string) ([]Core, error)
 }

@@ -18,6 +18,17 @@ func New(or office.Repository) office.UseCase {
 	}
 }
 
+// GetAllOfficeLogic implements office.UseCase
+func (ol *officeLogic) GetAllOfficeLogic(limit int, offset int, search string) ([]office.Core, error) {
+	result, err := ol.ol.GetAllOffice(limit, offset, search)
+	if err != nil {
+		log.Error("failed to find all office", err.Error())
+		return []office.Core{}, errors.New("internal server error")
+	}
+
+	return result, nil
+}
+
 // AddOfficeLogic implements office.UseCase
 func (ol *officeLogic) AddOfficeLogic(newOffice office.Core) error {
 	if err := ol.ol.InsertOffice(newOffice); err != nil {
