@@ -18,6 +18,24 @@ func New(u user.Repository) user.UseCase {
 	}
 }
 
+// DeleteUser implements user.UseCase
+func (ul *userLogic) DeleteUser(id string) error {
+	err := ul.u.DeleteUser(id)
+	if err != nil {
+		log.Error("failed on calling deleteuser query")
+		if strings.Contains(err.Error(), "finding user") {
+			log.Error("error on finding user (not found)")
+			return errors.New("bad request, user not found")
+		} else if strings.Contains(err.Error(), "cannot delete") {
+			log.Error("error on delete user")
+			return errors.New("internal server error, cannot delete user")
+		}
+		log.Error("error in delete user (else)")
+		return err
+	}
+	return nil
+}
+
 // UpdateUser implements user.UseCase
 func (ul *userLogic) UpdateUser(id string, updateUser user.Core) error {
 	if err := ul.u.UpdateUser(id, updateUser); err != nil {
