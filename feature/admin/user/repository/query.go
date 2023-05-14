@@ -2,6 +2,8 @@ package repository
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
@@ -20,9 +22,68 @@ func New(db *gorm.DB) user.Repository {
 	}
 }
 
+// GenerateIDFromPositionTag generates a unique user ID based on the position tag
+func (um *usersModel) GenerateIDFromPositionTag(positionTag string) (string, error) {
+	id := positionTag + "01"
+
+	// Check if the generated ID already exists in the 'users' table
+	exists, err := um.CheckUserIDExists(id)
+	if err != nil {
+		return "", err
+	}
+
+	// If the ID exists, increment the number part and check again until a unique ID is found
+	for exists {
+		// Extract the number part from the ID
+		numberPart := id[len(positionTag):]
+
+		// Parse the number part and increment it
+		number, err := strconv.Atoi(numberPart)
+		if err != nil {
+			return "", err
+		}
+		number++
+
+		// Generate the updated ID by combining the position tag and the incremented number
+		id = positionTag + strconv.Itoa(number)
+
+		// Check if the updated ID exists
+		exists, err = um.CheckUserIDExists(id)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return id, nil
+}
+
+// checkUserIDExists checks if a user ID already exists in the 'users' table
+func (um *usersModel) CheckUserIDExists(id string) (bool, error) {
+	var count int64
+	err := um.db.Table("users").Where("id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// GetPositionTagByID implements user.Repository
+func (um *usersModel) GetPositionTagByID(positionID int) (string, error) {
+	var position admin.Position
+	err := um.db.Table("positions").Select("tag").Where("id = ?", positionID).First(&position).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", fmt.Errorf("position tag not found for position ID: %d", positionID)
+		}
+		return "", err
+	}
+
+	return position.Tag, nil
+}
+
 // DeleteUser implements user.Repository
 func (um *usersModel) DeleteUser(id string) error {
-	tx := um.db.Where("user_id = ?", id).Delete(&admin.Users{})
+	tx := um.db.Table("Users").Where("id = ?", id).Delete(&admin.Users{})
 	if tx.RowsAffected < 1 {
 		log.Error("Terjadi error")
 		return errors.New("no data deleted")
@@ -91,6 +152,23 @@ func (um *usersModel) SelectAllUser(limit int, offset int, name string) ([]user.
 // InsertUser implements user.Repository
 func (um *usersModel) InsertUser(newUser user.Core) error {
 	inputUser := admin.Users{}
+
+	// Get the position tag based on newUser.PositionID
+	positionTag, err := um.GetPositionTagByID(newUser.PositionID)
+	if err != nil {
+		log.Error("error getting position tag", err.Error())
+		return err
+	}
+
+	// Generate the inputUser.ID based on the position tag
+	id, err := um.GenerateIDFromPositionTag(positionTag)
+	if err != nil {
+		log.Error("error generating user ID", err.Error())
+		return err
+	}
+	inputUser.ID = id
+
+	// Rest of the code to hash the password and populate the inputUser fields
 	hashedPassword, err := helper.HashPassword(newUser.Password)
 	if err != nil {
 		log.Error("error occurs on hashing password", err.Error())
