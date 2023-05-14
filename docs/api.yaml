@@ -1058,14 +1058,16 @@ paths:
                               values:
                                 type: array
                                 items:
-                                  type: number
-                                  example: 20000000, 22020301310
+                                  type: integer
+                                example:
+                                  - 2000000
+                                  - 10000000
           '400':
             $ref: '#/components/responses/Response400'
           '500':
             $ref: '#/components/responses/Response500'
   /submission/requirements:
-    post:
+    get:
       tags:
         - User
           - Submission
@@ -1073,22 +1075,21 @@ paths:
       description: Feature for get detail to, cc and requirement by submission type and value
       security:
         - JWTAuth: []
-      requestBody:
+      parameters:
+      - name: submission_type
+        in: query
+        description: Submission type
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                submission_type:
-                  type: string
-                  example: Program Promo
-                submission_value:
-                  type: integer
-                  example: 30000000
-              required:
-                - submission_type
-                - submision_value
+        schema:
+          type: string
+          example: Program Promo
+      - name: submission_value
+        in: query
+        description: Submission value
+        required: true
+        schema:
+          type: integer
+          example: 30000000
       responses:
         '200':
           description: show detail user profile
