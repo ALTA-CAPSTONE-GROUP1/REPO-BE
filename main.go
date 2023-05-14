@@ -3,6 +3,15 @@ package main
 import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/database"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/routes"
+
+	uAdminHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user/handler"
+	uAdminRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user/repository"
+	uAdminLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user/usecase"
+
+	authHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth/handler"
+	authRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth/repository"
+	authLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth/usecase"
 
 	"github.com/labstack/echo/v4"
 )
@@ -12,6 +21,17 @@ func main() {
 	cfg := config.InitConfig()
 	db := database.InitDBMySql(*cfg)
 	database.Migrate(db)
+
+	uAdminMdl := uAdminRepo.New(db)
+	uAdminSrv := uAdminLogic.New(uAdminMdl)
+	uAdminCtl := uAdminHandler.New(uAdminSrv)
+
+	authMdl := authRepo.New(db)
+	authSrv := authLogic.New(authMdl)
+	authCtl := authHandler.New(authSrv)
+
+	routes.AdminUserRoutes(e, uAdminCtl)
+	routes.AuthRoutes(e, authCtl)
 
 	if err := e.Start(":8080"); err != nil {
 		e.Logger.Fatal("cannot start server", err.Error())
