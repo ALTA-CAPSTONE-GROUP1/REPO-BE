@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
-	"github.com/rs/zerolog/log"
+	"github.com/labstack/gommon/log"
 )
 
 type officeLogic struct {
