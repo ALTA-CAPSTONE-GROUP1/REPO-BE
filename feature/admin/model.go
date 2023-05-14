@@ -29,7 +29,7 @@ type Position struct {
 	ID        int            `gorm:"primaryKey"`
 	Name      string         `gorm:"size:50;not null"`
 	Tag       string         `gorm:"size:50;not null"`
-	Types     []Type         `gorm:"many2many:position_has_type"`
+	Types     []Type         `gorm:"many2many:position_has_type;constraint:OnDelete:CASCADE;"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
@@ -37,15 +37,15 @@ type Type struct {
 	ID          int            `gorm:"primaryKey;autoIncrement"`
 	Name        string         `gorm:"size:50;not null"`
 	Requirement string         `gorm:"size:255;not null"`
-	Positions   []Position     `gorm:"many2many:position_has_type"`
+	Positions   []Position     `gorm:"many2many:position_has_type;constraint:OnDelete:CASCADE;"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 type PositionHasType struct {
 	ID         int    `gorm:"primaryKey;autoIncrement"`
-	PositionID int    `gorm:"primaryKey"`
-	TypeID     int    `gorm:"primaryKey"`
+	PositionID int    `gorm:"primaryKey;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	TypeID     int    `gorm:"primaryKey;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	As         string `gorm:"size:10;not null"`
 	ToLevel    int
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`

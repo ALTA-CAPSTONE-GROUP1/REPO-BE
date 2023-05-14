@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -83,4 +84,21 @@ func (stl *subTypeLogic) GetSubTypesLogic(limit int, offset int, search string) 
 	}
 
 	return subtypeData, positionData, nil
+}
+
+func (stl *subTypeLogic) DeleteSubTypeLogic(subTypeName string) error {
+	if err := stl.st.DeleteSubType(subTypeName); err != nil {
+		log.Error("error on calling delete SubType in logic")
+		if strings.Contains(err.Error(), "empty_set") {
+			return errors.New("subtypename not found")
+		} else if strings.Contains(err.Error(), "failed to find subtypename for delete") {
+			return errors.New("subtypename not found")
+		} else if strings.Contains(err.Error(), "failed to delete subtype by name") {
+			return errors.New("error on delete the subtype by name")
+		} else {
+			log.Error("unexpected error")
+			return fmt.Errorf("unexpected error, %w", err)
+		}
+	}
+	return nil
 }
