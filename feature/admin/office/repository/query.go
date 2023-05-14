@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
 	"github.com/labstack/gommon/log"
@@ -15,6 +17,20 @@ func New(db *gorm.DB) office.Repository {
 	return &officeModel{
 		db: db,
 	}
+}
+
+// DeleteOffice implements office.Repository
+func (om *officeModel) DeleteOffice(id uint) error {
+	tx := om.db.Where("office_id = ?", id).Delete(&admin.Office{})
+	if tx.RowsAffected < 1 {
+		log.Error("Terjadi error")
+		return errors.New("no data deleted")
+	}
+	if tx.Error != nil {
+		log.Error("Office tidak ditemukan")
+		return tx.Error
+	}
+	return nil
 }
 
 // GetAllOffice implements office.Repository

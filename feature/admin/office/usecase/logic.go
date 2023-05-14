@@ -18,6 +18,24 @@ func New(or office.Repository) office.UseCase {
 	}
 }
 
+// DeleteOfficeLogic implements office.UseCase
+func (ol *officeLogic) DeleteOfficeLogic(id uint) error {
+	err := ol.ol.DeleteOffice(id)
+	if err != nil {
+		log.Error("failed on calling deleteuser query")
+		if strings.Contains(err.Error(), "finding office") {
+			log.Error("error on finding office (not found)")
+			return errors.New("bad request, office not found")
+		} else if strings.Contains(err.Error(), "cannot delete") {
+			log.Error("error on delete office")
+			return errors.New("internal server error, cannot delete office")
+		}
+		log.Error("error in delete office (else)")
+		return err
+	}
+	return nil
+}
+
 // GetAllOfficeLogic implements office.UseCase
 func (ol *officeLogic) GetAllOfficeLogic(limit int, offset int, search string) ([]office.Core, error) {
 	result, err := ol.ol.GetAllOffice(limit, offset, search)

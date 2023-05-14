@@ -13,14 +13,17 @@ type Core struct {
 type Handler interface {
 	AddOfficeHandler() echo.HandlerFunc
 	GetAllOfficeHandler() echo.HandlerFunc
+	DeleteOfficeHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	AddOfficeLogic(newOffice Core) error
 	GetAllOfficeLogic(limit int, offset int, search string) ([]Core, error)
+	DeleteOfficeLogic(id uint) error
 }
 
 type Repository interface {
 	InsertOffice(newOffice Core) error
 	GetAllOffice(limit int, offset int, search string) ([]Core, error)
+	DeleteOffice(id uint) error
 }
