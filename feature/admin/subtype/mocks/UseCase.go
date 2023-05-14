@@ -26,6 +26,20 @@ func (_m *UseCase) AddSubTypeLogic(newType subtype.Core) error {
 	return r0
 }
 
+// DeleteSubTypeLogic provides a mock function with given fields: subTypeName
+func (_m *UseCase) DeleteSubTypeLogic(subTypeName string) error {
+	ret := _m.Called(subTypeName)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(subTypeName)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetSubTypesLogic provides a mock function with given fields: limit, offset, search
 func (_m *UseCase) GetSubTypesLogic(limit int, offset int, search string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error) {
 	ret := _m.Called(limit, offset, search)

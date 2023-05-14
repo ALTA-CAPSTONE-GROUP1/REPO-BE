@@ -12,6 +12,20 @@ type Repository struct {
 	mock.Mock
 }
 
+// DeleteSubType provides a mock function with given fields: subTypeName
+func (_m *Repository) DeleteSubType(subTypeName string) error {
+	ret := _m.Called(subTypeName)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(subTypeName)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetSubTypes provides a mock function with given fields: limit, offset, search
 func (_m *Repository) GetSubTypes(limit int, offset int, search string) ([]subtype.GetSubmissionTypeCore, []subtype.GetPosition, error) {
 	ret := _m.Called(limit, offset, search)

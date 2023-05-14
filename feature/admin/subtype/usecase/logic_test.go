@@ -198,7 +198,6 @@ func TestGetSubTypesLogic(t *testing.T) {
 	mockRepo := mocks.NewRepository(t)
 	sl := usecase.New(mockRepo)
 
-	// Mock data
 	limit := 10
 	offset := 0
 	search := "test"
@@ -226,18 +225,15 @@ func TestGetSubTypesLogic(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		// Mock repository function calls
 		mockRepo.On("GetSubTypes", limit, offset, search).Return(subtypeData, positionData, nil)
 
-		// Call the function
 		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(limit, offset, search)
 
-		// Verify the results
+
 		assert.NoError(t, err)
 		assert.Equal(t, subtypeData, resultSubtypeData)
 		assert.Equal(t, positionData, resultPositionData)
 
-		// Verify that the mock repository functions were called
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -245,7 +241,6 @@ func TestGetSubTypesLogic(t *testing.T) {
 		// Call the function with negative limit
 		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(-1, offset, search)
 
-		// Verify the error
 		assert.EqualError(t, err, "cannot accept limit value = -1")
 		assert.Nil(t, resultSubtypeData)
 		assert.Nil(t, resultPositionData)
@@ -255,66 +250,99 @@ func TestGetSubTypesLogic(t *testing.T) {
 	})
 
 	t.Run("FailedToRetrievePositions", func(t *testing.T) {
-		// Mock repository function calls
 		mockRepo.On("GetSubTypes", 2, 3, "test2").Return(nil, nil, fmt.Errorf("finding all positions")).Once()
 
-		// Call the function
 		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(2, 3, "test2")
 
-		// Verify the error
 		assert.ErrorContains(t, err, "failed to retrieve positions. finding all positions")
 		assert.Nil(t, resultSubtypeData)
 		assert.Nil(t, resultPositionData)
 
-		// Verify that the mock repository functions were called
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("FailedToRetrieveSubmissionTypes", func(t *testing.T) {
-		// Mock repository function calls
 		mockRepo.On("GetSubTypes", 1, 10, "search3").Return(nil, nil, fmt.Errorf("all submission types")).Once()
 
-		// Call the function
 		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(1, 10, "search3")
 
-		// Verify the error
 		assert.EqualError(t, err, "failed to retrieve submission types. all submission types")
 		assert.Nil(t, resultSubtypeData)
 		assert.Nil(t, resultPositionData)
 
-		// Verify that the mock repository functions were called
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("FailedToRetrievePositionHasTypes", func(t *testing.T) {
-		// Mock repository function calls
 		mockRepo.On("GetSubTypes", 5, 10, "search4").Return(nil, nil, fmt.Errorf("all position_has_types")).Once()
-
-		// Call the function
 		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(5, 10, "search4")
 
-		// Verify the error
 		assert.EqualError(t, err, "failed to retrieve position_has_types. all position_has_types")
 		assert.Nil(t, resultSubtypeData)
 		assert.Nil(t, resultPositionData)
 
-		// Verify that the mock repository functions were called
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("FailedToRetrievePositionHasTypes", func(t *testing.T) {
-		// Mock repository function calls
 		mockRepo.On("GetSubTypes", 2, 3, "searchlain").Return(nil, nil, fmt.Errorf("unexpected whatever it is")).Once()
 
-		// Call the function
 		resultSubtypeData, resultPositionData, err := sl.GetSubTypesLogic(2, 3, "searchlain")
 
-		// Verify the error
 		assert.EqualError(t, err, "failed to get submission types with unexpected error. unexpected whatever it is")
 		assert.Nil(t, resultSubtypeData)
 		assert.Nil(t, resultPositionData)
 
-		// Verify that the mock repository functions were called
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestDeleteSubTypeLogic(t *testing.T) {
+	mockRepo := mocks.NewRepository(t)
+	sl := usecase.New(mockRepo)
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepo.On("DeleteSubType", "test").Return(nil)
+
+		err := sl.DeleteSubTypeLogic("test")
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("SubTypeNotFound", func(t *testing.T) {
+		mockRepo.On("DeleteSubType", "not_found").Return(errors.New("empty_set"))
+
+		err := sl.DeleteSubTypeLogic("not_found")
+
+		assert.EqualError(t, err, "subtypename not found")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("FailedToFindSubTypeForDelete", func(t *testing.T) {
+		mockRepo.On("DeleteSubType", "failed_to_find").Return(errors.New("failed to find subtypename for delete"))
+
+		err := sl.DeleteSubTypeLogic("failed_to_find")
+
+		assert.EqualError(t, err, "subtypename not found")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("FailedToDeleteSubTypeByName", func(t *testing.T) {
+		mockRepo.On("DeleteSubType", "failed_to_delete").Return(errors.New("failed to delete subtype by name"))
+
+		err := sl.DeleteSubTypeLogic("failed_to_delete")
+
+		assert.EqualError(t, err, "error on delete the subtype by name")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("UnexpectedErrorOnDeleteSubType", func(t *testing.T) {
+		mockRepo.On("DeleteSubType", "unexpected_error").Return(errors.New("unexpected error"))
+
+		err := sl.DeleteSubTypeLogic("unexpected_error")
+
+		assert.EqualError(t, err, "unexpected error, unexpected error")
 		mockRepo.AssertExpectations(t)
 	})
 }
