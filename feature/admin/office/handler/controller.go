@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -16,6 +17,41 @@ type officeController struct {
 func New(ou office.UseCase) office.Handler {
 	return &officeController{
 		service: ou,
+	}
+}
+
+// DeleteOfficeHandler implements office.Handler
+func (oc *officeController) DeleteOfficeHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user are not admin try to acces delete office")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		}
+
+		bookPath, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Logger().Error("cannot use path param", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		}
+
+		if err = oc.service.DeleteOfficeLogic(uint(bookPath)); err != nil {
+			c.Logger().Error("error in calling DeletOfficeLogic")
+			if strings.Contains(err.Error(), "office not found") {
+				c.Logger().Error("error in calling DeletOfficeLogic, office not found")
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "office not found", nil))
+
+			} else if strings.Contains(err.Error(), "cannot delete") {
+				c.Logger().Error("error in calling DeletOfficeLogic, cannot delete")
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error in delete office", nil))
+			}
+
+			c.Logger().Error("error in calling DeletOfficeLogic, cannot delete")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error in delete office", nil))
+
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to delete office", nil))
 	}
 }
 
