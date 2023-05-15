@@ -1,10 +1,10 @@
 package user
 
 import (
-	"time"
+	office "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
+	position "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type Core struct {
@@ -15,9 +15,8 @@ type Core struct {
 	Email       string
 	PhoneNumber string
 	Password    string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   gorm.DeletedAt
+	Position    position.Core
+	Office      office.Core
 }
 
 type Handler interface {
@@ -42,4 +41,7 @@ type Repository interface {
 	GetUserById(id string) (Core, error)
 	UpdateUser(id string, input Core) error
 	DeleteUser(id string) error
+	GetPositionTagByID(positionID int) (string, error)
+	GenerateIDFromPositionTag(positionTag string) (string, error)
+	CheckUserIDExists(id string) (bool, error)
 }

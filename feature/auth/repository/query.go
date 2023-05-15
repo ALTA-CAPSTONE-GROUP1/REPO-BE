@@ -37,5 +37,13 @@ func (um *authModel) Login(id string, password string) (auth.Core, error) {
 	// 	return auth.Core{}, errors.New("wrong password")
 	// }
 
-	return auth.Core{}, nil
+	return auth.Core{
+		ID:          input.ID,
+		OfficeID:    input.OfficeID,
+		PositionID:  input.PositionID,
+		Name:        input.Name,
+		Email:       input.Email,
+		PhoneNumber: input.PhoneNumber,
+		Password:    input.Password,
+	}, nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
+	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,24 +24,16 @@ func New(u user.UseCase) user.Handler {
 // DeleteUserHandler implements user.Handler
 func (uc *userController) DeleteUserHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		userId := helper.DecodeToken(c)
-		if userId == "" {
-			c.Logger().Error("decode token is blank")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user are not admin try to acces delete user account")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 
-		userPath, err := strconv.Atoi(c.Param("id"))
+		userPath := c.Param("id")
+
+		err := uc.service.DeleteUser(userPath)
 		if err != nil {
-			c.Logger().Error("cannot use path param", err.Error())
-			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
-		}
-
-		if userId != string(userPath) {
-			c.Logger().Error("userpath is not equal with userId")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "user are not authorized to delete other user account", nil))
-		}
-
-		if err = uc.service.DeleteUser(string(userPath)); err != nil {
 			c.Logger().Error("error in calling DeletUserLogic")
 			if strings.Contains(err.Error(), "user not found") {
 				c.Logger().Error("error in calling DeletUserLogic, user not found")
@@ -63,34 +56,23 @@ func (uc *userController) DeleteUserHandler() echo.HandlerFunc {
 // UpdateUserHandler implements user.Handler
 func (uc *userController) UpdateUserHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
+
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user are not admin try to acces add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		}
+		userPath := c.Param("id")
+
 		updateInput := InputUpdate{}
-		userId := helper.DecodeToken(c)
-		if userId == "" {
-			c.Logger().Error("decode token is blank")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
-		}
-		userPath, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.Logger().Error("cannot use path param", err.Error())
-			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		if err := c.Bind(&updateInput); err != nil {
+			c.Logger().Error("terjadi kesalahan bind", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
-		if userId != string(userPath) {
-			c.Logger().Error("userpath is not equal with userId")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "user are not authorized to delete other user account", nil))
-		}
-
-		updateUser := user.Core{
-			ID:          updateInput.ID,
-			OfficeID:    updateInput.OfficeID,
-			PositionID:  updateInput.PositionID,
-			Name:        updateInput.Name,
-			Email:       updateInput.Email,
-			PhoneNumber: updateInput.PhoneNumber,
-			Password:    updateInput.Password,
-		}
-
-		if err := uc.service.UpdateUser(userId, updateUser); err != nil {
+		updateUser := user.Core{}
+		copier.Copy(&updateUser, &updateInput)
+		if err := uc.service.UpdateUser(userPath, updateUser); err != nil {
 			c.Logger().Error("failed on calling updateprofile log")
 			if strings.Contains(err.Error(), "hashing password") {
 				c.Logger().Error("hashing password error")
@@ -110,19 +92,19 @@ func (uc *userController) UpdateUserHandler() echo.HandlerFunc {
 // GetUserByIdHandler implements user.Handler
 func (uc *userController) GetUserByIdHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		userId := helper.DecodeToken(c)
-		if userId == "" {
-			c.Logger().Error("decode token is blank")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user are not admin try to acces add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 
-		userPath, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.Logger().Error("cannot use path param", err.Error())
-			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
-		}
+		userPath := c.Param("id")
+		// if err != nil {
+		// 	c.Logger().Error("cannot use path param", err.Error())
+		// 	return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		// }
 
-		data, err := uc.service.GetUserById(string(userPath))
+		data, err := uc.service.GetUserById(userPath)
 		if err != nil {
 			c.Logger().Error("error on calling user by id logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
@@ -141,7 +123,7 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 			pageConv, errConv := strconv.Atoi(pageParam)
 			if errConv != nil {
 				c.Logger().Error("cannot read data")
-				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, page must number", nil))
+				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, page must be a number", nil))
 			} else {
 				pageNumber = pageConv
 			}
@@ -151,19 +133,26 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 		data, err := uc.service.GetAllUser(pageNumber, nameParam)
 		if err != nil {
 			c.Logger().Error("error on calling get all user logic")
-			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, error read data", nil))
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
+
 		dataResponse := CoreToGetAllUserResponse(data)
-		return c.JSON(helper.ResponseFormat(http.StatusCreated, "get all user successfully", dataResponse))
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved all users", dataResponse))
 	}
 }
 
 // RegisterHandler implements user.Handler
 func (uc *userController) RegisterHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user is not admin trying to access add position")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not an admin", nil))
+		}
+
 		input := RegisterInput{}
 		if err := c.Bind(&input); err != nil {
-			c.Logger().Error("error on bind register input", err.Error())
+			c.Logger().Error("error on binding register input", err.Error())
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
@@ -176,10 +165,10 @@ func (uc *userController) RegisterHandler() echo.HandlerFunc {
 			Password:    input.Password,
 		})
 		if err != nil {
-			c.Logger().Error("error on calling userLogic", err.Error())
+			c.Logger().Error("error on calling RegisterUser", err.Error())
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, err.Error(), nil))
 		}
 
-		return c.JSON(helper.ResponseFormat(http.StatusCreated, "succes to create user", nil))
+		return c.JSON(helper.ResponseFormat(http.StatusCreated, "successfully created user", nil))
 	}
 }

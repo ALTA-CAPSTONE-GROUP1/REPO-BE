@@ -1,15 +1,18 @@
 package handler
 
-import "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
+import (
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
+)
 
 type UserResponse struct {
-	ID          string `json:"user_id"`
-	Name        string `json:"name"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-	OfficeID    int    `json:"office_id"`
-	PositionID  int    `json:"position_id"`
+	ID          string         `json:"user_id"`
+	Name        string         `json:"name"`
+	Email       string         `json:"email"`
+	PhoneNumber string         `json:"phone_number"`
+	Password    string         `json:"password"`
+	Position    admin.Position `json:"position"`
+	Office      admin.Office   `json:"office"`
 }
 
 func CoreToUserResponse(data user.Core) UserResponse {
@@ -19,8 +22,12 @@ func CoreToUserResponse(data user.Core) UserResponse {
 		Email:       data.Email,
 		PhoneNumber: data.PhoneNumber,
 		Password:    data.Password,
-		OfficeID:    data.OfficeID,
-		PositionID:  data.PositionID,
+		Position: admin.Position{
+			Name: data.Position.Name,
+		},
+		Office: admin.Office{
+			Name: data.Office.Name,
+		},
 	}
 }
 
