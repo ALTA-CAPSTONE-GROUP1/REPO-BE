@@ -5,6 +5,7 @@ import (
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
 )
@@ -23,9 +24,15 @@ func New(db *gorm.DB) profile.Repository {
 func (um *userModel) UpdateUser(id string, input profile.Core) error {
 	var updateUser user.Users
 
+	hashedPassword, err := helper.HashPassword(input.Password)
+	if err != nil {
+		log.Error("error occurs on hashing password", err.Error())
+		return errors.New("hashing password failed")
+	}
+
 	updateUser.Email = input.Email
 	updateUser.PhoneNumber = input.PhoneNumber
-	updateUser.Password = input.Password
+	updateUser.Password = hashedPassword
 
 	// Update the user in the database
 	tx := um.db.Model(&user.Users{}).Where("id = ?", id).Updates(&updateUser)

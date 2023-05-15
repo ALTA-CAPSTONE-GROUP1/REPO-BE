@@ -14,6 +14,6 @@ func ProfileRoutes(e *echo.Echo, pc profile.Handler) {
 	e.Use(middleware.Logger())
 
 	e.GET("/profile", pc.ProfileHandler(), helper.JWTMiddleWare())
-	// e.PUT("/profile", pc.AddOfficeHandler(), helper.JWTMiddleWare())
+	e.PUT("/profile", pc.UpdateUserHandler(), helper.JWTMiddleWare())
 
 }

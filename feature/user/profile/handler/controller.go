@@ -6,7 +6,6 @@ import (
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
-	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
 )
 
@@ -30,8 +29,12 @@ func (uc *profileController) UpdateUserHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
-		updateUser := profile.Core{}
-		copier.Copy(&updateUser, &updateInput)
+		updateUser := profile.Core{
+			Email:       updateInput.Email,
+			PhoneNumber: updateInput.PhoneNumber,
+			Password:    updateInput.Password,
+		}
+
 		if err := uc.service.UpdateUser(userID, updateUser); err != nil {
 			c.Logger().Error("failed on calling updateprofile log")
 			if strings.Contains(err.Error(), "hashing password") {
