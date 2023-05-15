@@ -97,23 +97,32 @@ func (um *usersModel) DeleteUser(id string) error {
 
 // UpdateUser implements user.Repository
 func (um *usersModel) UpdateUser(id string, input user.Core) error {
-	var UpdateUser admin.Users
+	var updateUser admin.Users
 
-	hashedPassword, err := helper.HashPassword(input.Password)
+	// Get the position tag based on input.PositionID
+	positionTag, err := um.GetPositionTagByID(input.PositionID)
 	if err != nil {
-		log.Error("error occurs on hashing password", err.Error())
-		return errors.New("hashing password failed")
+		log.Error("error getting position tag", err.Error())
+		return err
 	}
 
-	UpdateUser.ID = input.ID
-	UpdateUser.Name = input.Name
-	UpdateUser.Email = input.Email
-	UpdateUser.PhoneNumber = input.PhoneNumber
-	UpdateUser.Password = hashedPassword
-	UpdateUser.OfficeID = input.OfficeID
-	UpdateUser.PositionID = input.PositionID
+	// Generate the updated ID based on the position tag
+	updatedID, err := um.GenerateIDFromPositionTag(positionTag)
+	if err != nil {
+		log.Error("error generating user ID", err.Error())
+		return err
+	}
 
-	tx := um.db.Model(&admin.Users{}).Where("id = ?", id).Updates(&UpdateUser)
+	// Update the ID and other fields
+	updateUser.ID = updatedID
+	updateUser.Name = input.Name
+	updateUser.Email = input.Email
+	updateUser.PhoneNumber = input.PhoneNumber
+	updateUser.OfficeID = input.OfficeID
+	updateUser.PositionID = input.PositionID
+
+	// Update the user in the database
+	tx := um.db.Model(&admin.Users{}).Where("id = ?", id).Updates(&updateUser)
 	if tx.RowsAffected < 1 {
 		log.Error("there is no column to change on update user")
 		return errors.New("no data affected")

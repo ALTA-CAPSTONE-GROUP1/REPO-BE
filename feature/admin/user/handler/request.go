@@ -10,7 +10,6 @@ type RegisterInput struct {
 }
 
 type InputUpdate struct {
-	ID          string `json:"id" form:"id"`
 	Name        string `json:"name" form:"name"`
 	Email       string `json:"email" form:"email"`
 	PhoneNumber string `json:"phone_number" form:"phone_number"`
