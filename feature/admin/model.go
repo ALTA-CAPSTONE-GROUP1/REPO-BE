@@ -22,9 +22,11 @@ type Users struct {
 }
 
 type Office struct {
-	ID        int            `gorm:"primaryKey;autoIncrement"`
-	Name      string         `gorm:"size:50;not null"`
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID       uint
+	Name     string
+	Level    string
+	ParentID uint
+	Parent   *Office `gorm:"foreignkey:ParentID"`
 }
 
 type Position struct {

@@ -13,8 +13,8 @@ func PositionRoutes(e *echo.Echo, pc position.Handler) {
 	e.Use(middleware.CORS())
 	e.Use(middleware.Logger())
 
-	e.POST("/submission-type", pc.AddPositionHandler(), helper.JWTMiddleWare())
-	e.GET("/submission-type", pc.GetAllPositionHandler(), helper.JWTMiddleWare())
-	e.DELETE("/submission-type", pc.DeletePositionHandler(), helper.JWTMiddleWare())
+	e.POST("/position", pc.AddPositionHandler(), helper.JWTMiddleWare())
+	e.GET("/position", pc.GetAllPositionHandler(), helper.JWTMiddleWare())
+	e.DELETE("/position", pc.DeletePositionHandler(), helper.JWTMiddleWare())
 
 }

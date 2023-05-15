@@ -34,10 +34,10 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
-		if err := c.Validate(req); err != nil {
-			c.Logger().Error("errror in validate input" + err.Error())
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
-		}
+		// if err := c.Validate(req); err != nil {
+		// 	c.Logger().Error("errror in validate input" + err.Error())
+		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
+		// }
 		newPosition := position.Core{
 			Name: req.Position,
 			Tag:  req.Tag,
