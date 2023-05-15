@@ -1,5 +1,7 @@
 package handler
 
 type AddOfficeRequest struct {
-	Office string `json:"office"`
+	Name     string `json:"name"`
+	Level    string `json:"level"`
+	ParentID uint   `json:"parent_id"`
 }

@@ -21,7 +21,7 @@ func New(db *gorm.DB) office.Repository {
 
 // DeleteOffice implements office.Repository
 func (om *officeModel) DeleteOffice(id uint) error {
-	tx := om.db.Where("office_id = ?", id).Delete(&admin.Office{})
+	tx := om.db.Table("Offices").Where("id = ?", id).Delete(&admin.Office{})
 	if tx.RowsAffected < 1 {
 		log.Error("Terjadi error")
 		return errors.New("no data deleted")
@@ -37,7 +37,7 @@ func (om *officeModel) DeleteOffice(id uint) error {
 func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]office.Core, error) {
 	nameSearch := "%" + search + "%"
 	var res []office.Core
-	if err := om.db.Limit(limit).Offset(offset).Where("offices.name LIKE ?", nameSearch).Select("offices.id, offices.name").Find(&res).Error; err != nil {
+	if err := om.db.Limit(limit).Offset(offset).Where("offices.name LIKE ?", nameSearch).Select("offices.id, offices.name, offices.level, offices.parent_id").Find(&res).Error; err != nil {
 		log.Error("error occurs in finding all office", err.Error())
 		return nil, err
 	}
@@ -47,11 +47,13 @@ func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]off
 
 // InsertOffice implements office.Repository
 func (om *officeModel) InsertOffice(newOffice office.Core) error {
-	inputOffice := admin.Office{}
+	inputOffice := admin.Office{
+		Name:     newOffice.Name,
+		Level:    newOffice.Level,
+		ParentID: newOffice.ParentID,
+	}
 
-	inputOffice.Name = newOffice.Name
-
-	tx := om.db.Create(&newOffice)
+	tx := om.db.Create(&inputOffice)
 	if tx.Error != nil {
 		log.Error("error on create table office")
 		return tx.Error
