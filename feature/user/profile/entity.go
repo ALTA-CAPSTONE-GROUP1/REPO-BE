@@ -1,10 +1,8 @@
 package profile
 
 import (
-	"time"
-
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type Core struct {
@@ -15,19 +13,17 @@ type Core struct {
 	Email       string
 	PhoneNumber string
 	Password    string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   gorm.DeletedAt
+	Position    admin.Position
+	Office      admin.Office
 }
-
 type Handler interface {
-	LoginHandler() echo.HandlerFunc
+	ProfileHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
-	LogInLogic(id string, password string) (Core, error)
+	ProfileLogic(id string) (Core, error)
 }
 
 type Repository interface {
-	Login(id string, password string) (Core, error)
+	Profile(id string) (Core, error)
 }
