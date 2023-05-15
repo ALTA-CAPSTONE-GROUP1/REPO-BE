@@ -18,12 +18,15 @@ type Core struct {
 }
 type Handler interface {
 	ProfileHandler() echo.HandlerFunc
+	UpdateUserHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	ProfileLogic(id string) (Core, error)
+	UpdateUser(id string, updateUser Core) error
 }
 
 type Repository interface {
 	Profile(id string) (Core, error)
+	UpdateUser(id string, input Core) error
 }
