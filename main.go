@@ -25,6 +25,10 @@ import (
 	officeRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office/repository"
 	officeLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office/usecase"
 
+	profileHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile/handler"
+	profileRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile/repository"
+	profileLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile/usecase"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -54,11 +58,16 @@ func main() {
 	officeSrv := officeLogic.New(officeMdl)
 	officeCtl := officeHandler.New(officeSrv)
 
+	profileMdl := profileRepo.New(db)
+	profileSrv := profileLogic.New(profileMdl)
+	profileCtl := profileHandler.New(profileSrv)
+
 	routes.SubTypeRoutes(e, subTypeCtl)
 	routes.PositionRoutes(e, pstCtl)
 	routes.AdminUserRoutes(e, uAdminCtl)
 	routes.AuthRoutes(e, authCtl)
 	routes.OfficeRoutes(e, officeCtl)
+	routes.ProfileRoutes(e, profileCtl)
 
 	if err := e.Start(":8080"); err != nil {
 		e.Logger.Fatal("cannot start server", err.Error())
