@@ -26,6 +26,7 @@ func TestAddSubTypeLogic(t *testing.T) {
 			},
 		},
 	}
+
 	t.Run("Succes Create Position", func(t *testing.T) {
 		mockRepo.On("InsertSubType", succesData).Return(nil).Once()
 
