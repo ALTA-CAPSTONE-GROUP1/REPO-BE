@@ -32,8 +32,10 @@ func (sm *submissionModel) FindRequirement(applicantID string, typeName string, 
 		log.Errorf("errpr on finding typeDetail with name %s %w ", typeName, err)
 		return submission.RequirementDB{}, err
 	}
-	
+
 	var requirementDB submission.RequirementDB
 	requirementDB.ApplicantName = applicant.Name
 	requirementDB.ApplicantID = applicant.ID
+
+	return submission.RequirementDB{}, nil
 }
