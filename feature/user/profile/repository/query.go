@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile"
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
@@ -16,6 +17,28 @@ func New(db *gorm.DB) profile.Repository {
 	return &userModel{
 		db: db,
 	}
+}
+
+// UpdateUser implements profile.Repository
+func (um *userModel) UpdateUser(id string, input profile.Core) error {
+	var updateUser user.Users
+
+	updateUser.Email = input.Email
+	updateUser.PhoneNumber = input.PhoneNumber
+	updateUser.Password = input.Password
+
+	// Update the user in the database
+	tx := um.db.Model(&user.Users{}).Where("id = ?", id).Updates(&updateUser)
+	if tx.RowsAffected < 1 {
+		log.Error("there is no column to change on update user")
+		return errors.New("no data affected")
+	}
+	if tx.Error != nil {
+		log.Error("error on update user")
+		return tx.Error
+	}
+
+	return nil
 }
 
 // Profile implements profile.Repository
