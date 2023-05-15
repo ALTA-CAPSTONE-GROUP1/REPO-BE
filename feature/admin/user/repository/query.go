@@ -127,26 +127,47 @@ func (um *usersModel) UpdateUser(id string, input user.Core) error {
 }
 
 // GetUserById implements user.Repository
-func (um *usersModel) GetUserById(id string) (user.Core, error) {
-	var res user.Core
-	if err := um.db.Where("id = ?", id).First(&res).Error; err != nil {
-		log.Error("error occurs in finding user profile", err.Error())
-		return user.Core{}, err
+func (ur *usersModel) GetUserById(id string) (user.Core, error) {
+	var user user.Core
+	err := ur.db.Table("users").
+		Joins("JOIN positions ON positions.id = users.position_id").
+		Joins("JOIN offices ON offices.id = users.office_id").
+		Select("users.id, users.office_id, users.position_id, users.name, users.email, users.phone_number, users.password, positions.name as position_name, offices.name as office_name").
+		Where("users.id = ?", id).
+		First(&user).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return user, errors.New("user not found")
+		}
+		log.Error("failed to find user:", err.Error())
+		return user, errors.New("failed to retrieve user")
 	}
 
-	return res, nil
+	return user, nil
 }
 
 // SelectAllUser implements user.Repository
-func (um *usersModel) SelectAllUser(limit int, offset int, name string) ([]user.Core, error) {
-	nameSearch := "%" + name + "%"
-	var res []user.Core
-	if err := um.db.Limit(limit).Offset(offset).Where("users.name LIKE ?", nameSearch).Select("users.id, users.email, users.phone_number, users.office_id, users.position_id").Find(&res).Error; err != nil {
-		log.Error("error occurs in finding all user", err.Error())
-		return nil, err
+func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core, error) {
+	var users []user.Core
+	query := ur.db.Table("users").
+		Joins("JOIN positions ON positions.id = users.position_id").
+		Joins("JOIN offices ON offices.id = users.office_id").
+		Select("users.id, users.office_id, users.position_id, users.name, users.email, users.phone_number, users.password, positions.name as position_name, offices.name as office_name").
+		Limit(limit).
+		Offset(offset)
+
+	if name != "" {
+		query = query.Where("users.name LIKE ?", "%"+name+"%")
 	}
 
-	return res, nil
+	err := query.Find(&users).Error
+	if err != nil {
+		log.Error("failed to find all users:", err.Error())
+		return nil, errors.New("failed to retrieve users")
+	}
+
+	return users, nil
 }
 
 // InsertUser implements user.Repository
