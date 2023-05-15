@@ -12,6 +12,7 @@ import (
 	authHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth/handler"
 	authRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth/repository"
 	authLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth/usecase"
+
 	stHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype/handler"
 	stRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype/repository"
 	stLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype/usecase"
@@ -29,16 +30,7 @@ func main() {
 	db := database.InitDBMySql(*cfg)
 	database.Migrate(db)
 
-	uAdminMdl := uAdminRepo.New(db)
-	uAdminSrv := uAdminLogic.New(uAdminMdl)
-	uAdminCtl := uAdminHandler.New(uAdminSrv)
-
-	authMdl := authRepo.New(db)
-	authSrv := authLogic.New(authMdl)
-	authCtl := authHandler.New(authSrv)
-
-	routes.AdminUserRoutes(e, uAdminCtl)
-	routes.AuthRoutes(e, authCtl)
+	
 	subtypeMdl := stRepo.New(db)
 	subtypeSrv := stLogic.New(subtypeMdl)
 	subTypeCtl := stHandler.New(subtypeSrv)
@@ -47,8 +39,18 @@ func main() {
 	pstSrv := pstLogic.New(pstMdl)
 	pstCtl := pstHandler.New(pstSrv)
 
+	uAdminMdl := uAdminRepo.New(db)
+	uAdminSrv := uAdminLogic.New(uAdminMdl)
+	uAdminCtl := uAdminHandler.New(uAdminSrv)
+
+	authMdl := authRepo.New(db)
+	authSrv := authLogic.New(authMdl)
+	authCtl := authHandler.New(authSrv)
+	
 	routes.SubTypeRoutes(e, subTypeCtl)
 	routes.PositionRoutes(e, pstCtl)
+	routes.AdminUserRoutes(e, uAdminCtl)
+	routes.AuthRoutes(e, authCtl)
 
 	if err := e.Start(":8080"); err != nil {
 		e.Logger.Fatal("cannot start server", err.Error())
