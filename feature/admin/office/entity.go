@@ -2,12 +2,14 @@ package office
 
 import (
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type Core struct {
-	Name      string
-	DeletedAt gorm.DeletedAt
+	ID       uint
+	Name     string
+	Level    string
+	ParentID uint
+	Parent   *Core
 }
 
 type Handler interface {
