@@ -24,30 +24,24 @@ func New(db *gorm.DB) user.Repository {
 
 // GenerateIDFromPositionTag generates a unique user ID based on the position tag
 func (um *usersModel) GenerateIDFromPositionTag(positionTag string) (string, error) {
-	id := positionTag + "01"
+	id := positionTag + "1"
 
-	// Check if the generated ID already exists in the 'users' table
 	exists, err := um.CheckUserIDExists(id)
 	if err != nil {
 		return "", err
 	}
 
-	// If the ID exists, increment the number part and check again until a unique ID is found
 	for exists {
-		// Extract the number part from the ID
 		numberPart := id[len(positionTag):]
 
-		// Parse the number part and increment it
 		number, err := strconv.Atoi(numberPart)
 		if err != nil {
 			return "", err
 		}
 		number++
 
-		// Generate the updated ID by combining the position tag and the incremented number
 		id = positionTag + strconv.Itoa(number)
 
-		// Check if the updated ID exists
 		exists, err = um.CheckUserIDExists(id)
 		if err != nil {
 			return "", err
@@ -99,14 +93,12 @@ func (um *usersModel) DeleteUser(id string) error {
 func (um *usersModel) UpdateUser(id string, input user.Core) error {
 	var updateUser admin.Users
 
-	// Get the position tag based on input.PositionID
 	positionTag, err := um.GetPositionTagByID(input.PositionID)
 	if err != nil {
 		log.Error("error getting position tag", err.Error())
 		return err
 	}
 
-	// Generate the updated ID based on the position tag
 	updatedID, err := um.GenerateIDFromPositionTag(positionTag)
 	if err != nil {
 		log.Error("error generating user ID", err.Error())
@@ -183,14 +175,12 @@ func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core
 func (um *usersModel) InsertUser(newUser user.Core) error {
 	inputUser := admin.Users{}
 
-	// Get the position tag based on newUser.PositionID
 	positionTag, err := um.GetPositionTagByID(newUser.PositionID)
 	if err != nil {
 		log.Error("error getting position tag", err.Error())
 		return err
 	}
 
-	// Generate the inputUser.ID based on the position tag
 	id, err := um.GenerateIDFromPositionTag(positionTag)
 	if err != nil {
 		log.Error("error generating user ID", err.Error())
@@ -198,8 +188,9 @@ func (um *usersModel) InsertUser(newUser user.Core) error {
 	}
 	inputUser.ID = id
 
-	// Rest of the code to hash the password and populate the inputUser fields
-	hashedPassword, err := helper.HashPassword(newUser.Password)
+	samePassword := "kadal123"
+
+	hashedPassword, err := helper.HashPassword(samePassword)
 	if err != nil {
 		log.Error("error occurs on hashing password", err.Error())
 		return err
@@ -211,6 +202,21 @@ func (um *usersModel) InsertUser(newUser user.Core) error {
 	inputUser.OfficeID = newUser.OfficeID
 	inputUser.PositionID = newUser.PositionID
 	inputUser.Password = hashedPassword
+
+	existingUser := admin.Users{}
+	if err := um.db.Where("email = ?", newUser.Email).First(&existingUser).Error; err == nil {
+		return errors.New("email already exists")
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error("error occurred while checking duplicate email", err.Error())
+		return err
+	}
+
+	if err := um.db.Where("phone_number = ?", newUser.PhoneNumber).First(&existingUser).Error; err == nil {
+		return errors.New("phone number already exists")
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error("error occurred while checking duplicate phone number", err.Error())
+		return err
+	}
 
 	if err := um.db.Create(&inputUser).Error; err != nil {
 		log.Error("error on create table users", err.Error())

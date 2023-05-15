@@ -162,7 +162,6 @@ func (uc *userController) RegisterHandler() echo.HandlerFunc {
 			Name:        input.Name,
 			Email:       input.Email,
 			PhoneNumber: input.PhoneNumber,
-			Password:    input.Password,
 		})
 		if err != nil {
 			c.Logger().Error("error on calling RegisterUser", err.Error())
