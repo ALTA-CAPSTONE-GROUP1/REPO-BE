@@ -31,14 +31,14 @@ type Office struct {
 type Position struct {
 	ID        int            `gorm:"primaryKey"`
 	Name      string         `gorm:"size:50;not null"`
-	Tag       string         `gorm:"size:50;not null;unique"`
+	Tag       string         `gorm:"size:50;not null"`
 	Types     []Type         `gorm:"many2many:position_has_type;constraint:OnDelete:CASCADE;"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type Type struct {
 	ID          int            `gorm:"primaryKey;autoIncrement"`
-	Name        string         `gorm:"size:50;not null;unique"`
+	Name        string         `gorm:"size:50;not null"`
 	Requirement string         `gorm:"size:255;not null"`
 	Positions   []Position     `gorm:"many2many:position_has_type;constraint:OnDelete:CASCADE;"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
@@ -46,9 +46,9 @@ type Type struct {
 }
 
 type PositionHasType struct {
-	ID         int `gorm:"primaryKey;autoIncrement"`
-	PositionID int
-	TypeID     int
+	ID         int    `gorm:"primaryKey;autoIncrement"`
+	PositionID int    
+	TypeID     int    
 	As         string `gorm:"size:10;not null"`
 	ToLevel    int
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`
