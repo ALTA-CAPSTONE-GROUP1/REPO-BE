@@ -8,8 +8,8 @@ import (
 
 type Users struct {
 	ID          string `gorm:"primaryKey;size:50"`
-	OfficeID    int    `gorm:"foreignKey:OfficeID"`
-	PositionID  int    `gorm:"foreignKey:PositionID"`
+	OfficeID    int
+	PositionID  int
 	Name        string `gorm:"size:50;not null"`
 	Email       string `gorm:"size:50"`
 	PhoneNumber string `gorm:"size:50"`
@@ -22,10 +22,8 @@ type Users struct {
 }
 
 type Office struct {
-	ID       uint
-	Name     string
-	Level    string
-	ParentID uint
+	ID   uint
+	Name string
 }
 
 type Position struct {
@@ -38,7 +36,7 @@ type Position struct {
 
 type Type struct {
 	ID          int            `gorm:"primaryKey;autoIncrement"`
-	Name        string         `gorm:"size:50;not null"`
+	Name        string         `gorm:"size:50;not null;unique"`
 	Requirement string         `gorm:"size:255;not null"`
 	Positions   []Position     `gorm:"many2many:position_has_type;constraint:OnDelete:CASCADE;"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
@@ -46,9 +44,9 @@ type Type struct {
 }
 
 type PositionHasType struct {
-	ID         int    `gorm:"primaryKey;autoIncrement"`
-	PositionID int    
-	TypeID     int    
+	ID         int `gorm:"primaryKey;autoIncrement"`
+	PositionID int
+	TypeID     int
 	As         string `gorm:"size:10;not null"`
 	ToLevel    int
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`

@@ -57,9 +57,7 @@ func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]off
 // InsertOffice implements office.Repository
 func (om *officeModel) InsertOffice(newOffice office.Core) error {
 	inputOffice := admin.Office{
-		Name:     newOffice.Name,
-		Level:    newOffice.Level,
-		ParentID: newOffice.ParentID,
+		Name: newOffice.Name,
 	}
 
 	tx := om.db.Create(&inputOffice)
