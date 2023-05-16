@@ -7,6 +7,8 @@ type UserResponse struct {
 	Name        string `json:"name"`
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
+	Position    string `json:"position"`
+	Office      string `json:"office"`
 }
 
 func CoreToUserResponse(data profile.Core) UserResponse {
@@ -15,5 +17,7 @@ func CoreToUserResponse(data profile.Core) UserResponse {
 		Name:        data.Name,
 		Email:       data.Email,
 		PhoneNumber: data.PhoneNumber,
+		Position:    data.Position.Name,
+		Office:      data.Office.Name,
 	}
 }
