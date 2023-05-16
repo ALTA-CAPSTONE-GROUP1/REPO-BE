@@ -1,10 +1,16 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
+	"mime/multipart"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
+	"github.com/labstack/gommon/log"
 )
 
 type submissionLogic struct {
@@ -30,4 +36,33 @@ func (sr *submissionLogic) FindRequirementLogic(userID string, typeName string, 
 	}
 
 	return result, nil
+}
+
+func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCore, subFile *multipart.FileHeader) error {
+	if subFile != nil {
+		subFile, err := subFile.Open()
+		if err != nil {
+			log.Errorf("error in open subfile file")
+			uploadUrl, err := helper.UploadFile(&subFile, "/submissionfiles")
+			if err != nil {
+				log.Errorf("error fron third party upload file %w", err)
+				return err
+			}
+			newSub.AttachmentLink = uploadUrl[0]
+			newSub.Attachment = newSub.OwnerID + strconv.FormatInt(time.Now().Unix(), 10)
+		}
+	}
+
+	if err := sr.sl.InsertSubmission(newSub); err != nil {
+		log.Errorf("error on insert submission %w", err)
+		if strings.Contains(err.Error(), "record not found") {
+			return errors.New("record not found")
+		}
+		if strings.Contains(err.Error(), "syntax") {
+			return errors.New("syntax error")
+		}
+		return errors.New("unexpected error on inserting data")
+	}
+
+	return nil
 }

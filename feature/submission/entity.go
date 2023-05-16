@@ -13,7 +13,7 @@ type Handler interface {
 
 type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
-	AddSubmissioLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
+	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
 }
 
 type Repository interface {
@@ -28,10 +28,11 @@ type AddSubmissionCore struct {
 	SubmissionType    string
 	SubmissiontTypeID int
 	Status            string
-	SubmissionValue   string
+	SubmissionValue   int
 	Title             string
 	Message           string
 	Attachment        string
+	AttachmentLink    string
 }
 
 type Core struct {
