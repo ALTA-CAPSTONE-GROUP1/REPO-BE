@@ -3,10 +3,12 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 type submissionController struct {
@@ -24,9 +26,9 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 		var response RequirementResponseBody
 
 		userID := helper.DecodeToken(c)
-		if userID != "admin" {
-			c.Logger().Error("user are not admin try to acces delete office")
-			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		if userID != "" {
+			c.Logger().Error("")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
 
 		typeName := c.QueryParam("submission_type")
@@ -37,11 +39,10 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "value are cannot processed now", nil))
 		}
 		result, err := sc.sc.FindRequirementLogic(userID, typeName, valueInt)
-		if err != nil{
-			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError,"server errror", nil))
+		if err != nil {
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server errror", nil))
 		}
 
-		
 		response.To = make([]ToApprover, len(result.To))
 		response.CC = make([]CcApprover, len(result.CC))
 
@@ -64,5 +65,74 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 		response.Requirement = result.Requirement
 
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get requirement data", response))
+	}
+}
+
+func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var newSub submission.AddSubmissionCore
+		userID := helper.DecodeToken(c)
+		if userID != "" {
+			c.Logger().Error("")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
+
+		req := new(AddAddSubReq)
+		if err := c.Bind(&req); err != nil {
+			log.Errorf("error on finding binding submission")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"bad request",
+				nil))
+		}
+
+		attachment, err := c.FormFile("attachment")
+		if err != nil {
+			log.Error("error occurs on read attachment")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"bad request",
+				nil,
+			))
+		}
+
+		req.Attachment = attachment
+		newSub.Message = req.Message
+		newSub.SubmissionType = req.SubmissionType
+		newSub.SubmissionValue = req.SubmissionValue
+		newSub.OwnerID = userID
+		newSub.Title = req.Title
+
+		for _, v := range req.CC {
+			tmp := submission.CcApprover{
+				CcId: v,
+			}
+			newSub.CC = append(newSub.CC, tmp)
+		}
+
+		for _, v := range req.To {
+			tmp := submission.ToApprover{
+				ApproverId: v,
+			}
+			newSub.ToApprover = append(newSub.ToApprover, tmp)
+		}
+
+		if err := sc.sc.AddSubmissionLogic(newSub, req.Attachment); err != nil {
+			log.Error("error on calling addsubmissionlogic")
+			if strings.Contains(err.Error(), "record not found ") {
+				return c.JSON(helper.ResponseFormat(
+					http.StatusNotFound,
+					"data not found",
+					nil,
+				))
+			}
+			if strings.Contains(err.Error(), "syntax") {
+				return c.JSON(
+					helper.ResponseFormat(http.StatusInternalServerError,
+						"internal server error",
+						nil))
+			}
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusCreated, "succes to create submission", nil))
 	}
 }

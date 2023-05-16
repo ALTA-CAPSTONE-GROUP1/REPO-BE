@@ -1,17 +1,38 @@
 package submission
 
-import "github.com/labstack/echo/v4"
+import (
+	"mime/multipart"
+
+	"github.com/labstack/echo/v4"
+)
 
 type Handler interface {
 	FindRequirementHandler() echo.HandlerFunc
+	AddSubmissionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
+	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
 }
 
 type Repository interface {
 	FindRequirement(userID string, typeName string, value int) (Core, error)
+	InsertSubmission(newSub AddSubmissionCore) error
+}
+
+type AddSubmissionCore struct {
+	OwnerID           string
+	ToApprover        []ToApprover
+	CC                []CcApprover
+	SubmissionType    string
+	SubmissiontTypeID int
+	Status            string
+	SubmissionValue   int
+	Title             string
+	Message           string
+	Attachment        string
+	AttachmentLink    string
 }
 
 type Core struct {

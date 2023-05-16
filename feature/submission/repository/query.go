@@ -86,3 +86,42 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 
 	return result, nil
 }
+
+func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore) error {
+	var submissionDB Submission
+
+	var SubmissionTypeQuery admin.Type
+
+	if err := sm.db.Where("name = ?", newSub.SubmissionType).First(&SubmissionTypeQuery).Error; err != nil {
+		log.Error("cannot find submissiontype by name")
+		return err
+	}
+
+	submissionDB.UserID = newSub.OwnerID
+	submissionDB.Title = newSub.Title
+	submissionDB.TypeID = SubmissionTypeQuery.ID
+	submissionDB.Is_Opened = false
+	submissionDB.UserID = newSub.OwnerID
+	submissionDB.Status = "Sent"
+
+	for _, v := range newSub.ToApprover {
+		tmp := To{
+			Name:   v.ApproverName,
+			UserID: v.ApproverId,
+		}
+		submissionDB.Tos = append(submissionDB.Tos, tmp)
+	}
+
+	file := File{
+		Name: newSub.Attachment,
+		Link: newSub.AttachmentLink,
+	}
+	submissionDB.Files = append(submissionDB.Files, file)
+
+	if err := sm.db.Create(&submissionDB).Error; err != nil {
+		log.Error("error occurs while insert submission datas")
+		return err
+	}
+
+	return nil
+}
