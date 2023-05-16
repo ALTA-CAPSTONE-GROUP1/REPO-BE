@@ -24,9 +24,9 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 		var response RequirementResponseBody
 
 		userID := helper.DecodeToken(c)
-		if userID != "admin" {
-			c.Logger().Error("user are not admin try to acces delete office")
-			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
+		if userID != "" {
+			c.Logger().Error("")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
 
 		typeName := c.QueryParam("submission_type")
@@ -37,11 +37,10 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "value are cannot processed now", nil))
 		}
 		result, err := sc.sc.FindRequirementLogic(userID, typeName, valueInt)
-		if err != nil{
-			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError,"server errror", nil))
+		if err != nil {
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server errror", nil))
 		}
 
-		
 		response.To = make([]ToApprover, len(result.To))
 		response.CC = make([]CcApprover, len(result.CC))
 
@@ -64,5 +63,16 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 		response.Requirement = result.Requirement
 
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get requirement data", response))
+	}
+}
+
+func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		userID := helper.DecodeToken(c)
+		if userID != "" {
+			c.Logger().Error("")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
 	}
 }

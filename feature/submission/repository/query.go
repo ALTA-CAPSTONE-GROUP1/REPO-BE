@@ -87,7 +87,18 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 	return result, nil
 }
 
-func (sm *submissionModel) InsertSubmission(submission.AddSubmissionCore) error {
-	
+func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore) error {
+	var submissionDB Submission
 
+	for _, v := range  newSub.ToApprover{
+		tmp := To{
+			ID: v.ApproverId,
+			Name: v.ApproverName,
+			
+		}
+		
+	}
+
+
+	err := sm.db.
 }

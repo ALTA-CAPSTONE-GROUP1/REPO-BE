@@ -8,16 +8,17 @@ import (
 
 type Handler interface {
 	FindRequirementHandler() echo.HandlerFunc
+	AddSubmissionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
-	AddSubmission(AddSubmissionCore, *multipart.FileHeader) error
+	AddSubmissioLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
 }
 
 type Repository interface {
 	FindRequirement(userID string, typeName string, value int) (Core, error)
-	InsertSubmission(AddSubmissionCore) error
+	InsertSubmission(newSub AddSubmissionCore) error
 }
 
 type AddSubmissionCore struct {
