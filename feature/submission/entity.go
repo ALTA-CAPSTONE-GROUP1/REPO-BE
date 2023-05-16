@@ -23,6 +23,7 @@ type Repository interface {
 	FindRequirement(userID string, typeName string, value int) (Core, error)
 	InsertSubmission(newSub AddSubmissionCore) error
 	SelectAllSubmissions(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []admin.Type, error)
+	SelectSubmissionByID(submissionID int) (GetSubmmisionByIDCore, error)
 }
 
 type AllSubmiisionCore struct {
@@ -45,19 +46,20 @@ type GetAllQueryParams struct {
 }
 
 type GetSubmmisionByIDCore struct {
-	To              ToApprover
-	CC              CcApprover
+	To              []ToApprover
+	CC              []CcApprover
 	SubmissionType  string
-	SubmissionValue string
 	ApproverActions []ApproverActions
 	ActionMessage   string
 	Attachment      string
+	Message         string
 }
 
 type ApproverActions struct {
 	Action           string
 	ApproverName     string
 	ApproverPosition string
+	Message          string
 }
 
 type AddSubmissionCore struct {
