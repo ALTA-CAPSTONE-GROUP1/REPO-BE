@@ -73,7 +73,7 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 		var newSub submission.AddSubmissionCore
 		userID := helper.DecodeToken(c)
 		if userID != "" {
-			c.Logger().Error("")
+			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
 
@@ -134,5 +134,45 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 		}
 
 		return c.JSON(helper.ResponseFormat(http.StatusCreated, "succes to create submission", nil))
+	}
+}
+
+func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "" {
+			c.Logger().Error("invalid or expired jwt")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
+
+		var params submission.GetAllQueryParams
+
+		limit, err := strconv.Atoi(c.QueryParam("limit"))
+		if err != nil {
+			c.Logger().Error("cannot convert limit to int")
+			c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"limit must be string",
+				nil))
+		}
+		offset, err := strconv.Atoi(c.QueryParam("offset"))
+		if err != nil {
+			c.Logger().Error("cannot convert offset to int")
+			c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"offset must be string",
+				nil))
+		}
+		params.Title = c.QueryParam("title")
+		params.To = c.QueryParam("to")
+		params.Limit = limit
+		params.Offset = offset
+
+		submissionDatas, subTypeDatas, err := sc.sc.GetAllSubmissionLogic(userID, params)
+		if err != nil{
+			if strings.Contains(err.Error(), "record"){
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "record not found", nil))
+			}
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server error", nil))
+		}
+		
 	}
 }

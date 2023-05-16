@@ -10,11 +10,13 @@ import (
 type Handler interface {
 	FindRequirementHandler() echo.HandlerFunc
 	AddSubmissionHandler() echo.HandlerFunc
+	GetAllSubmissionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
 	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
+	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []admin.Type, error)
 }
 
 type Repository interface {

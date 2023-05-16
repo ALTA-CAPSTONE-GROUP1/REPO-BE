@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
@@ -65,4 +66,20 @@ func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCor
 	}
 
 	return nil
+}
+
+func (sr *submissionLogic) GetAllSubmissionLogic(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []admin.Type, error) {
+	allsubmission, typelist, err := sr.sl.SelectAllSubmissions(userID, pr)
+	if err != nil {
+		log.Errorf("error on get all submission data", err)
+		if strings.Contains(err.Error(), "record not found") {
+			return []submission.AllSubmiisionCore{}, []admin.Type{}, errors.New("record not found")
+		}
+		if strings.Contains(err.Error(), "syntax") {
+			return []submission.AllSubmiisionCore{}, []admin.Type{}, errors.New("syntax error")
+		}
+		return []submission.AllSubmiisionCore{}, []admin.Type{}, errors.New("unexpected error on inserting data")
+	}
+
+	return allsubmission, typelist, nil
 }
