@@ -29,29 +29,33 @@ func (oc *officeController) DeleteOfficeHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 
-		officePath, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.Logger().Error("cannot use path param", err.Error())
-			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		officeIDStr := c.QueryParam("id")
+		if officeIDStr == "" {
+			c.Logger().Error("office ID is missing")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "office ID is missing", nil))
 		}
 
-		if err = oc.service.DeleteOfficeLogic(uint(officePath)); err != nil {
-			c.Logger().Error("error in calling DeletOfficeLogic")
-			if strings.Contains(err.Error(), "office not found") {
-				c.Logger().Error("error in calling DeletOfficeLogic, office not found")
-				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "office not found", nil))
+		officeID, err := strconv.Atoi(officeIDStr)
+		if err != nil {
+			c.Logger().Error("invalid office ID format")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid office ID format", nil))
+		}
 
+		if err = oc.service.DeleteOfficeLogic(uint(officeID)); err != nil {
+			c.Logger().Error("error in calling DeleteOfficeLogic")
+			if strings.Contains(err.Error(), "office not found") {
+				c.Logger().Error("error in calling DeleteOfficeLogic, office not found")
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "office not found", nil))
 			} else if strings.Contains(err.Error(), "cannot delete") {
-				c.Logger().Error("error in calling DeletOfficeLogic, cannot delete")
+				c.Logger().Error("error in calling DeleteOfficeLogic, cannot delete")
 				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error in delete office", nil))
 			}
 
-			c.Logger().Error("error in calling DeletOfficeLogic, cannot delete")
+			c.Logger().Error("error in calling DeleteOfficeLogic, cannot delete")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error in delete office", nil))
-
 		}
 
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to delete office", nil))
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "successfully deleted office", nil))
 	}
 }
 
@@ -119,9 +123,7 @@ func (oc *officeController) AddOfficeHandler() echo.HandlerFunc {
 		}
 
 		newOffice := office.Core{
-			Name:     req.Name,
-			Level:    req.Level,
-			ParentID: req.ParentID,
+			Name: req.Name,
 		}
 
 		if err := oc.service.AddOfficeLogic(newOffice); err != nil {
