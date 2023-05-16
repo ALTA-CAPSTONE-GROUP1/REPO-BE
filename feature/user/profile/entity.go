@@ -1,7 +1,8 @@
 package profile
 
 import (
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
+	office "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
+	position "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/labstack/echo/v4"
 )
 
@@ -13,8 +14,8 @@ type Core struct {
 	Email       string
 	PhoneNumber string
 	Password    string
-	Position    admin.Position
-	Office      admin.Office
+	Position    position.Core
+	Office      office.Core
 }
 type Handler interface {
 	ProfileHandler() echo.HandlerFunc
