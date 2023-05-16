@@ -44,8 +44,8 @@ func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string)
 	return positions, nil
 }
 
-func (pl *positionLogic) DeletePositionLogic(position string, tag string) error {
-	if err := pl.pl.DeletePosition(position, tag); err != nil {
+func (pl *positionLogic) DeletePositionLogic(position int) error {
+	if err := pl.pl.DeletePosition(position); err != nil {
 		if strings.Contains(err.Error(), "count query error") {
 			log.Error("errors occurs when countin the datas for delete")
 			return fmt.Errorf("count position query error %w", err)

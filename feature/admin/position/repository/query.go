@@ -51,6 +51,7 @@ func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]p
 
 		for _, dbPos := range DBpositions {
 			corePos := position.Core{
+				ID:   dbPos.ID,
 				Name: dbPos.Name,
 				Tag:  dbPos.Tag,
 			}
@@ -68,6 +69,7 @@ func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]p
 
 	for _, dbPos := range DBpositions {
 		corePos := position.Core{
+			ID:   dbPos.ID,
 			Name: dbPos.Name,
 			Tag:  dbPos.Tag,
 		}
@@ -77,20 +79,9 @@ func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]p
 	return positions, nil
 }
 
-func (pm *positionModel) DeletePosition(position string, tag string) error {
-	var count int64
-	tx := pm.db.Model(&admin.Position{}).Where(&admin.Position{Name: position, Tag: tag}).Count(&count)
-	if tx.Error != nil {
-		log.Error("count position query error")
-		return fmt.Errorf("count position query error: %w", tx.Error)
-	}
+func (pm *positionModel) DeletePosition(position int) error {
 
-	if count == 0 {
-		log.Warn("no position data found for deletion")
-		return fmt.Errorf("no position data found for deletion with name %s and tag %s", position, tag)
-	}
-
-	tx = pm.db.Delete(&admin.Position{Name: position, Tag: tag})
+	tx := pm.db.Where("id = ?", position).Delete(&admin.Position{})
 	if tx.Error != nil {
 		log.Error("delete position query error")
 		return fmt.Errorf("delete position query error: %w", tx.Error)
