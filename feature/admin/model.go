@@ -26,7 +26,6 @@ type Office struct {
 	Name     string
 	Level    string
 	ParentID uint
-	Parent   *Office
 }
 
 type Position struct {
