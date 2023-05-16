@@ -86,3 +86,8 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 
 	return result, nil
 }
+
+func (sm *submissionModel) InsertSubmission(submission.AddSubmissionCore) error {
+	
+
+}
