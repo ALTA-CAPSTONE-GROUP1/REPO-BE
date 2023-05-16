@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"strings"
+	"time"
+
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission"
 	"github.com/labstack/gommon/log"
@@ -124,4 +127,115 @@ func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore)
 	}
 
 	return nil
+}
+
+func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []admin.Type, error) {
+	var (
+		dbsubmissions       []Submission
+		resultAllSubmission []submission.AllSubmiisionCore
+		subTypes            []admin.Type
+		user                admin.Users
+	)
+
+	if pr.Limit < 1 {
+		pr.Limit = 10
+	}
+	if pr.Offset < 0 {
+		pr.Offset = 0
+	}
+
+	if err := sm.db.Where("id = ?", userID).Preload("Position.Types").Find(&user).Error; err != nil {
+		log.Errorf("error on finding subTypes have by user", err)
+		return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+	}
+
+	subTypes = append(subTypes, user.Position.Types...)
+
+	if err := sm.db.Where("user_id = ?", userID).Find(&dbsubmissions).Error; err != nil {
+		log.Errorf("error on finding submissions for user %s: %v", userID, err)
+		return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+	}
+
+	for _, sub := range dbsubmissions {
+		var toApprover []submission.ToApprover
+		for _, to := range sub.Tos {
+			var toDetails admin.Users
+			if err := sm.db.Where("id = ?", to.UserID).Preload("Positions").Find(&toDetails).Error; err != nil {
+				log.Error("failed on finding positions of tos")
+			}
+			toApprover = append(toApprover, submission.ToApprover{
+				ApproverId:       to.UserID,
+				ApproverName:     to.Name,
+				ApproverPosition: toDetails.Position.Name,
+			})
+		}
+		var ccApprover []submission.CcApprover
+		for _, cc := range sub.Ccs {
+			var ccDetails admin.Users
+			if err := sm.db.Where("id = ?", cc.UserID).Preload("Positions").Find(&ccDetails).Error; err != nil {
+				log.Error("failed on finding positions of tos")
+			}
+			ccApprover = append(ccApprover, submission.CcApprover{
+				CcPosition: ccDetails.Position.Name,
+				CcName:     cc.Name,
+				CcId:       cc.UserID,
+			})
+		}
+
+		var attachment File
+		if err := sm.db.Where("submission_id = ?", sub.ID).First(&attachment).Error; err != nil {
+			log.Errorf("error getting files for submission %d: %v", sub.ID, err)
+			return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+		}
+
+		var subTypeByID admin.Type
+		if err := sm.db.Where("id = ?", sub.TypeID).First(&subTypeByID).Error; err != nil {
+			log.Errorf("error getting files for subType %d: %v", sub.TypeID, err)
+			return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+		}
+
+		resultAllSubmission = append(resultAllSubmission, submission.AllSubmiisionCore{
+			ID:             sub.ID,
+			Tos:            toApprover,
+			CCs:            ccApprover,
+			Title:          sub.Title,
+			Status:         sub.Status,
+			ReceiveDate:    sub.CreatedAt.Format(time.RFC3339),
+			Opened:         sub.Is_Opened,
+			Attachment:     attachment.Link,
+			SubmissionType: subTypeByID.Name,
+		})
+	}
+	if pr.To != "" {
+		var filteredByTo []submission.AllSubmiisionCore
+		for _, data := range resultAllSubmission {
+			for _, v := range data.Tos {
+				if strings.Contains(strings.ToLower(v.ApproverName), strings.ToLower(pr.To)) ||
+					strings.Contains(strings.ToLower(v.ApproverId), strings.ToLower(pr.To)) ||
+					strings.Contains(strings.ToLower(v.ApproverPosition), strings.ToLower(pr.To)) {
+					filteredByTo = append(filteredByTo, data)
+				}
+			}
+			resultAllSubmission = filteredByTo
+		}
+	}
+
+	if pr.Title != "" {
+		var filteredByTitle []submission.AllSubmiisionCore
+		for _, data := range resultAllSubmission {
+			if strings.Contains(strings.ToLower(data.Title), strings.ToLower(pr.Title)) {
+				filteredByTitle = append(filteredByTitle, data)
+			}
+		}
+		resultAllSubmission = filteredByTitle
+	}
+
+	end := pr.Limit + pr.Limit
+	if end > len(resultAllSubmission) {
+		end = len(resultAllSubmission)
+	}
+
+	resultAllSubmission = resultAllSubmission[pr.Offset:end]
+
+	return resultAllSubmission, subTypes, nil
 }

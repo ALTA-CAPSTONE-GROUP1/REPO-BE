@@ -73,7 +73,7 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 		var newSub submission.AddSubmissionCore
 		userID := helper.DecodeToken(c)
 		if userID != "" {
-			c.Logger().Error("")
+			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
 
@@ -134,5 +134,94 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 		}
 
 		return c.JSON(helper.ResponseFormat(http.StatusCreated, "succes to create submission", nil))
+	}
+}
+
+func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID != "" {
+			c.Logger().Error("invalid or expired jwt")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
+
+		var params submission.GetAllQueryParams
+
+		limit, err := strconv.Atoi(c.QueryParam("limit"))
+		if err != nil {
+			c.Logger().Error("cannot convert limit to int")
+			c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"limit must be string",
+				nil))
+		}
+		offset, err := strconv.Atoi(c.QueryParam("offset"))
+		if err != nil {
+			c.Logger().Error("cannot convert offset to int")
+			c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"offset must be string",
+				nil))
+		}
+		params.Title = c.QueryParam("title")
+		params.To = c.QueryParam("to")
+		params.Limit = limit
+		params.Offset = offset
+
+		submissionDatas, subTypeDatas, err := sc.sc.GetAllSubmissionLogic(userID, params)
+		if err != nil {
+			if strings.Contains(err.Error(), "record") {
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "record not found", nil))
+			}
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server error", nil))
+		}
+
+		var submissions []Submission
+		for _, submissionData := range submissionDatas {
+			var toApprovers []Approver
+			for _, to := range submissionData.Tos {
+				toApprovers = append(toApprovers, Approver{
+					ApproverPosition: to.ApproverPosition,
+					ApproverName:     to.ApproverName,
+				})
+			}
+			var ccApprovers []CC
+			for _, cc := range submissionData.CCs {
+				ccApprovers = append(ccApprovers, CC{
+					CCPosition: cc.CcPosition,
+					CCName:     cc.CcName,
+				})
+			}
+
+			submissions = append(submissions, Submission{
+				ID:             submissionData.ID,
+				To:             toApprovers,
+				CC:             ccApprovers,
+				Title:          submissionData.Title,
+				Status:         submissionData.Status,
+				Attachment:     submissionData.Attachment,
+				ReceiveDate:    submissionData.ReceiveDate,
+				Opened:         submissionData.Opened,
+				SubmissionType: submissionData.SubmissionType,
+			})
+		}
+
+		var submissionTypeChoices []SubmissionTypeChoice
+		for _, subTypeData := range subTypeDatas {
+			var values []int
+			for _, pos := range subTypeData.Positions {
+				values = append(values, pos.ID)
+			}
+
+			submissionTypeChoices = append(submissionTypeChoices, SubmissionTypeChoice{
+				Name:   subTypeData.Name,
+				Values: values,
+			})
+		}
+
+		response := SubmissionResponse{
+			Submissions:           submissions,
+			SubmissionTypeChoices: submissionTypeChoices,
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submissions data", response))
 	}
 }
