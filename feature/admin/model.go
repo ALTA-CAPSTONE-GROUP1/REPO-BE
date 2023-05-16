@@ -22,8 +22,8 @@ type Users struct {
 }
 
 type Office struct {
-	ID   uint
-	Name string
+	ID   uint   `gorm:"primaryKey"`
+	Name string `gorm:"size:50;not null"`
 }
 
 type Position struct {

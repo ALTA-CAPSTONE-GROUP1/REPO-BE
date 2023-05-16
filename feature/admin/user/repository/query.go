@@ -10,6 +10,10 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
+
+	// office "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
+	// position "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
+
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
 )
@@ -134,6 +138,8 @@ func (ur *usersModel) GetUserById(id string) (user.Core, error) {
 	// var user user.Core
 	var dbuser admin.Users
 	err := ur.db.Table("users").
+		Preload("Position").
+		Preload("Office").
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Joins("JOIN offices ON offices.id = users.office_id").
 		Select("users.id, users.office_id, users.position_id, users.name, users.email, users.phone_number, users.password, positions.name as position_name, offices.name as office_name").
@@ -156,8 +162,8 @@ func (ur *usersModel) GetUserById(id string) (user.Core, error) {
 		Email:       dbuser.Email,
 		PhoneNumber: dbuser.PhoneNumber,
 		Password:    dbuser.Password,
-		Position:    position.Core{},
-		Office:      office.Core{},
+		Position:    position.Core{Name: dbuser.Position.Name},
+		Office:      office.Core{Name: dbuser.Office.Name},
 	}, nil
 
 }
@@ -165,8 +171,10 @@ func (ur *usersModel) GetUserById(id string) (user.Core, error) {
 // SelectAllUser implements user.Repository
 func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core, error) {
 	var users []user.Core
-	var dbuser []admin.Users
+	var dbusers []admin.Users
 	query := ur.db.Table("users").
+		Preload("Position").
+		Preload("Office").
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Joins("JOIN offices ON offices.id = users.office_id").
 		Select("users.id, users.office_id, users.position_id, users.name, users.email, users.phone_number, users.password, positions.name as position_name, offices.name as office_name").
@@ -174,25 +182,37 @@ func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core
 		Offset(offset)
 
 	if name != "" {
-		query = query.Where("users.name LIKE ?", "%"+name+"%")
+		nameSearch := "%" + name + "%"
+		query = query.Where("users.name LIKE ? OR users.email LIKE ? OR users.phone_number LIKE ? OR positions.name LIKE ? OR offices.name LIKE ?", nameSearch, nameSearch, nameSearch, nameSearch, nameSearch)
 	}
 
-	err := query.Find(&dbuser).Error
+	err := query.Find(&dbusers).Error
 	if err != nil {
 		log.Error("failed to find all users:", err.Error())
 		return nil, errors.New("failed to retrieve users")
 	}
 
-	for _, v := range dbuser {
-		tmp := user.Core{
-			ID:          v.ID,
-			OfficeID:    v.OfficeID,
-			PositionID:  v.PositionID,
-			Name:        v.Name,
-			Email:       v.Email,
-			PhoneNumber: v.Email,
+	for _, dbuser := range dbusers {
+		position := position.Core{
+			Name: dbuser.Position.Name,
 		}
-		users = append(users, tmp)
+		office := office.Core{
+			Name: dbuser.Office.Name,
+		}
+
+		user := user.Core{
+			ID:          dbuser.ID,
+			OfficeID:    dbuser.OfficeID,
+			PositionID:  dbuser.PositionID,
+			Name:        dbuser.Name,
+			Email:       dbuser.Email,
+			PhoneNumber: dbuser.PhoneNumber,
+			Password:    dbuser.Password,
+			Position:    position,
+			Office:      office,
+		}
+
+		users = append(users, user)
 	}
 
 	return users, nil

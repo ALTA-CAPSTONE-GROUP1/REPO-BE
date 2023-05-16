@@ -1,18 +1,17 @@
 package handler
 
 import (
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 )
 
 type UserResponse struct {
-	ID          string         `json:"user_id"`
-	Name        string         `json:"name"`
-	Email       string         `json:"email"`
-	PhoneNumber string         `json:"phone_number"`
-	Password    string         `json:"password"`
-	Position    admin.Position `json:"position"`
-	Office      admin.Office   `json:"office"`
+	ID          string `json:"user_id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
+	Position    string `json:"position"`
+	Office      string `json:"office"`
 }
 
 func CoreToUserResponse(data user.Core) UserResponse {
@@ -22,19 +21,15 @@ func CoreToUserResponse(data user.Core) UserResponse {
 		Email:       data.Email,
 		PhoneNumber: data.PhoneNumber,
 		Password:    data.Password,
-		Position: admin.Position{
-			Name: data.Position.Name,
-		},
-		Office: admin.Office{
-			Name: data.Office.Name,
-		},
+		Position:    data.Position.Name,
+		Office:      data.Office.Name,
 	}
 }
 
 func CoreToGetAllUserResponse(data []user.Core) []UserResponse {
-	res := []UserResponse{}
-	for _, val := range data {
-		res = append(res, CoreToUserResponse(val))
+	res := make([]UserResponse, len(data))
+	for i, val := range data {
+		res[i] = CoreToUserResponse(val)
 	}
 	return res
 }
