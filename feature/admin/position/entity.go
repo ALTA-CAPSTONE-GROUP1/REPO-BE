@@ -7,6 +7,7 @@ import (
 )
 
 type Core struct {
+	ID        int
 	Name      string
 	Tag       string
 	Types     []admin.Type
@@ -22,11 +23,11 @@ type Handler interface {
 type UseCase interface {
 	AddPositionLogic(newPosition Core) error
 	GetPositionsLogic(limit int, offset int, search string) ([]Core, error)
-	DeletePositionLogic(position string, tag string) error
+	DeletePositionLogic(position int) error
 }
 
 type Repository interface {
 	InsertPosition(newPosition Core) error
 	GetPositions(limit int, offset int, search string) ([]Core, error)
-	DeletePosition(position string, tag string) error
+	DeletePosition(position int) error
 }

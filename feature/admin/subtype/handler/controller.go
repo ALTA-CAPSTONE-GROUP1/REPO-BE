@@ -34,11 +34,6 @@ func (sc *subTypeController) AddTypeHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
-		// if err := c.Validate(req); err != nil {
-		// 	c.Logger().Error("errror in validate input" + err.Error())
-		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
-		// }
-
 		newSubType := subtype.Core{}
 		newSubType.SubmissionTypeName = req.SubmissionTypeName
 		newSubType.PositionTag = req.Position

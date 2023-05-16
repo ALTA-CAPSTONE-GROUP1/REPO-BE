@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,11 +34,6 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 			c.Logger().Error("error on binding user input")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
-
-		// if err := c.Validate(req); err != nil {
-		// 	c.Logger().Error("errror in validate input" + err.Error())
-		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
-		// }
 		newPosition := position.Core{
 			Name: req.Position,
 			Tag:  req.Tag,
@@ -84,8 +80,19 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			c.Logger().Error("error occurs when calling GetPositionsLogic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error", nil))
 		}
+		fmt.Println(positions)
+		response := []GetAllPositionResponse{}
 
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get positions data", positions))
+		for _, v := range positions {
+			tmp := GetAllPositionResponse{
+				PositionID: v.ID,
+				Position:   v.Name,
+				Tag:        v.Tag,
+			}
+			response = append(response, tmp)
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get positions data", response))
 	}
 }
 
@@ -96,15 +103,19 @@ func (pc *positionController) DeletePositionHandler() echo.HandlerFunc {
 			c.Logger().Error("user are not admin try to acces add position")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
-		position := c.QueryParam("position")
-		tag := c.QueryParam("tag")
+		position := c.QueryParam("position_id")
 
-		if position == "" || tag == "" {
+		if position == "" {
 			c.Logger().Error("position or tag are empty string")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "data to delete are empty", nil))
 		}
 
-		if err := pc.service.DeletePositionLogic(position, tag); err != nil {
+		positionINT, err := strconv.Atoi(position)
+		if err != nil {
+			c.Logger().Error("position id is not a number")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "position_id must be a number", nil))
+		}
+		if err := pc.service.DeletePositionLogic(positionINT); err != nil {
 			if strings.Contains(err.Error(), "count position query error") {
 				c.Logger().Error("errors occurs when counting the datas for delete")
 				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
