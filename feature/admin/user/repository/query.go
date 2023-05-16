@@ -151,6 +151,7 @@ func (ur *usersModel) GetUserById(id string) (user.Core, error) {
 // SelectAllUser implements user.Repository
 func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core, error) {
 	var users []user.Core
+	var dbuser []admin.Users
 	query := ur.db.Table("users").
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Joins("JOIN offices ON offices.id = users.office_id").
@@ -162,10 +163,22 @@ func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core
 		query = query.Where("users.name LIKE ?", "%"+name+"%")
 	}
 
-	err := query.Find(&users).Error
+	err := query.Find(&dbuser).Error
 	if err != nil {
 		log.Error("failed to find all users:", err.Error())
 		return nil, errors.New("failed to retrieve users")
+	}
+
+	for _, v := range dbuser {
+		tmp := user.Core{
+			ID:          v.ID,
+			OfficeID:    v.OfficeID,
+			PositionID:  v.PositionID,
+			Name:        v.Name,
+			Email:       v.Email,
+			PhoneNumber: v.Email,
+		}
+		users = append(users, tmp)
 	}
 
 	return users, nil

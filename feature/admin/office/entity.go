@@ -9,7 +9,6 @@ type Core struct {
 	Name     string
 	Level    string
 	ParentID uint
-	Parent   *Core
 }
 
 type Handler interface {

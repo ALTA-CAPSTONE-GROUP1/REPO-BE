@@ -26,7 +26,6 @@ type Office struct {
 	Name     string
 	Level    string
 	ParentID uint
-	Parent   *Office `gorm:"foreignkey:ParentID"`
 }
 
 type Position struct {
