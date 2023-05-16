@@ -117,20 +117,42 @@ func (uc *userController) GetUserByIdHandler() echo.HandlerFunc {
 // GetAllUserHandler implements user.Handler
 func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var pageNumber int = 1
-		pageParam := c.QueryParam("page")
-		if pageParam != "" {
-			pageConv, errConv := strconv.Atoi(pageParam)
-			if errConv != nil {
-				c.Logger().Error("cannot read data")
-				return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed, page must be a number", nil))
-			} else {
-				pageNumber = pageConv
-			}
+		userID := helper.DecodeToken(c)
+		if userID != "admin" {
+			c.Logger().Error("user is not an admin trying to access get all office")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not an admin", nil))
 		}
 
-		nameParam := c.QueryParam("name")
-		data, err := uc.service.GetAllUser(pageNumber, nameParam)
+		limitStr := c.QueryParam("limit")
+		offsetStr := c.QueryParam("offset")
+		name := c.QueryParam("name")
+
+		limit := -1
+		if limitStr != "" {
+			limitInt, err := strconv.Atoi(limitStr)
+			if err != nil {
+				c.Logger().Errorf("limit is not a number: %s", limitStr)
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Invalid limit value", nil))
+			}
+			limit = limitInt
+		}
+
+		offset := -1
+		if offsetStr != "" {
+			offsetInt, err := strconv.Atoi(offsetStr)
+			if err != nil {
+				c.Logger().Errorf("offset is not a number: %s", offsetStr)
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Invalid offset value", nil))
+			}
+			offset = offsetInt
+		}
+
+		if limit < 0 || offset < 0 {
+			c.Logger().Error("error occurs because limit or offset is negative")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
+		}
+
+		data, err := uc.service.GetAllUser(limit, offset, name)
 		if err != nil {
 			c.Logger().Error("error on calling get all user logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
