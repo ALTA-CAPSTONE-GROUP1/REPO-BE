@@ -7,7 +7,19 @@ type UseCase interface {
 }
 
 type Repository interface {
-	FindRequirement(userID string, typeName string, value string) (RequirementDB, error)
+	FindRequirement(userID string, typeName string, value int) (RequirementDB, error)
+}
+
+type RequirementDB struct {
+	ApplicantID         string
+	ApplicantName       string
+	ApplicantPositionID string
+	ApplicantPosition   string
+	ApplicantOfficeID   string
+	ApplicantOfficeName int
+	To                  []Approver
+	CC                  []CC
+	Requirement         string
 }
 
 type Approver struct {
@@ -21,18 +33,6 @@ type CC struct {
 	CCPositionID string
 	CCPosition   string
 	CCDetails    string
-}
-
-type RequirementDB struct {
-	ApplicantID         string
-	ApplicantName       string
-	ApplicantPositionID string
-	ApplicantPosition   string
-	ApplicantOfficeID   string
-	ApplicantOfficeName int
-	To                  []Approver
-	CC                  []CC
-	Requirement         string
 }
 
 type ApproverDetail struct {

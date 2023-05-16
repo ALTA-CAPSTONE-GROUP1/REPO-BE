@@ -29,15 +29,15 @@ func (sc *subTypeController) AddTypeHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not admin", nil))
 		}
 
-		if err := c.Bind(req); err != nil {
+		if err := c.Bind(&req); err != nil {
 			c.Logger().Error("error on binding user input")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
 		}
 
-		if err := c.Validate(req); err != nil {
-			c.Logger().Error("errror in validate input" + err.Error())
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
-		}
+		// if err := c.Validate(req); err != nil {
+		// 	c.Logger().Error("errror in validate input" + err.Error())
+		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "bad request, invalid input", nil))
+		// }
 
 		newSubType := subtype.Core{}
 		newSubType.SubmissionTypeName = req.SubmissionTypeName
@@ -72,7 +72,7 @@ func (sc *subTypeController) AddTypeHandler() echo.HandlerFunc {
 			}
 		}
 
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to create submission type", nil))
+		return c.JSON(helper.ResponseFormat(http.StatusCreated, "succes to create submission type", nil))
 	}
 }
 
