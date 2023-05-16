@@ -201,16 +201,10 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 }
 
 func (st *subTypeModel) DeleteSubType(subTypeName string) error {
-	var t admin.Type
-	if err := st.db.Where("name = ?", subTypeName).First(&t).Error; err != nil {
-		log.Errorf("error on finding subtypename for delete, %w", err)
-		return fmt.Errorf("failed to find subtypename for delete %w", err)
-	}
-
-	if err := st.db.Delete(&t).Error; err != nil {
-		log.Errorf("error on delete subtype by name, %w", err)
-		return fmt.Errorf("failed to delete subtype by name %w", err)
-	}
-
-	return nil
+    if err := st.db.Where("name = ?", subTypeName).Delete(&admin.Type{}).Error; err != nil {
+        log.Errorf("error on delete subtype by name, %w", err)
+        return fmt.Errorf("failed to delete subtype by name %w", err)
+    }
+    return nil
 }
+
