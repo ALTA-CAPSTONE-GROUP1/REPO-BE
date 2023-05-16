@@ -48,8 +48,8 @@ type Type struct {
 
 type PositionHasType struct {
 	ID         int    `gorm:"primaryKey;autoIncrement"`
-	PositionID int    `gorm:"primaryKey;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	TypeID     int    `gorm:"primaryKey;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	PositionID int    
+	TypeID     int    
 	As         string `gorm:"size:10;not null"`
 	ToLevel    int
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`
