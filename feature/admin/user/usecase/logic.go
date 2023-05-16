@@ -64,9 +64,7 @@ func (ul *userLogic) GetUserById(id string) (user.Core, error) {
 }
 
 // GetAllUser implements user.UseCase
-func (ul *userLogic) GetAllUser(page int, name string) ([]user.Core, error) {
-	limit := 10
-	offset := (page - 1) * limit
+func (ul *userLogic) GetAllUser(limit, offset int, name string) ([]user.Core, error) {
 	result, err := ul.u.SelectAllUser(limit, offset, name)
 	if err != nil {
 		log.Error("failed to find all user", err.Error())
