@@ -167,12 +167,61 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		params.Offset = offset
 
 		submissionDatas, subTypeDatas, err := sc.sc.GetAllSubmissionLogic(userID, params)
-		if err != nil{
-			if strings.Contains(err.Error(), "record"){
+		if err != nil {
+			if strings.Contains(err.Error(), "record") {
 				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "record not found", nil))
 			}
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server error", nil))
 		}
-		
+
+		var submissions []Submission
+		for _, submissionData := range submissionDatas {
+			var toApprovers []Approver
+			for _, to := range submissionData.Tos {
+				toApprovers = append(toApprovers, Approver{
+					ApproverPosition: to.ApproverPosition,
+					ApproverName:     to.ApproverName,
+				})
+			}
+			var ccApprovers []CC
+			for _, cc := range submissionData.CCs {
+				ccApprovers = append(ccApprovers, CC{
+					CCPosition: cc.CcPosition,
+					CCName:     cc.CcName,
+				})
+			}
+
+			submissions = append(submissions, Submission{
+				ID:             submissionData.ID,
+				To:             toApprovers,
+				CC:             ccApprovers,
+				Title:          submissionData.Title,
+				Status:         submissionData.Status,
+				Attachment:     submissionData.Attachment,
+				ReceiveDate:    submissionData.ReceiveDate,
+				Opened:         submissionData.Opened,
+				SubmissionType: submissionData.SubmissionType,
+			})
+		}
+
+		var submissionTypeChoices []SubmissionTypeChoice
+		for _, subTypeData := range subTypeDatas {
+			var values []int
+			for _, pos := range subTypeData.Positions {
+				values = append(values, pos.ID)
+			}
+
+			submissionTypeChoices = append(submissionTypeChoices, SubmissionTypeChoice{
+				Name:   subTypeData.Name,
+				Values: values,
+			})
+		}
+
+		response := SubmissionResponse{
+			Submissions:           submissions,
+			SubmissionTypeChoices: submissionTypeChoices,
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submissions data", response))
 	}
 }

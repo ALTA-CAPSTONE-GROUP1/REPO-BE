@@ -17,3 +17,33 @@ type ToApprover struct {
 	ApproverId       string `json:"approver_id"`
 	ApproverName     string `json:"approver_name"`
 }
+type SubmissionResponse struct {
+	Submissions           []Submission           `json:"submissions"`
+	SubmissionTypeChoices []SubmissionTypeChoice `json:"submission_type_choices"`
+}
+type Submission struct {
+	ID             int        `json:"id"`
+	To             []Approver `json:"to"`
+	CC             []CC       `json:"cc"`
+	Title          string     `json:"title"`
+	Status         string     `json:"status"`
+	Attachment     string     `json:"attachment"`
+	ReceiveDate    string     `json:"receive_date"`
+	Opened         bool       `json:"opened"`
+	SubmissionType string     `json:"submission_type"`
+}
+
+type Approver struct {
+	ApproverPosition string `json:"approver_position"`
+	ApproverName     string `json:"approver_name"`
+}
+
+type CC struct {
+	CCPosition string `json:"cc_position"`
+	CCName     string `json:"cc_name"`
+}
+
+type SubmissionTypeChoice struct {
+	Name   string `json:"name"`
+	Values []int  `json:"values"`
+}
