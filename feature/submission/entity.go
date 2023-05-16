@@ -44,6 +44,22 @@ type GetAllQueryParams struct {
 	Offset int
 }
 
+type GetSubmmisionByIDCore struct {
+	To              ToApprover
+	CC              CcApprover
+	SubmissionType  string
+	SubmissionValue string
+	ApproverActions []ApproverActions
+	ActionMessage   string
+	Attachment      string
+}
+
+type ApproverActions struct {
+	Action           string
+	ApproverName     string
+	ApproverPosition string
+}
+
 type AddSubmissionCore struct {
 	OwnerID           string
 	ToApprover        []ToApprover
