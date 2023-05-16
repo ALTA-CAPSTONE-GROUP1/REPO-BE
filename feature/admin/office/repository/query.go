@@ -38,7 +38,7 @@ func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]off
 	nameSearch := "%" + search + "%"
 	var dbres []admin.Office
 	var res []office.Core
-	if err := om.db.Limit(limit).Offset(offset).Where("offices.name LIKE ?", nameSearch).Select("offices.id, offices.name, offices.level, offices.parent_id").Find(&dbres).Error; err != nil {
+	if err := om.db.Limit(limit).Offset(offset).Where("offices.name LIKE ?", nameSearch).Select("offices.id, offices.name").Find(&dbres).Error; err != nil {
 		log.Error("error occurs in finding all office", err.Error())
 		return nil, err
 	}

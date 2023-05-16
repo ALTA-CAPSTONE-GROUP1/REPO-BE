@@ -5,10 +5,8 @@ import (
 )
 
 type Core struct {
-	ID       uint
-	Name     string
-	Level    string
-	ParentID uint
+	ID   uint
+	Name string
 }
 
 type Handler interface {
