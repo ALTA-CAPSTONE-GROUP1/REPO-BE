@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
@@ -129,23 +131,35 @@ func (um *usersModel) UpdateUser(id string, input user.Core) error {
 
 // GetUserById implements user.Repository
 func (ur *usersModel) GetUserById(id string) (user.Core, error) {
-	var user user.Core
+	// var user user.Core
+	var dbuser admin.Users
 	err := ur.db.Table("users").
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Joins("JOIN offices ON offices.id = users.office_id").
 		Select("users.id, users.office_id, users.position_id, users.name, users.email, users.phone_number, users.password, positions.name as position_name, offices.name as office_name").
 		Where("users.id = ?", id).
-		First(&user).Error
+		First(&dbuser).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return user, errors.New("user not found")
+			return user.Core{}, errors.New("user not found")
 		}
 		log.Error("failed to find user:", err.Error())
-		return user, errors.New("failed to retrieve user")
+		return user.Core{}, errors.New("failed to retrieve user")
 	}
 
-	return user, nil
+	return user.Core{
+		ID:          dbuser.ID,
+		OfficeID:    dbuser.OfficeID,
+		PositionID:  dbuser.PositionID,
+		Name:        dbuser.Name,
+		Email:       dbuser.Email,
+		PhoneNumber: dbuser.PhoneNumber,
+		Password:    dbuser.Password,
+		Position:    position.Core{},
+		Office:      office.Core{},
+	}, nil
+
 }
 
 // SelectAllUser implements user.Repository

@@ -49,6 +49,12 @@ func (uc *authController) LoginHandler() echo.HandlerFunc {
 		var data = new(LoginResponse)
 		data.Token = token
 
+		if input.Password == "admin" {
+			data.Role = "admin"
+		} else {
+			data.Role = "user"
+		}
+
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes login!", data))
 	}
 }

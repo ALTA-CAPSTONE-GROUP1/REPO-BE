@@ -22,10 +22,8 @@ type Users struct {
 }
 
 type Office struct {
-	ID       uint
-	Name     string
-	Level    string
-	ParentID uint
+	ID   uint
+	Name string
 }
 
 type Position struct {
@@ -46,9 +44,9 @@ type Type struct {
 }
 
 type PositionHasType struct {
-	ID         int    `gorm:"primaryKey;autoIncrement"`
-	PositionID int    
-	TypeID     int    
+	ID         int `gorm:"primaryKey;autoIncrement"`
+	PositionID int
+	TypeID     int
 	As         string `gorm:"size:10;not null"`
 	ToLevel    int
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`

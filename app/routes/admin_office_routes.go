@@ -15,6 +15,6 @@ func OfficeRoutes(e *echo.Echo, pc office.Handler) {
 
 	e.POST("/office", pc.AddOfficeHandler(), helper.JWTMiddleWare())
 	e.GET("/office", pc.GetAllOfficeHandler(), helper.JWTMiddleWare())
-	e.DELETE("/office/:id", pc.DeleteOfficeHandler(), helper.JWTMiddleWare())
+	e.DELETE("/office", pc.DeleteOfficeHandler(), helper.JWTMiddleWare())
 
 }
