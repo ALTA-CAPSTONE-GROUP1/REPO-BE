@@ -47,18 +47,18 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 			offset = offsetInt
 		}
 
-		if limit < 0 || offset < 0 {
-			c.Logger().Error("error occurs because limit or offset is negative")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
-		}
+		// if limit < 0 || offset < 0 {
+		// 	c.Logger().Error("error occurs because limit or offset is negative")
+		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
+		// }
 
 		data, err := ac.service.GetSubmissionAprrove(userID, limit, offset, search)
 		if err != nil {
 			c.Logger().Error("error on calling get all user logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
-
+		pagination := helper.Pagination(limit, offset, len(data))
 		dataResponse := CoreToGetAllApproveResponse(data)
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved all users", dataResponse))
+		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "Successfully retrieved all users", dataResponse, pagination))
 	}
 }
