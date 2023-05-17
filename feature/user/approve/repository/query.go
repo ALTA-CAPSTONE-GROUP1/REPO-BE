@@ -7,6 +7,7 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/handler"
 	"github.com/labstack/gommon/log"
 
 	"gorm.io/gorm"
@@ -24,7 +25,7 @@ func New(db *gorm.DB) approve.Repository {
 
 // SelectSubmissionById implements approve.Repository
 func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Core, error) {
-	var res approve.Core
+	// var res approve.Core
 	var dbsub user.Submission
 
 	query := ar.db.Table("submissions").
@@ -32,6 +33,9 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		Joins("JOIN types ON submissions.type_id = types.id").
 		Where("tos.user_id = ? AND submissions.id = ?", userID, id).
 		Preload("Type").
+		Preload("User").
+		// Preload("To").
+		// Preload("Cc").
 		Find(&dbsub)
 	if query.Error != nil {
 		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
@@ -41,21 +45,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		return approve.Core{}, errors.New("failed to retrieve submission")
 	}
 
-	res = approve.Core{
-		ID:        dbsub.ID,
-		UserID:    dbsub.UserID,
-		TypeID:    dbsub.TypeID,
-		Title:     dbsub.Title,
-		Message:   dbsub.Message,
-		Status:    dbsub.Status,
-		Is_Opened: false,
-		CreatedAt: time.Time{},
-		Type: admin.Type{
-			Name: dbsub.Type.Name,
-		},
-	}
-
-	return res, nil
+	return handler.SubmissionToCore(dbsub), nil
 }
 
 // SelectSubmissionApprove implements approve.Repository

@@ -18,6 +18,7 @@ type Core struct {
 	Is_Opened bool
 	CreatedAt time.Time
 	Type      admin.Type
+	User      admin.Users
 	Files     []user.File
 	Tos       []user.To
 	Ccs       []user.Cc

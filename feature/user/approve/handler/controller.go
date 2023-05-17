@@ -40,7 +40,7 @@ func (ac *approveController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
 
-		dataResponse := CoreToApproveResponse(data)
+		dataResponse := CoreToApproveByIdResponse(data)
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved all users", dataResponse))
 	}
 }
