@@ -17,6 +17,11 @@ func New(a approve.Repository) approve.UseCase {
 	}
 }
 
+// GetSubmissionById implements approve.UseCase
+func (*approverLogic) GetSubmissionById(userID string, id int) (approve.Core, error) {
+	panic("unimplemented")
+}
+
 // GetSubmissionAprrove implements approve.UseCase
 func (al *approverLogic) GetSubmissionAprrove(userID string, limit, offset int, search string) ([]approve.Core, error) {
 	result, err := al.a.SelectSubmissionAprrove(userID, limit, offset, search)

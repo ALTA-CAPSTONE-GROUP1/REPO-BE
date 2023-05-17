@@ -26,15 +26,15 @@ type Core struct {
 
 type Handler interface {
 	GetSubmissionAprroveHandler() echo.HandlerFunc
-	GetSubmissionAprroveHandlerById() echo.HandlerFunc
+	GetSubmissionByIdHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	GetSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
-	GetSubmissionAprroveById(userID string, id int) ([]Core, error)
+	GetSubmissionById(userID string, id int) (Core, error)
 }
 
 type Repository interface {
-	SelectSubmissionAprrove(userID string, limit, offset int, search string) (Core, error)
-	SelectSubmissionAprroveById(userID string, id int) (Core, error)
+	SelectSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
+	SelectSubmissionById(userID string, id int) (Core, error)
 }
