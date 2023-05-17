@@ -19,6 +19,32 @@ func New(a approve.UseCase) approve.Handler {
 	}
 }
 
+// GetSubmissionByIdHandler implements approve.Handler
+func (ac *approveController) GetSubmissionByIdHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID == "" {
+			c.Logger().Error("decode token is blank")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "jwt invalid", nil))
+		}
+
+		id, errid := strconv.Atoi(c.Param("id"))
+		if errid != nil {
+			c.Logger().Error("cannot use path param", errid.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		}
+
+		data, err := ac.service.GetSubmissionById(userID, id)
+		if err != nil {
+			c.Logger().Error("error on calling get all user logic")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
+		}
+
+		dataResponse := CoreToApproveResponse(data)
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved all users", dataResponse))
+	}
+}
+
 // GetSubmissionAprroveHandler implements approve.Handler
 func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
