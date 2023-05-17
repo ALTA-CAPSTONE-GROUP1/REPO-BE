@@ -23,6 +23,10 @@ func New(a approve.UseCase) approve.Handler {
 func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
+		// if userID == "" {
+		// 	c.Logger().Error("invalid or expired jwt")
+		// 	return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		// }
 
 		limitStr := c.QueryParam("limit")
 		offsetStr := c.QueryParam("offset")
@@ -53,13 +57,13 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
 		}
 
-		data, err := ac.service.(limit, offset, search)
+		data, err := ac.service.GetSubmissionAprrove(userID, limit, offset, search)
 		if err != nil {
 			c.Logger().Error("error on calling get all user logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
 
-		dataResponse := CoreToGetAllUserResponse(data)
+		dataResponse := CoreToGetAllApproveResponse(data)
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved all users", dataResponse))
 	}
 }
