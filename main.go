@@ -33,6 +33,10 @@ import (
 	submissionRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/repository"
 	submissionLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/usecase"
 
+	approveHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/handler"
+	approveRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/repository"
+	approveLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/usecase"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -70,6 +74,10 @@ func main() {
 	profileSrv := profileLogic.New(profileMdl)
 	profileCtl := profileHandler.New(profileSrv)
 
+	approveMdl := approveRepo.New(db)
+	approveSrv := approveLogic.New(approveMdl)
+	approveCtl := approveHandler.New(approveSrv)
+
 	routes.SubTypeRoutes(e, subTypeCtl)
 	routes.PositionRoutes(e, pstCtl)
 	routes.AdminUserRoutes(e, uAdminCtl)
@@ -77,6 +85,7 @@ func main() {
 	routes.OfficeRoutes(e, officeCtl)
 	routes.ProfileRoutes(e, profileCtl)
 	routes.SubmissionRoutes(e, submissionCtl)
+	routes.ApproveRoutes(e, approveCtl)
 
 	if err := e.Start(":8080"); err != nil {
 		e.Logger.Fatal("cannot start server", err.Error())
