@@ -2,8 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -139,13 +137,6 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 	var types []admin.Type
 	var hasTypes []admin.PositionHasType
 
-	if limit < 1 {
-		limit = 10
-	}
-	if offset < 0 {
-		offset = 0
-	}
-
 	if err := st.db.Find(&dbpositions).Error; err != nil {
 		log.Errorf("failed on finding all positions %w", err)
 		return nil, nil, fmt.Errorf("error on finding all positions in get all submission type %w", err)
@@ -163,7 +154,6 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 		log.Errorf("failed on finding all submission types %w", err)
 		return nil, nil, fmt.Errorf("error when get all submission type %w", err)
 	}
-	fmt.Println(types)
 
 	if err := st.db.Find(&hasTypes).Error; err != nil {
 		log.Errorf("failed on finding all position_has_types for getall submission types %w", err)
@@ -182,22 +172,6 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 			}
 		}
 	}
-
-	if search != "" {
-		var filteredData []subtype.GetSubmissionTypeCore
-		for _, data := range submissionTypeCoreData {
-			if strings.Contains(strings.ToLower(data.SubmissionTypeName), strings.ToLower(search)) || strings.Contains(strings.ToLower(data.Requirement), strings.ToLower(search)) || strings.Contains(strconv.Itoa(data.Value), strings.ToLower(search)) {
-				filteredData = append(filteredData, data)
-			}
-		}
-		submissionTypeCoreData = filteredData
-	}
-	// end := offset + limit
-	// if end > len(submissionTypeCoreData) {
-	// 	end = len(submissionTypeCoreData)
-	// }
-
-	// submissionTypeCoreData = submissionTypeCoreData[offset:end]
 	fmt.Println(submissionTypeCoreData)
 	return submissionTypeCoreData, resPositions, nil
 }

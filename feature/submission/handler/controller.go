@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -146,40 +147,71 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		userID := helper.DecodeToken(c)
 		if userID == "" {
 			c.Logger().Error("invalid or expired jwt")
-			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusUnauthorized, "invalid or expired JWT", nil, nil))
 		}
 
 		var params submission.GetAllQueryParams
+		limit := c.QueryParam("limit")
+		offset := c.QueryParam("offset")
+		if limit == "" {
+			limit = "10"
+		}
 
-		limit, err := strconv.Atoi(c.QueryParam("limit"))
+		if offset == "" {
+			offset = "0"
+		}
+
+		limitInt, err := strconv.Atoi(limit)
 		if err != nil {
 			c.Logger().Error("cannot convert limit to int")
-			c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest,
 				"limit must be string",
-				nil))
+				nil, nil))
 		}
-		offset, err := strconv.Atoi(c.QueryParam("offset"))
+		offsetInt, err := strconv.Atoi(offset)
 		if err != nil {
 			c.Logger().Error("cannot convert offset to int")
-			c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest,
 				"offset must be string",
-				nil))
+				nil, nil))
 		}
-		params.Title = c.QueryParam("title")
-		params.To = c.QueryParam("to")
-		params.Limit = limit
-		params.Offset = offset
+		searchInTitle := c.QueryParam("title")
+		searchInTo := c.QueryParam("to")
 
 		submissionDatas, subTypeDatas, err := sc.sc.GetAllSubmissionLogic(userID, params)
 		if err != nil {
 			if strings.Contains(err.Error(), "record") {
-				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "record not found", nil))
+				return c.JSON(helper.ReponseFormatWithMeta(http.StatusNotFound, "record not found", nil, nil))
 			}
-			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server error", nil))
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "Server error", nil, nil))
 		}
 
 		var submissions []Submission
-		for _, submissionData := range submissionDatas {
+		filteredData := []submission.AllSubmiisionCore{}
+
+		if searchInTitle != "" {
+			for _, data := range submissionDatas {
+				if strings.Contains(strings.ToLower(data.Title), strings.ToLower(searchInTitle)) {
+					filteredData = append(filteredData, data)
+				}
+			}
+		} else {
+			filteredData = submissionDatas
+		}
+
+		if searchInTo != "" {
+			for _, data := range filteredData {
+				for _, to := range data.Tos {
+					if strings.Contains(strings.ToLower(to.ApproverName), strings.ToLower(searchInTo)) ||
+						strings.Contains(strings.ToLower(to.ApproverId), strings.ToLower(searchInTo)) ||
+						strings.Contains(strings.ToLower(to.ApproverPosition), strings.ToLower(searchInTo)) {
+						filteredData = append(filteredData, data)
+					}
+				}
+			}
+		}
+
+		for _, submissionData := range filteredData {
 			var toApprovers []Approver
 			for _, to := range submissionData.Tos {
 				toApprovers = append(toApprovers, Approver{
@@ -221,12 +253,32 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 			})
 		}
 
+		if offsetInt+limitInt > len(filteredData) {
+			limitInt = len(filteredData) - offsetInt
+		}
+		submissions = submissions[offsetInt : offsetInt+limitInt]
+		var totalData int
+		var totalPage int
+		if len(filteredData) > 0 {
+			totalData = len(filteredData)
+			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
+		}
+		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+
+		meta := Meta{
+			CurrentLimit:  limitInt,
+			CurrentOffset: offsetInt,
+			CurrentPage:   currentPage,
+			TotalData:     totalData,
+			TotalPage:     totalPage,
+		}
+
 		response := SubmissionResponse{
 			Submissions:           submissions,
 			SubmissionTypeChoices: submissionTypeChoices,
 		}
 
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submissions data", response))
+		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "succes to get submissions data", response, meta))
 	}
 }
 
