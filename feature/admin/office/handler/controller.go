@@ -68,9 +68,10 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "you are not an admin", nil))
 		}
 
+		search := c.QueryParam("search")
+
 		limitStr := c.QueryParam("limit")
 		offsetStr := c.QueryParam("offset")
-		search := c.QueryParam("search")
 
 		limit := -1
 		if limitStr != "" {
@@ -92,10 +93,10 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			offset = offsetInt
 		}
 
-		if limit < 0 || offset < 0 {
-			c.Logger().Error("error occurs because limit or offset is negative")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
-		}
+		// if limit < 0 || offset < 0 {
+		// 	c.Logger().Error("error occurs because limit or offset is negative")
+		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
+		// }
 
 		office, err := oc.service.GetAllOfficeLogic(limit, offset, search)
 		if err != nil {
@@ -103,7 +104,9 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error", nil))
 		}
 
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved office data", office))
+		pagination := helper.Pagination(limit, offset, len(office))
+
+		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "Successfully retrieved office data", office, pagination))
 	}
 }
 
