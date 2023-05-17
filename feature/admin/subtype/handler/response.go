@@ -19,3 +19,11 @@ type SubmissionDetail struct {
 	SubmissionValue       int    `json:"submission_value"`
 	SubmissionRequirement string `json:"submission_requirement"`
 }
+
+type Meta struct {
+	CurrentLimit  int `json:"current_limit"`
+	CurrentOffset int `json:"current_offset"`
+	CurrentPage   int `json:"current_page"`
+	TotalData     int `json:"total_data"`
+	TotalPage     int `json:"total_page"`
+}

@@ -7,8 +7,9 @@ type GetAllPositionResponse struct {
 }
 
 type Meta struct {
-	Current_limit int `json:"current_limit"`
-	Current_Page  int `json:"current_page"`
-	Data_amount   int `json:"data_amount"`
-	Page_amount   int `json:"page_amount"`
+	CurrentLimit  int `json:"current_limit"`
+	CurrentOffset int `json:"current_offset"`
+	CurrentPage   int `json:"current_page"`
+	TotalData     int `json:"total_data"`
+	TotalPage     int `json:"total_page"`
 }

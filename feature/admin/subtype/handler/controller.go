@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -84,6 +85,14 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 		offset := c.QueryParam("offset")
 		search := c.QueryParam("search")
 
+		if limit == "" {
+			limit = "10"
+		}
+
+		if offset == "" {
+			offset = "0"
+		}
+
 		limitInt, err := strconv.Atoi(limit)
 		if err != nil {
 			c.Logger().Errorf("limit are not a number %v", limit)
@@ -122,7 +131,19 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 			res.Position = append(res.Position, position)
 		}
 
-		for _, std := range subTypesData {
+		filteredData := []subtype.GetSubmissionTypeCore{}
+		if search != "" {
+			for _, data := range subTypesData {
+				if strings.Contains(strings.ToLower(data.SubmissionTypeName), strings.ToLower(search)) ||
+					strings.Contains(strings.ToLower(data.Requirement), strings.ToLower(search)) {
+					filteredData = append(filteredData, data)
+				}
+			}
+		} else {
+			filteredData = subTypesData
+		}
+
+		for _, std := range filteredData {
 			found := false
 			for i, r := range res.SubmissionType {
 				if r.SubmissionTypeName == std.SubmissionTypeName {
@@ -158,23 +179,24 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 				res.SubmissionType = append(res.SubmissionType, newSubmissionType)
 			}
 		}
+		if offsetInt+limitInt > len(filteredData) {
+			limitInt = len(filteredData) - offsetInt
+		}
+		res.SubmissionType = res.SubmissionType[offsetInt : offsetInt+limitInt]
 
-		if search != "" {
-			var filteredData []SubmissionType
-			for _, data := range res.SubmissionType {
-				if strings.Contains(strings.ToLower(data.SubmissionTypeName), strings.ToLower(search)) {
-					filteredData = append(filteredData, data)
-				}
-				res.SubmissionType = filteredData
-			}
+		totalData := len(filteredData)
+		totalPage := int(math.Ceil(float64(totalData) / float64(limitInt)))
+		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+
+		meta := Meta{
+			CurrentLimit:  limitInt,
+			CurrentOffset: offsetInt,
+			CurrentPage:   currentPage,
+			TotalData:     totalData,
+			TotalPage:     totalPage,
 		}
-		end := limitInt + offsetInt
-		if end > len(res.SubmissionType){
-			end = len(res.SubmissionType)
-		}
-		
-		res.SubmissionType = res.SubmissionType[offsetInt:end]
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submission types data", res))
+
+		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "succes to get submission types data", res, meta))
 	}
 }
 
