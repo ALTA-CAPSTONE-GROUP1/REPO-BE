@@ -17,6 +17,17 @@ func New(a approve.Repository) approve.UseCase {
 	}
 }
 
+// GetSubmissionById implements approve.UseCase
+func (al *approverLogic) GetSubmissionById(userID string, id int) (approve.Core, error) {
+	result, err := al.a.SelectSubmissionById(userID, id)
+	if err != nil {
+		log.Error("failed to find submission for action", err.Error())
+		return approve.Core{}, errors.New("internal server error")
+	}
+
+	return result, nil
+}
+
 // GetSubmissionAprrove implements approve.UseCase
 func (al *approverLogic) GetSubmissionAprrove(userID string, limit, offset int, search string) ([]approve.Core, error) {
 	result, err := al.a.SelectSubmissionAprrove(userID, limit, offset, search)
