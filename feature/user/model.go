@@ -33,6 +33,7 @@ type Submission struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt
+	Type      admin.Type
 	Files     []File
 	Tos       []To
 	Ccs       []Cc
