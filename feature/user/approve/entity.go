@@ -1,6 +1,8 @@
 package approve
 
 import (
+	"time"
+
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/labstack/echo/v4"
@@ -14,6 +16,7 @@ type Core struct {
 	Message   string
 	Status    string
 	Is_Opened bool
+	CreatedAt time.Time
 	Type      admin.Type
 	Files     []user.File
 	Tos       []user.To
