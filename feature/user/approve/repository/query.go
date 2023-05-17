@@ -26,9 +26,11 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset in
 
 	query := ar.db.Table("submissions").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
+		Joins("JOIN types ON submissions.type_id = types.id").
 		Where("tos.user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
+		Preload("Type").
 		Find(&dbsub)
 	if query.Error != nil {
 		return nil, query.Error
@@ -51,5 +53,4 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset in
 	}
 
 	return res, nil
-
 }

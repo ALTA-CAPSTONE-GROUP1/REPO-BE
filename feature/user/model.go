@@ -25,7 +25,7 @@ type Users struct {
 type Submission struct {
 	ID        int    `gorm:"primaryKey;autoIncrement"`
 	UserID    string `gorm:"size:50"`
-	TypeID    int    `gorm:"not null"`
+	TypeID    int    `gorm:"foreignKey:TypeID"`
 	Title     string `gorm:"size:50;not null"`
 	Message   string `gorm:"type:text;not null"`
 	Status    string `gorm:"size:50;not null"`
