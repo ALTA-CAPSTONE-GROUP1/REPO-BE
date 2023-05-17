@@ -3,7 +3,6 @@ package submission
 import (
 	"mime/multipart"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/labstack/echo/v4"
 )
 
@@ -17,14 +16,14 @@ type Handler interface {
 type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
 	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
-	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []admin.Type, error)
+	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
 	GetSubmissionByIDLogic(submissionID int) (GetSubmmisionByIDCore, error)
 }
 
 type Repository interface {
 	FindRequirement(userID string, typeName string, value int) (Core, error)
 	InsertSubmission(newSub AddSubmissionCore) error
-	SelectAllSubmissions(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []admin.Type, error)
+	SelectAllSubmissions(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
 	SelectSubmissionByID(submissionID int) (GetSubmmisionByIDCore, error)
 }
 
@@ -95,4 +94,9 @@ type CcApprover struct {
 	CcPosition string
 	CcName     string
 	CcId       string
+}
+
+type SubTypeChoices struct {
+	SubTypeName  string
+	SubtypeValue []int
 }

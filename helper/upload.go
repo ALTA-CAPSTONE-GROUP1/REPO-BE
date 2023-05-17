@@ -3,7 +3,6 @@ package helper
 import (
 	"context"
 	"fmt"
-	"log"
 	"mime/multipart"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
@@ -11,27 +10,13 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
-func UploadFile(fileContents interface{}, path string) ([]string, error) {
+func UploadFile(fileContents *multipart.File, path string) ([]string, error) {
 	var urls []string
-	switch cnv := fileContents.(type) {
-	case []*multipart.File:
-		for _, content := range cnv {
-			uploadResult, err := uploadFile(content, path)
-			if err != nil {
-				return nil, err
-			}
-			urls = append(urls, uploadResult.SecureURL)
-		}
-	case *multipart.File:
-		uploadResult, err := uploadFile(cnv, path)
-		if err != nil {
-			return nil, err
-		}
-		urls = append(urls, uploadResult.SecureURL)
-		fmt.Println(urls)
-		return urls, nil
+	uploadResult, err := uploadFile(fileContents, path)
+	if err != nil {
+		return nil, err
 	}
-	fmt.Println(urls)
+	urls = append(urls, uploadResult.SecureURL)
 	return urls, nil
 }
 
@@ -40,18 +25,19 @@ func uploadFile(content *multipart.File, path string) (*uploader.UploadResult, e
 	if err != nil {
 		return nil, err
 	}
-
+	overwrite := true
+	useFileName := true
+	useFileNameDisplay := true
 	uploadParams := uploader.UploadParams{
-		Folder: config.CloudinaryUploadFolder + path,
-	}
-	if err != nil {
-		return nil, err
+		Folder:                   config.CloudinaryUploadFolder + path,
+		UseFilename:              &useFileName,
+		Overwrite:                &overwrite,
+		UseFilenameAsDisplayName: &useFileNameDisplay,
 	}
 
 	uploadResult, err := cld.Upload.Upload(context.Background(), *content, uploadParams)
 	if err != nil {
-		log.Panic(err)
-		return nil, err
+		return nil, fmt.Errorf("error in uploadin file %w", err)
 	}
 	return uploadResult, nil
 }
