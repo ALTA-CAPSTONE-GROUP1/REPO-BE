@@ -241,15 +241,10 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		}
 
 		var submissionTypeChoices []SubmissionTypeChoice
-		for _, subTypeData := range subTypeDatas {
-			var values []int
-			for _, pos := range subTypeData.Positions {
-				values = append(values, pos.ID)
-			}
-
+		for _, v := range subTypeDatas {
 			submissionTypeChoices = append(submissionTypeChoices, SubmissionTypeChoice{
-				Name:   subTypeData.Name,
-				Values: values,
+				Name:   v.SubTypeName,
+				Values: v.SubtypeValue,
 			})
 		}
 
