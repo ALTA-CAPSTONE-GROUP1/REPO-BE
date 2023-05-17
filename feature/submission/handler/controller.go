@@ -284,7 +284,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
-		IDParam := c.Param("submisision_id")
+		IDParam := c.Param("submission_id")
 		subID, err := strconv.Atoi(IDParam)
 		if err != nil {
 			log.Errorf("error on convert submissionID to int", err.Error())

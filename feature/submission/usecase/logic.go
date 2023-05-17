@@ -83,19 +83,19 @@ func (sr *submissionLogic) GetAllSubmissionLogic(userID string, pr submission.Ge
 	return allsubmission, typelist, nil
 }
 
-func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int) (submission.GetSubmmisionByIDCore, error) {
+func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int) (submission.GetSubmissionByIDCore, error) {
 	result, err := sr.sl.SelectSubmissionByID(submissionID)
 	if err != nil {
 		if strings.Contains(err.Error(), "record not found") {
-			return submission.GetSubmmisionByIDCore{}, errors.New("record not found")
+			return submission.GetSubmissionByIDCore{}, errors.New("record not found")
 		}
 
 		if strings.Contains(err.Error(), "syntax") {
-			return submission.GetSubmmisionByIDCore{}, errors.New("syntax error")
+			return submission.GetSubmissionByIDCore{}, errors.New("syntax error")
 		}
 
 		log.Errorf("unexpected error on getsubmissionByID")
-		return submission.GetSubmmisionByIDCore{}, fmt.Errorf("unexpected error %w", err)
+		return submission.GetSubmissionByIDCore{}, fmt.Errorf("unexpected error %w", err)
 	}
 
 	return result, nil
