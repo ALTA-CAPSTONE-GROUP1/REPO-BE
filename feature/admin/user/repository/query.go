@@ -83,7 +83,7 @@ func (um *usersModel) GetPositionTagByID(positionID int) (string, error) {
 
 // DeleteUser implements user.Repository
 func (um *usersModel) DeleteUser(id string) error {
-	tx := um.db.Table("Users").Where("id = ?", id).Delete(&admin.Users{})
+	tx := um.db.Where("id = ?", id).Delete(&admin.Users{})
 	if tx.RowsAffected < 1 {
 		log.Error("Terjadi error")
 		return errors.New("no data deleted")
