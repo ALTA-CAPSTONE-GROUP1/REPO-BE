@@ -21,7 +21,7 @@ func New(db *gorm.DB) office.Repository {
 
 // DeleteOffice implements office.Repository
 func (om *officeModel) DeleteOffice(id uint) error {
-	tx := om.db.Table("Offices").Where("id = ?", id).Delete(&admin.Office{})
+	tx := om.db.Where("id = ?", id).Delete(&admin.Office{})
 	if tx.RowsAffected < 1 {
 		log.Error("Terjadi error")
 		return errors.New("no data deleted")
