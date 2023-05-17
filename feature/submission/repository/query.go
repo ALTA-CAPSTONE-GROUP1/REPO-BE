@@ -213,7 +213,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			}
 			ccApprover = append(ccApprover, submission.CcApprover{
 				CcPosition: ccDetails.Position.Name,
-				CcName:     cc.Name,
+				CcName:     ccDetails.Name,
 				CcId:       cc.UserID,
 			})
 		}
@@ -246,18 +246,17 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 	return resultAllSubmission, choices, nil
 }
 
-func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.GetSubmmisionByIDCore, error) {
-	var result submission.GetSubmmisionByIDCore
+func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.GetSubmissionByIDCore, error) {
+	var result submission.GetSubmissionByIDCore
 
 	var submissions Submission
-	if err := sm.db.Preload("To").
-		Preload("Signs").
-		Preload("Ccs").
+	if err := sm.db.Where("id = ?", submissionID).
 		Preload("Files").
-		First(&submissions, submissionID).Error; err != nil {
-		log.Errorf("error on finding all data from submission ID", err)
-		return submission.GetSubmmisionByIDCore{},
-			fmt.Errorf("error on finding submissionDatas %w", err)
+		Preload("Tos").
+		Preload("Ccs").
+		First(&submissions).Error; err != nil {
+		log.Errorf("error on finding all data from submission ID: %v", err)
+		return submission.GetSubmissionByIDCore{}, fmt.Errorf("error on finding submissionDatas: %w", err)
 	}
 
 	result.Attachment = submissions.Files[0].Link
@@ -266,7 +265,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.Ge
 	if err := sm.db.Where("id = ?", submissions.TypeID).
 		First(&typeDetails).Error; err != nil {
 		log.Errorf("error on finding submissionType detail %w", err)
-		return submission.GetSubmmisionByIDCore{},
+		return submission.GetSubmissionByIDCore{},
 			fmt.Errorf("error on finding submissionType %w", err)
 	}
 
@@ -292,7 +291,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.Ge
 			Where("id = ?", v.ApproverId).
 			First(&to).Error; err != nil {
 			log.Errorf("eror on finding to position %w", err)
-			return submission.GetSubmmisionByIDCore{},
+			return submission.GetSubmissionByIDCore{},
 				fmt.Errorf("error on to positions %w", err)
 		}
 		result.To[i].ApproverPosition = to.Position.Name
@@ -314,7 +313,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.Ge
 			Where("id = ?", v.CcId).
 			First(&cc).Error; err != nil {
 			log.Errorf("eror on finding to position %w", err)
-			return submission.GetSubmmisionByIDCore{},
+			return submission.GetSubmissionByIDCore{},
 				fmt.Errorf("error on to positions %w", err)
 		}
 
