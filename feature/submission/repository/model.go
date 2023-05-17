@@ -10,7 +10,7 @@ type Submission struct {
 	ID        int    `gorm:"primaryKey;autoIncrement"`
 	UserID    string `gorm:"size:50"`
 	TypeID    int    `gorm:"not null"`
-	Title     string `gorm:"size:50;not null"`
+	Title     string `gorm:"size:50;not null;unique"`
 	Message   string `gorm:"type:text;not null"`
 	Status    string `gorm:"size:50;not null"`
 	Is_Opened bool
@@ -27,7 +27,7 @@ type File struct {
 	ID           int `gorm:"primaryKey;autoIncrement"`
 	SubmissionID int
 	Name         string `gorm:"size:50;not null"`
-	Link         string `gorm:"size:50;not null"`
+	Link         string `gorm:"size:255;not null"`
 }
 
 type Cc struct {
@@ -47,7 +47,7 @@ type To struct {
 	Action_Type  string `gorm:"size:50;not null"`
 	Is_Opened    bool
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	Message		string 
+	Message      string
 }
 
 type Sign struct {

@@ -4,11 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
-	"strconv"
 	"strings"
-	"time"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
@@ -41,17 +38,19 @@ func (sr *submissionLogic) FindRequirementLogic(userID string, typeName string, 
 
 func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCore, subFile *multipart.FileHeader) error {
 	if subFile != nil {
-		subFile, err := subFile.Open()
+		uploadFile, err := subFile.Open()
 		if err != nil {
-			log.Errorf("error in open subfile file")
-			uploadUrl, err := helper.UploadFile(&subFile, "/submissionfiles")
-			if err != nil {
-				log.Errorf("error fron third party upload file %w", err)
-				return err
-			}
-			newSub.AttachmentLink = uploadUrl[0]
-			newSub.Attachment = newSub.OwnerID + strconv.FormatInt(time.Now().Unix(), 10)
+			log.Errorf("error in open subfile file", err)
+			return fmt.Errorf("error on opening file %w", err)
 		}
+		uploadUrl, err := helper.UploadFile(&uploadFile, "/"+newSub.OwnerID)
+		if err != nil {
+			log.Errorf("error fron third party upload file %w", err)
+			return err
+		}
+		fmt.Println(uploadUrl)
+		newSub.AttachmentLink = uploadUrl[0]
+		newSub.Attachment = subFile.Filename
 	}
 
 	if err := sr.sl.InsertSubmission(newSub); err != nil {
@@ -68,17 +67,17 @@ func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCor
 	return nil
 }
 
-func (sr *submissionLogic) GetAllSubmissionLogic(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []admin.Type, error) {
+func (sr *submissionLogic) GetAllSubmissionLogic(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []submission.SubTypeChoices, error) {
 	allsubmission, typelist, err := sr.sl.SelectAllSubmissions(userID, pr)
 	if err != nil {
 		log.Errorf("error on get all submission data", err)
 		if strings.Contains(err.Error(), "record not found") {
-			return []submission.AllSubmiisionCore{}, []admin.Type{}, errors.New("record not found")
+			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, errors.New("record not found")
 		}
 		if strings.Contains(err.Error(), "syntax") {
-			return []submission.AllSubmiisionCore{}, []admin.Type{}, errors.New("syntax error")
+			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, errors.New("syntax error")
 		}
-		return []submission.AllSubmiisionCore{}, []admin.Type{}, errors.New("unexpected error on inserting data")
+		return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, errors.New("unexpected error on inserting data")
 	}
 
 	return allsubmission, typelist, nil

@@ -113,6 +113,14 @@ func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore)
 		submissionDB.Tos = append(submissionDB.Tos, tmp)
 	}
 
+	for _, v := range newSub.CC {
+		tmp := Cc{
+			Name:   v.CcName,
+			UserID: v.CcId,
+		}
+		submissionDB.Ccs = append(submissionDB.Ccs, tmp)
+	}
+
 	file := File{
 		Name: newSub.Attachment,
 		Link: newSub.AttachmentLink,
@@ -127,44 +135,81 @@ func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore)
 	return nil
 }
 
-func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []admin.Type, error) {
+func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []submission.SubTypeChoices, error) {
 	var (
 		dbsubmissions       []Submission
 		resultAllSubmission []submission.AllSubmiisionCore
-		subTypes            []admin.Type
 		user                admin.Users
+		choices             []submission.SubTypeChoices
 	)
 
 	if err := sm.db.Where("id = ?", userID).Preload("Position.Types").Find(&user).Error; err != nil {
 		log.Errorf("error on finding subTypes have by user", err)
-		return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+		return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 	}
 
-	subTypes = append(subTypes, user.Position.Types...)
+	for _, v := range user.Position.Types {
+		var phts []admin.PositionHasType
+		if err := sm.db.Where("position_id = ? AND type_id = ? AND `as` = ?", user.Position.ID, v.ID, "Owner").Find(&phts).Error; err != nil {
+			log.Errorf("error on finding subTypes have by user", err)
+			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
+		}
+		existingIndex := -1
+		for i, choice := range choices {
+			if choice.SubTypeName == v.Name {
+				existingIndex = i
+				break
+			}
+		}
 
-	if err := sm.db.Where("user_id = ?", userID).Find(&dbsubmissions).Error; err != nil {
+		if existingIndex != -1 {
+			for _, detail := range phts {
+				choices[existingIndex].SubtypeValue = append(choices[existingIndex].SubtypeValue, detail.Value)
+			}
+		} else {
+			subTypeChoices := submission.SubTypeChoices{
+				SubTypeName:  v.Name,
+				SubtypeValue: make([]int, 0, len(phts)),
+			}
+			for _, detail := range phts {
+				subTypeChoices.SubtypeValue = append(subTypeChoices.SubtypeValue, detail.Value)
+			}
+			choices = append(choices, subTypeChoices)
+		}
+	}
+
+	fmt.Println(choices)
+
+	if err := sm.db.Where("user_id = ?", userID).
+		Preload("Files").
+		Preload("Tos").
+		Preload("Ccs").
+		Preload("Signs").
+		Find(&dbsubmissions).Error; err != nil {
 		log.Errorf("error on finding submissions for user %s: %v", userID, err)
-		return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+		return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 	}
 
 	for _, sub := range dbsubmissions {
 		var toApprover []submission.ToApprover
 		for _, to := range sub.Tos {
 			var toDetails admin.Users
-			if err := sm.db.Where("id = ?", to.UserID).Preload("Positions").Find(&toDetails).Error; err != nil {
-				log.Error("failed on finding positions of tos")
+			if err := sm.db.Where("id = ?", to.UserID).Preload("Position").First(&toDetails).Error; err != nil {
+				log.Errorf("failed on finding positions of tos %w", err)
+				return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 			}
 			toApprover = append(toApprover, submission.ToApprover{
 				ApproverId:       to.UserID,
-				ApproverName:     to.Name,
+				ApproverName:     toDetails.Name,
 				ApproverPosition: toDetails.Position.Name,
 			})
 		}
 		var ccApprover []submission.CcApprover
 		for _, cc := range sub.Ccs {
 			var ccDetails admin.Users
-			if err := sm.db.Where("id = ?", cc.UserID).Preload("Positions").Find(&ccDetails).Error; err != nil {
+			if err := sm.db.Where("id = ?", cc.UserID).Preload("Position").First(&ccDetails).Error; err != nil {
 				log.Error("failed on finding positions of tos")
+				return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 			}
 			ccApprover = append(ccApprover, submission.CcApprover{
 				CcPosition: ccDetails.Position.Name,
@@ -173,16 +218,16 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			})
 		}
 
-		var attachment File
-		if err := sm.db.Where("submission_id = ?", sub.ID).First(&attachment).Error; err != nil {
-			log.Errorf("error getting files for submission %d: %v", sub.ID, err)
-			return []submission.AllSubmiisionCore{}, []admin.Type{}, err
-		}
-
 		var subTypeByID admin.Type
 		if err := sm.db.Where("id = ?", sub.TypeID).First(&subTypeByID).Error; err != nil {
 			log.Errorf("error getting files for subType %d: %v", sub.TypeID, err)
-			return []submission.AllSubmiisionCore{}, []admin.Type{}, err
+			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
+		}
+
+		var attachment File
+		if err := sm.db.Where("submission_id = ?", sub.ID).First(&attachment).Error; err != nil {
+			log.Errorf("error getting files for submission %d: %v", sub.ID, err)
+			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 		}
 
 		resultAllSubmission = append(resultAllSubmission, submission.AllSubmiisionCore{
@@ -198,7 +243,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		})
 	}
 
-	return resultAllSubmission, subTypes, nil
+	return resultAllSubmission, choices, nil
 }
 
 func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.GetSubmmisionByIDCore, error) {
