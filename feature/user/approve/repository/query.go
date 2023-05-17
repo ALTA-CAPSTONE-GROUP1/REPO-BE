@@ -42,7 +42,7 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset in
 
 	query := ar.db.Table("submissions").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
-		Where("tos.user_id = ?", userID). // Menambahkan kondisi WHERE untuk user ID di relasi To
+		Where("tos.user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
 		Find(&res)

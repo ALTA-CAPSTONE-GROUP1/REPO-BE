@@ -159,6 +159,21 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 			}
 		}
 
+		if search != "" {
+			var filteredData []SubmissionType
+			for _, data := range res.SubmissionType {
+				if strings.Contains(strings.ToLower(data.SubmissionTypeName), strings.ToLower(search)) {
+					filteredData = append(filteredData, data)
+				}
+				res.SubmissionType = filteredData
+			}
+		}
+		end := limitInt + offsetInt
+		if end > len(res.SubmissionType){
+			end = len(res.SubmissionType)
+		}
+		
+		res.SubmissionType = res.SubmissionType[offsetInt:end]
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get submission types data", res))
 	}
 }

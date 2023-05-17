@@ -29,6 +29,10 @@ import (
 	profileRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile/repository"
 	profileLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/profile/usecase"
 
+	submissionHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/handler"
+	submissionRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/repository"
+	submissionLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/usecase"
+
 	approveHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/handler"
 	approveRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/repository"
 	approveLogic "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/usecase"
@@ -41,6 +45,10 @@ func main() {
 	cfg := config.InitConfig()
 	db := database.InitDBMySql(*cfg)
 	database.Migrate(db)
+
+	submissioMdl := submissionRepo.New(db)
+	submissionSrv := submissionLogic.New(submissioMdl)
+	submissionCtl := submissionHandler.New(submissionSrv)
 
 	subtypeMdl := stRepo.New(db)
 	subtypeSrv := stLogic.New(subtypeMdl)
@@ -76,6 +84,7 @@ func main() {
 	routes.AuthRoutes(e, authCtl)
 	routes.OfficeRoutes(e, officeCtl)
 	routes.ProfileRoutes(e, profileCtl)
+	routes.SubmissionRoutes(e, submissionCtl)
 	routes.ApproveRoutes(e, approveCtl)
 
 	if err := e.Start(":8080"); err != nil {

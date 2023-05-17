@@ -163,6 +163,7 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 		log.Errorf("failed on finding all submission types %w", err)
 		return nil, nil, fmt.Errorf("error when get all submission type %w", err)
 	}
+	fmt.Println(types)
 
 	if err := st.db.Find(&hasTypes).Error; err != nil {
 		log.Errorf("failed on finding all position_has_types for getall submission types %w", err)
@@ -181,6 +182,7 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 			}
 		}
 	}
+
 	if search != "" {
 		var filteredData []subtype.GetSubmissionTypeCore
 		for _, data := range submissionTypeCoreData {
@@ -190,21 +192,20 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 		}
 		submissionTypeCoreData = filteredData
 	}
+	// end := offset + limit
+	// if end > len(submissionTypeCoreData) {
+	// 	end = len(submissionTypeCoreData)
+	// }
 
-	end := offset + limit
-	if end > len(submissionTypeCoreData) {
-		end = len(submissionTypeCoreData)
-	}
-
-	submissionTypeCoreData = submissionTypeCoreData[offset:end]
+	// submissionTypeCoreData = submissionTypeCoreData[offset:end]
+	fmt.Println(submissionTypeCoreData)
 	return submissionTypeCoreData, resPositions, nil
 }
 
 func (st *subTypeModel) DeleteSubType(subTypeName string) error {
-    if err := st.db.Where("name = ?", subTypeName).Delete(&admin.Type{}).Error; err != nil {
-        log.Errorf("error on delete subtype by name, %w", err)
-        return fmt.Errorf("failed to delete subtype by name %w", err)
-    }
-    return nil
+	if err := st.db.Where("name = ?", subTypeName).Delete(&admin.Type{}).Error; err != nil {
+		log.Errorf("error on delete subtype by name, %w", err)
+		return fmt.Errorf("failed to delete subtype by name %w", err)
+	}
+	return nil
 }
-

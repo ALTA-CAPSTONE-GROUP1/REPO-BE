@@ -23,11 +23,6 @@ func New(a approve.UseCase) approve.Handler {
 func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
-		// if userID == "" {
-		// 	c.Logger().Error("invalid or expired jwt")
-		// 	return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
-		// }
-
 		limitStr := c.QueryParam("limit")
 		offsetStr := c.QueryParam("offset")
 		search := c.QueryParam("search")

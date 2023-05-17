@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -38,33 +39,30 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		return submission.Core{}, err
 	}
 
-	if err := sm.db.Raw(`
-    SELECT users.id, users.name, users.email, users.phone_number, offices.id as office_id, position_has_types.as AS position_role
-    FROM users
-    INNER JOIN position_has_types ON position_has_types.position_id = users.position_id
-    INNER JOIN positions ON positions.id = position_has_types.position_id
-    INNER JOIN offices ON offices.id = users.office_id
-    INNER JOIN types ON types.id = position_has_types.type_id
-    WHERE positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL
-    AND types.name = ? AND position_has_types.as = 'cc' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')
-`, typeName, 30000000, applicant.Office.ID).Scan(&ccs).Error; err != nil {
+	if err := sm.db.Preload("Position").
+		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
+		Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
+		Joins("INNER JOIN offices ON offices.id = users.office_id").
+		Joins("INNER JOIN types ON types.id = position_has_types.type_id").
+		Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
+		Where("types.name = ? AND position_has_types.as = 'Cc' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, 30000000, applicant.Office.ID).
+		Find(&ccs).Error; err != nil {
 		return submission.Core{}, err
 	}
 
-	if err := sm.db.Raw(`
-    SELECT users.id, users.name, users.email, users.phone_number, offices.id as office_id, position_has_types.as AS position_role
-    FROM users
-    INNER JOIN position_has_types ON position_has_types.position_id = users.position_id
-    INNER JOIN positions ON positions.id = position_has_types.position_id
-    INNER JOIN offices ON offices.id = users.office_id
-    INNER JOIN types ON types.id = position_has_types.type_id
-    WHERE positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL
-    AND types.name = ? AND position_has_types.as = 'to' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')
-	ORDER BY position_has_types.to_level ASC
-`, typeName, 30000000, applicant.Office.ID).Scan(&tos).Error; err != nil {
+	if err := sm.db.Preload("Position").
+		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
+		Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
+		Joins("INNER JOIN offices ON offices.id = users.office_id").
+		Joins("INNER JOIN types ON types.id = position_has_types.type_id").
+		Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
+		Where("types.name = ? AND position_has_types.as = 'To' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, 30000000, applicant.Office.ID).
+		Order("position_has_types.to_level ASC").
+		Find(&tos).Error; err != nil {
 		return submission.Core{}, err
 	}
-
+	// fmt.Println(tos)
+	fmt.Println(tos[0].Position)
 	var result submission.Core
 
 	result.Requirement = typeDetail.Requirement
@@ -75,6 +73,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 			ApproverId:       to.ID,
 			ApproverName:     to.Name,
 		}
+		fmt.Println(to.Position.Name)
 		result.To = append(result.To, tmp)
 	}
 
@@ -238,4 +237,85 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 	resultAllSubmission = resultAllSubmission[pr.Offset:end]
 
 	return resultAllSubmission, subTypes, nil
+}
+
+func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.GetSubmmisionByIDCore, error) {
+	var result submission.GetSubmmisionByIDCore
+
+	var submissions Submission
+	if err := sm.db.Preload("To").
+		Preload("Signs").
+		Preload("Ccs").
+		Preload("Files").
+		First(&submissions, submissionID).Error; err != nil {
+		log.Errorf("error on finding all data from submission ID", err)
+		return submission.GetSubmmisionByIDCore{},
+			fmt.Errorf("error on finding submissionDatas %w", err)
+	}
+
+	result.Attachment = submissions.Files[0].Link
+
+	var typeDetails admin.Type
+	if err := sm.db.Where("id = ?", submissions.TypeID).
+		First(&typeDetails).Error; err != nil {
+		log.Errorf("error on finding submissionType detail %w", err)
+		return submission.GetSubmmisionByIDCore{},
+			fmt.Errorf("error on finding submissionType %w", err)
+	}
+
+	result.SubmissionType = typeDetails.Name
+
+	for _, submissionTo := range submissions.Tos {
+		tmp := submission.ToApprover{
+			ApproverPosition: submissionTo.Name,
+			ApproverId:       submissionTo.UserID,
+		}
+		tmpaction := submission.ApproverActions{
+			Action:       submissionTo.Action_Type,
+			ApproverName: submissionTo.Name,
+			Message:      submissionTo.Message,
+		}
+		result.To = append(result.To, tmp)
+		result.ApproverActions = append(result.ApproverActions, tmpaction)
+	}
+
+	for i, v := range result.To {
+		var to admin.Users
+		if err := sm.db.Preload("Positions").
+			Where("id = ?", v.ApproverId).
+			First(&to).Error; err != nil {
+			log.Errorf("eror on finding to position %w", err)
+			return submission.GetSubmmisionByIDCore{},
+				fmt.Errorf("error on to positions %w", err)
+		}
+		result.To[i].ApproverPosition = to.Position.Name
+		result.ApproverActions[i].ApproverPosition = to.Position.Name
+	}
+
+	for _, submissionCc := range submissions.Ccs {
+		tmp := submission.CcApprover{
+			CcName: submissionCc.Name,
+			CcId:   submissionCc.UserID,
+		}
+
+		result.CC = append(result.CC, tmp)
+	}
+
+	for i, v := range result.CC {
+		var cc admin.Users
+		if err := sm.db.Preload("Positions").
+			Where("id = ?", v.CcId).
+			First(&cc).Error; err != nil {
+			log.Errorf("eror on finding to position %w", err)
+			return submission.GetSubmmisionByIDCore{},
+				fmt.Errorf("error on to positions %w", err)
+		}
+
+		result.CC[i].CcPosition = cc.Position.Name
+	}
+
+	result.Message = submissions.Message
+	result.Title = submissions.Title
+
+	return result, nil
 }

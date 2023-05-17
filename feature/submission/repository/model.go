@@ -47,6 +47,7 @@ type To struct {
 	Action_Type  string `gorm:"size:50;not null"`
 	Is_Opened    bool
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
+	Message		string 
 }
 
 type Sign struct {

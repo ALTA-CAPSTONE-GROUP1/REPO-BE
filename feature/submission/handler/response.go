@@ -47,3 +47,4 @@ type SubmissionTypeChoice struct {
 	Name   string `json:"name"`
 	Values []int  `json:"values"`
 }
+
