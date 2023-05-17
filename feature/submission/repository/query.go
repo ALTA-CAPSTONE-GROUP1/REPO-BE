@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -238,4 +239,85 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 	resultAllSubmission = resultAllSubmission[pr.Offset:end]
 
 	return resultAllSubmission, subTypes, nil
+}
+
+func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.GetSubmmisionByIDCore, error) {
+	var result submission.GetSubmmisionByIDCore
+
+	var submissions Submission
+	if err := sm.db.Preload("To").
+		Preload("Signs").
+		Preload("Ccs").
+		Preload("Files").
+		First(&submissions, submissionID).Error; err != nil {
+		log.Errorf("error on finding all data from submission ID", err)
+		return submission.GetSubmmisionByIDCore{},
+			fmt.Errorf("error on finding submissionDatas %w", err)
+	}
+
+	result.Attachment = submissions.Files[0].Link
+
+	var typeDetails admin.Type
+	if err := sm.db.Where("id = ?", submissions.TypeID).
+		First(&typeDetails).Error; err != nil {
+		log.Errorf("error on finding submissionType detail %w", err)
+		return submission.GetSubmmisionByIDCore{},
+			fmt.Errorf("error on finding submissionType %w", err)
+	}
+
+	result.SubmissionType = typeDetails.Name
+
+	for _, submissionTo := range submissions.Tos {
+		tmp := submission.ToApprover{
+			ApproverPosition: submissionTo.Name,
+			ApproverId:       submissionTo.UserID,
+		}
+		tmpaction := submission.ApproverActions{
+			Action:       submissionTo.Action_Type,
+			ApproverName: submissionTo.Name,
+			Message:      submissionTo.Message,
+		}
+		result.To = append(result.To, tmp)
+		result.ApproverActions = append(result.ApproverActions, tmpaction)
+	}
+
+	for i, v := range result.To {
+		var to admin.Users
+		if err := sm.db.Preload("Positions").
+			Where("id = ?", v.ApproverId).
+			First(&to).Error; err != nil {
+			log.Errorf("eror on finding to position %w", err)
+			return submission.GetSubmmisionByIDCore{},
+				fmt.Errorf("error on to positions %w", err)
+		}
+		result.To[i].ApproverPosition = to.Position.Name
+		result.ApproverActions[i].ApproverPosition = to.Position.Name
+	}
+
+	for _, submissionCc := range submissions.Ccs {
+		tmp := submission.CcApprover{
+			CcName: submissionCc.Name,
+			CcId:   submissionCc.UserID,
+		}
+
+		result.CC = append(result.CC, tmp)
+	}
+
+	for i, v := range result.CC {
+		var cc admin.Users
+		if err := sm.db.Preload("Positions").
+			Where("id = ?", v.CcId).
+			First(&cc).Error; err != nil {
+			log.Errorf("eror on finding to position %w", err)
+			return submission.GetSubmmisionByIDCore{},
+				fmt.Errorf("error on to positions %w", err)
+		}
+
+		result.CC[i].CcPosition = cc.Position.Name
+	}
+
+	result.Message = submissions.Message
+	result.Title = submissions.Title
+
+	return result, nil
 }
