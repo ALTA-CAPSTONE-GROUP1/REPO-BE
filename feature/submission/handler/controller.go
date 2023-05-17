@@ -26,7 +26,7 @@ func (sc *submissionController) FindRequirementHandler() echo.HandlerFunc {
 		var response RequirementResponseBody
 
 		userID := helper.DecodeToken(c)
-		if userID != "" {
+		if userID == "" {
 			c.Logger().Error("")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
@@ -72,20 +72,20 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var newSub submission.AddSubmissionCore
 		userID := helper.DecodeToken(c)
-		if userID != "" {
+		if userID == "" {
 			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
 
 		req := new(AddAddSubReq)
-		if err := c.Bind(&req); err != nil {
-			log.Errorf("error on finding binding submission")
+		if err := c.Bind(req); err != nil {
+			log.Errorf("error on finding binding submission", err)
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest,
 				"bad request",
 				nil))
 		}
 
-		attachment, err := c.FormFile("attachment")
+		attachmentHeader, err := c.FormFile("attachment")
 		if err != nil {
 			log.Error("error occurs on read attachment")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest,
@@ -94,7 +94,11 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 			))
 		}
 
-		req.Attachment = attachment
+		if err != nil {
+			log.Error("error occurs on open attachment")
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "internal server error", nil))
+		}
+
 		newSub.Message = req.Message
 		newSub.SubmissionType = req.SubmissionType
 		newSub.SubmissionValue = req.SubmissionValue
@@ -115,7 +119,7 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 			newSub.ToApprover = append(newSub.ToApprover, tmp)
 		}
 
-		if err := sc.sc.AddSubmissionLogic(newSub, req.Attachment); err != nil {
+		if err := sc.sc.AddSubmissionLogic(newSub, attachmentHeader); err != nil {
 			log.Error("error on calling addsubmissionlogic")
 			if strings.Contains(err.Error(), "record not found ") {
 				return c.JSON(helper.ResponseFormat(
@@ -140,7 +144,7 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
-		if userID != "" {
+		if userID == "" {
 			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
@@ -229,7 +233,7 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
-		if userID != "" {
+		if userID == "" {
 			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
