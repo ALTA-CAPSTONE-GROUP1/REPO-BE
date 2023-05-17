@@ -11,12 +11,14 @@ type Handler interface {
 	FindRequirementHandler() echo.HandlerFunc
 	AddSubmissionHandler() echo.HandlerFunc
 	GetAllSubmissionHandler() echo.HandlerFunc
+	GetSubmissionByIdHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
 	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
 	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []admin.Type, error)
+	GetSubmissionByIDLogic(submissionID int) (GetSubmmisionByIDCore, error)
 }
 
 type Repository interface {
@@ -47,6 +49,7 @@ type GetAllQueryParams struct {
 
 type GetSubmmisionByIDCore struct {
 	To              []ToApprover
+	Title           string
 	CC              []CcApprover
 	SubmissionType  string
 	ApproverActions []ApproverActions

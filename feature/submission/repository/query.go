@@ -252,7 +252,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.Ge
 		First(&submissions, submissionID).Error; err != nil {
 		log.Errorf("error on finding all data from submission ID", err)
 		return submission.GetSubmmisionByIDCore{},
-			fmt.Errorf("error on finding submissionDatas", nil)
+			fmt.Errorf("error on finding submissionDatas %w", err)
 	}
 
 	result.Attachment = submissions.Files[0].Link
@@ -317,6 +317,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.Ge
 	}
 
 	result.Message = submissions.Message
+	result.Title = submissions.Title
 
 	return result, nil
 }
