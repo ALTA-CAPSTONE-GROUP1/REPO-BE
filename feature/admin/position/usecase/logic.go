@@ -33,15 +33,15 @@ func (pl *positionLogic) AddPositionLogic(newPosition position.Core) error {
 	return nil
 }
 
-func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) {
+func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, int64, error) {
 
-	positions, err := pl.pl.GetPositions(limit, offset, search)
+	positions, count, err := pl.pl.GetPositions(limit, offset, search)
 	if err != nil {
 		log.Error("error on getpositions query")
-		return nil, err
+		return nil, 0, err
 	}
 
-	return positions, nil
+	return positions, count, nil
 }
 
 func (pl *positionLogic) DeletePositionLogic(position int) error {

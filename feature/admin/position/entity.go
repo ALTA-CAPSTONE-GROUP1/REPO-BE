@@ -22,12 +22,12 @@ type Handler interface {
 
 type UseCase interface {
 	AddPositionLogic(newPosition Core) error
-	GetPositionsLogic(limit int, offset int, search string) ([]Core, error)
+	GetPositionsLogic(limit int, offset int, search string) ([]Core, int64, error)
 	DeletePositionLogic(position int) error
 }
 
 type Repository interface {
 	InsertPosition(newPosition Core) error
-	GetPositions(limit int, offset int, search string) ([]Core, error)
+	GetPositions(limit int, offset int, search string) ([]Core, int64, error)
 	DeletePosition(position int) error
 }

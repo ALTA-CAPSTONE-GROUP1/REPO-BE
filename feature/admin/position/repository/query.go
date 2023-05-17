@@ -34,38 +34,19 @@ func (pm *positionModel) InsertPosition(position position.Core) error {
 	return nil
 }
 
-func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]position.Core, error) {
+func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]position.Core, int64, error) {
 	var (
 		positions   []position.Core
 		DBpositions []admin.Position
+		count       int64
 	)
 
-	if search != "" {
-		searchConds := ("%" + search + "%")
-
-		tx := pm.db.Limit(limit).Offset(offset).Where("name LIKE ? OR tag LIKE ?", searchConds, searchConds).Find(&DBpositions)
-		if tx.Error != nil {
-			log.Error("get positions query error with search condition")
-			return nil, tx.Error
-		}
-
-		for _, dbPos := range DBpositions {
-			corePos := position.Core{
-				ID:   dbPos.ID,
-				Name: dbPos.Name,
-				Tag:  dbPos.Tag,
-			}
-			positions = append(positions, corePos)
-		}
-
-		return positions, nil
-	}
-
-	tx := pm.db.Limit(limit).Offset(offset).Find(&DBpositions)
+	tx := pm.db.Find(&DBpositions)
 	if tx.Error != nil {
 		log.Error("get posititons query error without search condition")
-		return nil, tx.Error
+		return nil, 0, tx.Error
 	}
+	tx.Count(&count)
 
 	for _, dbPos := range DBpositions {
 		corePos := position.Core{
@@ -76,7 +57,7 @@ func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]p
 		positions = append(positions, corePos)
 	}
 
-	return positions, nil
+	return positions, count, nil
 }
 
 func (pm *positionModel) DeletePosition(position int) error {

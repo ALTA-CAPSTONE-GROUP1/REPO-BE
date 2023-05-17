@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -60,27 +60,47 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 		offset := c.QueryParam("offset")
 		search := c.QueryParam("search")
 
+		if limit == "" {
+			limit = "10"
+		}
+
+		if offset == "" {
+			offset = "0"
+		}
+
 		limitInt, err := strconv.Atoi(limit)
 		if err != nil {
 			c.Logger().Errorf("limit are not a number %v", limit)
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Server Error, limit are NaN", nil))
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest, "Server Error, limit are NaN", nil, nil))
 		}
 		offsetInt, err := strconv.Atoi(offset)
 		if err != nil {
 			c.Logger().Errorf("offset are not a number %v", offset)
-			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error, offset are NaN", nil))
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "Server Error, offset are NaN", nil, nil))
 		}
 		if limitInt < 0 || offsetInt < 0 {
 			c.Logger().Error("error occurs because limit/offset are negatif")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "limit and offset cannot negative", nil))
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest, "limit and offset cannot negative", nil, nil))
 		}
 
-		positions, err := pc.service.GetPositionsLogic(limitInt, offsetInt, search)
+		positions, _, err := pc.service.GetPositionsLogic(limitInt, offsetInt, search)
 		if err != nil {
 			c.Logger().Error("error occurs when calling GetPositionsLogic")
-			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error", nil))
+			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "Server Error", nil, nil))
 		}
-		fmt.Println(positions)
+
+		filteredPositions := []position.Core{}
+		if search != "" {
+			for _, pos := range positions {
+				if strings.Contains(strings.ToLower(pos.Name), strings.ToLower(search)) ||
+					strings.Contains(strings.ToLower(pos.Tag), strings.ToLower(search)) {
+					filteredPositions = append(filteredPositions, pos)
+				}
+			}
+		} else {
+			filteredPositions = positions
+		}
+
 		response := []GetAllPositionResponse{}
 
 		for _, v := range positions {
@@ -92,7 +112,19 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			response = append(response, tmp)
 		}
 
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to get positions data", response))
+		//pagination menggunakan limit, offset dan len(response)
+		totalData := len(filteredPositions)
+		totalPage := int(math.Ceil(float64(totalData) / float64(limitInt)))
+		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+
+		meta := Meta{
+			Current_limit: limitInt,
+			Current_Page:  currentPage,
+			Data_amount:   totalData,
+			Page_amount:   totalPage,
+		}
+
+		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "succes to get positions data", response, meta))
 	}
 }
 
