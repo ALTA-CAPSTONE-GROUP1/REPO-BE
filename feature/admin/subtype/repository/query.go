@@ -155,7 +155,7 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 		return nil, nil, fmt.Errorf("error when get all submission type %w", err)
 	}
 
-	if err := st.db.Find(&hasTypes).Error; err != nil {
+	if err := st.db.Unscoped().Where("1 = 1").Find(&hasTypes).Error; err != nil {
 		log.Errorf("failed on finding all position_has_types for getall submission types %w", err)
 		return nil, nil, fmt.Errorf("error when get all positions_has_types %w", err)
 	}
