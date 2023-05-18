@@ -15,6 +15,6 @@ func ApproveRoutes(e *echo.Echo, pc approve.Handler) {
 
 	e.GET("/approver", pc.GetSubmissionAprroveHandler(), helper.JWTMiddleWare())
 	e.GET("/approver/:id", pc.GetSubmissionByIdHandler(), helper.JWTMiddleWare())
-	// e.PUT("/profile", pc.UpdateUserHandler(), helper.JWTMiddleWare())
+	e.PUT("/approver/:id", pc.UpdateSubmissionApproveHandler(), helper.JWTMiddleWare())
 
 }
