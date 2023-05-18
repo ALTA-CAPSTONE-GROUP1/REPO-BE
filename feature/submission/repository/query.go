@@ -213,7 +213,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			}
 			ccApprover = append(ccApprover, submission.CcApprover{
 				CcPosition: ccDetails.Position.Name,
-				CcName:     ccDetails.Name,
+				CcName:     cc.Name,
 				CcId:       cc.UserID,
 			})
 		}
@@ -260,6 +260,9 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		log.Errorf("error on finding submissions for by userid and submissionid %s: %v", userID, err)
 		return submission.GetSubmissionByIDCore{}, err
 	}
+
+
+
 
 	var toApprover []submission.ToApprover
 	var toActions []submission.ApproverActions
