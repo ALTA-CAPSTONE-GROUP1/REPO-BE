@@ -28,14 +28,17 @@ type Core struct {
 type Handler interface {
 	GetSubmissionAprroveHandler() echo.HandlerFunc
 	GetSubmissionByIdHandler() echo.HandlerFunc
+	UpdateSubmissionApproveHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
 	GetSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
 	GetSubmissionById(userID string, id int) (Core, error)
+	UpdateApprove(userID string, id int, updateInput Core) error
 }
 
 type Repository interface {
 	SelectSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
 	SelectSubmissionById(userID string, id int) (Core, error)
+	UpdateApprove(userID string, id int, input Core) error
 }

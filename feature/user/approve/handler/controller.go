@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -16,6 +17,40 @@ type approveController struct {
 func New(a approve.UseCase) approve.Handler {
 	return &approveController{
 		service: a,
+	}
+}
+
+// UpdateSubmissionApproveHandler implements approve.Handler
+func (ac *approveController) UpdateSubmissionApproveHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		submissionID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.Logger().Error("cannot use path param", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
+		}
+
+		updateInput := InputUpdate{}
+		if err := c.Bind(&updateInput); err != nil {
+			c.Logger().Error("terjadi kesalahan bind", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "invalid input", nil))
+		}
+
+		input := approve.Core{
+			Status: updateInput.Action,
+		}
+
+		if err := ac.service.UpdateApprove(userID, submissionID, input); err != nil {
+			c.Logger().Error("failed on calling updateprofile log")
+			if strings.Contains(err.Error(), "affected") {
+				c.Logger().Error("no rows affected on update submission")
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "data is up to date", nil))
+			}
+
+			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "internal server error", nil))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK, "succes to give action", nil))
 	}
 }
 

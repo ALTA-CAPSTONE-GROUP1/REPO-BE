@@ -41,13 +41,13 @@ func CoreToGetAllApproveResponse(data []approve.Core) []SubmissionResponse {
 type SubmissionByIdResponse struct {
 	ID             int           `json:"submission_id"`
 	From           string        `json:"from"`
-	Title          string        `json:"title"`
-	SubmissionType string        `json:"submission_type"`
-	Message        string        `json:"message"`
-	Attachment     string        `json:"attachment"`
 	To             []ToApp       `json:"to"`
 	Cc             []CcRecipient `json:"cc"`
-	Status         []Action      `json:"status_by"`
+	Title          string        `json:"title"`
+	SubmissionType string        `json:"submission_type"`
+	Sign           []Action      `json:"status_by"`
+	Message        string        `json:"message"`
+	Attachment     string        `json:"attachment"`
 }
 
 type ToApp struct {
@@ -89,6 +89,14 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 		result.Cc = append(result.Cc, cCcs)
 	}
 
+	for _, z := range data.Signs {
+		cSigns := Action{
+			Action:    z.Name,
+			AppAction: z.User.Position.Name,
+		}
+		result.Sign = append(result.Sign, cSigns)
+	}
+
 	return result
 }
 
@@ -124,6 +132,16 @@ func SubmissionToCore(data user.Submission) approve.Core {
 			},
 		}
 		result.Ccs = append(result.Ccs, cCcs)
+	}
+
+	for _, z := range data.Signs {
+		cSigns := user.Sign{
+			User: user.Users{
+				Position: z.User.Position,
+				Name:     z.User.Name,
+			},
+		}
+		result.Signs = append(result.Signs, cSigns)
 	}
 
 	return result
