@@ -54,4 +54,6 @@ type Sign struct {
 	ID           int `gorm:"primaryKey"`
 	SubmissionID int
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
+	Name         string    `gorm:"size:50"`
+	UserID       string    `gorm:"size:50"`
 }

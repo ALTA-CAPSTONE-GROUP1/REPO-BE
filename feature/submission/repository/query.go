@@ -246,83 +246,76 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 	return resultAllSubmission, choices, nil
 }
 
-func (sm *submissionModel) SelectSubmissionByID(submissionID int) (submission.GetSubmmisionByIDCore, error) {
-	var result submission.GetSubmmisionByIDCore
-
-	var submissions Submission
-	if err := sm.db.Preload("To").
-		Preload("Signs").
-		Preload("Ccs").
+func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string) (submission.GetSubmissionByIDCore, error) {
+	var (
+		result         submission.GetSubmissionByIDCore
+		submissionByID Submission
+	)
+	if err := sm.db.Where("user_id = ? AND id = ?", userID, submissionID).
 		Preload("Files").
-		First(&submissions, submissionID).Error; err != nil {
-		log.Errorf("error on finding all data from submission ID", err)
-		return submission.GetSubmmisionByIDCore{},
-			fmt.Errorf("error on finding submissionDatas %w", err)
+		Preload("Tos").
+		Preload("Ccs").
+		Preload("Signs").
+		First(&submissionByID).Error; err != nil {
+		log.Errorf("error on finding submissions for by userid and submissionid %s: %v", userID, err)
+		return submission.GetSubmissionByIDCore{}, err
 	}
 
-	result.Attachment = submissions.Files[0].Link
-
-	var typeDetails admin.Type
-	if err := sm.db.Where("id = ?", submissions.TypeID).
-		First(&typeDetails).Error; err != nil {
-		log.Errorf("error on finding submissionType detail %w", err)
-		return submission.GetSubmmisionByIDCore{},
-			fmt.Errorf("error on finding submissionType %w", err)
-	}
-
-	result.SubmissionType = typeDetails.Name
-
-	for _, submissionTo := range submissions.Tos {
-		tmp := submission.ToApprover{
-			ApproverPosition: submissionTo.Name,
-			ApproverId:       submissionTo.UserID,
+	var toApprover []submission.ToApprover
+	var toActions []submission.ApproverActions
+	for _, to := range submissionByID.Tos {
+		var toDetails admin.Users
+		if err := sm.db.Where("id = ?", to.UserID).Preload("Position").First(&toDetails).Error; err != nil {
+			log.Errorf("failed on finding positions of tos %w", err)
+			return submission.GetSubmissionByIDCore{}, err
 		}
-		tmpaction := submission.ApproverActions{
-			Action:       submissionTo.Action_Type,
-			ApproverName: submissionTo.Name,
-			Message:      submissionTo.Message,
-		}
-		result.To = append(result.To, tmp)
-		result.ApproverActions = append(result.ApproverActions, tmpaction)
-	}
-
-	for i, v := range result.To {
-		var to admin.Users
-		if err := sm.db.Preload("Positions").
-			Where("id = ?", v.ApproverId).
-			First(&to).Error; err != nil {
-			log.Errorf("eror on finding to position %w", err)
-			return submission.GetSubmmisionByIDCore{},
-				fmt.Errorf("error on to positions %w", err)
-		}
-		result.To[i].ApproverPosition = to.Position.Name
-		result.ApproverActions[i].ApproverPosition = to.Position.Name
-	}
-
-	for _, submissionCc := range submissions.Ccs {
-		tmp := submission.CcApprover{
-			CcName: submissionCc.Name,
-			CcId:   submissionCc.UserID,
+		toApprover = append(toApprover, submission.ToApprover{
+			ApproverId:       to.UserID,
+			ApproverName:     toDetails.Name,
+			ApproverPosition: toDetails.Position.Name,
+		})
+		toActions = append(toActions, submission.ApproverActions{
+			Action:           to.Action_Type,
+			ApproverName:     toDetails.Name,
+			ApproverPosition: toDetails.Position.Name,
+			Message:          to.Message,
+		})
+		var signs []Sign
+		if err := sm.db.Where("id = ? AND user_id = ?", submissionByID.ID, to.UserID).Find(&signs).Error; err != nil {
+			log.Errorf("error on finding sign datas %w", err)
+			return submission.GetSubmissionByIDCore{}, err
 		}
 
-		result.CC = append(result.CC, tmp)
-	}
-
-	for i, v := range result.CC {
-		var cc admin.Users
-		if err := sm.db.Preload("Positions").
-			Where("id = ?", v.CcId).
-			First(&cc).Error; err != nil {
-			log.Errorf("eror on finding to position %w", err)
-			return submission.GetSubmmisionByIDCore{},
-				fmt.Errorf("error on to positions %w", err)
+		for _, v := range signs {
+			result.Signs = append(result.Signs, v.Name)
 		}
 
-		result.CC[i].CcPosition = cc.Position.Name
+	}
+	var ccApprover []submission.CcApprover
+	for _, cc := range submissionByID.Ccs {
+		var ccDetails admin.Users
+		if err := sm.db.Where("id = ?", cc.UserID).Preload("Position").First(&ccDetails).Error; err != nil {
+			log.Errorf("failed on finding positions of tos %w", err)
+			return submission.GetSubmissionByIDCore{}, err
+		}
+		ccApprover = append(ccApprover, submission.CcApprover{
+			CcPosition: ccDetails.Position.Name,
+			CcName:     ccDetails.Name,
+			CcId:       cc.UserID,
+		})
 	}
 
-	result.Message = submissions.Message
-	result.Title = submissions.Title
+	if len(submissionByID.Files) > 0 {
+		result.Attachment = submissionByID.Files[0].Link
+	}
+
+	result.To = append(result.To, toApprover...)
+	result.ApproverActions = append(result.ApproverActions, toActions...)
+	result.CC = append(result.CC, ccApprover...)
+	result.Title = submissionByID.Title
+	result.Message = submissionByID.Message
+	result.Status = submissionByID.Status
+	result.ActionMessage = toActions[(len(toActions) - 1)].Message
 
 	return result, nil
 }

@@ -284,7 +284,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			c.Logger().Error("invalid or expired jwt")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
 		}
-		IDParam := c.Param("submisision_id")
+		IDParam := c.Param("submission_id")
 		subID, err := strconv.Atoi(IDParam)
 		if err != nil {
 			log.Errorf("error on convert submissionID to int", err.Error())
@@ -295,7 +295,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			))
 		}
 
-		result, err := sc.sc.GetSubmissionByIDLogic(subID)
+		result, err := sc.sc.GetSubmissionByIDLogic(subID, userID)
 		if err != nil {
 			log.Errorf("error in calling submissionID Logic", err)
 			if strings.Contains(err.Error(), "syntax") {
@@ -342,7 +342,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			}
 			response.CC = append(response.CC, tmp)
 		}
-
+		
 		response.Attachment = result.Attachment
 		response.Title = result.Title
 		response.ActionMessage = result.ActionMessage
