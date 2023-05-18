@@ -17,4 +17,6 @@ func SubmissionRoutes(e *echo.Echo, sc submission.Handler) {
 	e.GET("/submission", sc.GetAllSubmissionHandler(), helper.JWTMiddleWare())
 	e.GET("submission/requirements", sc.FindRequirementHandler(), helper.JWTMiddleWare())
 	e.GET("/submission/:submission_id", sc.GetSubmissionByIdHandler(), helper.JWTMiddleWare())
+	e.DELETE("/submission/:submission_id", sc.DeleteSubmissionHandler(), helper.JWTMiddleWare())
+	e.PUT("/submission/:submission_id", sc.UpdateSubmissionHandler(), helper.JWTMiddleWare())
 }

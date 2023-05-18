@@ -11,6 +11,8 @@ type Handler interface {
 	AddSubmissionHandler() echo.HandlerFunc
 	GetAllSubmissionHandler() echo.HandlerFunc
 	GetSubmissionByIdHandler() echo.HandlerFunc
+	DeleteSubmissionHandler() echo.HandlerFunc
+	UpdateSubmissionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
@@ -18,6 +20,8 @@ type UseCase interface {
 	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
 	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
 	GetSubmissionByIDLogic(submissionID int, userID string) (GetSubmissionByIDCore, error)
+	DeleteSubmissionLogic(submissionID int, userID string) error
+	UpdateDataByOwnerLogic(updatedata UpdateCore, subFile *multipart.FileHeader) error
 }
 
 type Repository interface {
@@ -25,6 +29,9 @@ type Repository interface {
 	InsertSubmission(newSub AddSubmissionCore) error
 	SelectAllSubmissions(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
 	SelectSubmissionByID(submissionID int, userID string) (GetSubmissionByIDCore, error)
+	DeleteSubmissionByID(submissionID int, userID string) error
+	UpdateDataByOwner(UpdateCore) error
+	FindFileData(subID int, fileName string) bool
 }
 
 type AllSubmiisionCore struct {
@@ -37,6 +44,15 @@ type AllSubmiisionCore struct {
 	Opened         bool
 	Attachment     string
 	SubmissionType string
+}
+
+type UpdateCore struct {
+	SubmissionID   int
+	UserID         string
+	Message        string
+	Status         string
+	AttachmentName string
+	AttachmentLink string
 }
 
 type GetAllQueryParams struct {

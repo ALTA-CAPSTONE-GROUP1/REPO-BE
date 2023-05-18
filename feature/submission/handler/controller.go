@@ -342,7 +342,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			}
 			response.CC = append(response.CC, tmp)
 		}
-		
+
 		response.Attachment = result.Attachment
 		response.Title = result.Title
 		response.ActionMessage = result.ActionMessage
@@ -353,6 +353,133 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			http.StatusOK,
 			"succes to get submission by id",
 			response,
+		))
+	}
+}
+
+func (sc *submissionController) DeleteSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID == "" {
+			c.Logger().Error("invalid or expired jwt")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
+		submissionParam := c.Param("submission_id")
+
+		submissionID, err := strconv.Atoi(submissionParam)
+		if err != nil {
+			log.Error("parameter is not a number")
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "data not found", nil))
+		}
+		if err := sc.sc.DeleteSubmissionLogic(submissionID, userID); err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "data not found", nil))
+			}
+			if strings.Contains(err.Error(), "sent") {
+				return c.JSON(helper.ResponseFormat(
+					http.StatusUnauthorized,
+					"submission has been updated by approve",
+					nil,
+				))
+			}
+
+			log.Error("unexpected error", err)
+			return c.JSON(helper.ResponseFormat(
+				http.StatusInternalServerError,
+				"server error",
+				nil,
+			))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK,
+			"succes to delete data",
+			nil,
+		))
+	}
+}
+
+func (sc *submissionController) UpdateSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var editedData submission.UpdateCore
+		userID := helper.DecodeToken(c)
+		if userID == "" {
+			c.Logger().Error("invalid or expired jwt")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
+
+		req := new(AddAddSubReq)
+		if err := c.Bind(req); err != nil {
+			log.Errorf("error on finding binding submission", err)
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"bad request",
+				nil))
+		}
+
+		attachmentHeader, err := c.FormFile("attachment")
+		if err != nil {
+			log.Error("error occurs on read attachment")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest,
+				"bad request",
+				nil,
+			))
+		}
+
+		editedData.Message = req.Message
+		submissionParam := c.Param("submission_id")
+
+		submissionID, err := strconv.Atoi(submissionParam)
+		if err != nil {
+			log.Error("parameter is not a number")
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "data not found", nil))
+		}
+		editedData.SubmissionID = submissionID
+		editedData.UserID = userID
+
+		if err := sc.sc.UpdateDataByOwnerLogic(editedData, attachmentHeader); err != nil {
+			if strings.Contains(err.Error(), "same file") {
+				log.Errorf("error because of same file for update submission")
+				return c.JSON(helper.ResponseFormat(http.StatusConflict,
+					"cannot upload with same file name or duplicate file",
+					nil,
+				))
+			}
+			if strings.Contains(err.Error(), "cannot open subfile attachment") {
+				return c.JSON(
+					helper.ResponseFormat(
+						http.StatusBadRequest,
+						"failed to get file",
+						nil,
+					))
+			}
+			if strings.Contains(err.Error(), "third party") {
+				return c.JSON(helper.ResponseFormat(
+					http.StatusInternalServerError,
+					"third party server error",
+					nil,
+				))
+			}
+			if strings.Contains(err.Error(), "submisison data not found") {
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "submission data not found", nil))
+			}
+			if strings.Contains(err.Error(), "status not") {
+				return c.JSON(helper.ResponseFormat(
+					http.StatusConflict,
+					"user submission has been updated by approver",
+					nil,
+				))
+			}
+
+			return c.JSON(helper.ResponseFormat(
+				http.StatusInternalServerError,
+				"server error",
+				nil,
+			))
+		}
+
+		return c.JSON(helper.ResponseFormat(
+			http.StatusOK,
+			"succes to update submission data",
+			nil,
 		))
 	}
 }

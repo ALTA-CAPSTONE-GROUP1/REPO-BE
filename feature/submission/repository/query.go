@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -318,4 +319,88 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.ActionMessage = toActions[(len(toActions) - 1)].Message
 
 	return result, nil
+}
+
+func (sm *submissionModel) DeleteSubmissionByID(submissionID int, userID string) error {
+	var submission Submission
+	var count int64
+	if err := sm.db.Where("id = ? AND user_id = ?", submissionID, userID).Find(&submission).Count(&count).Error; err != nil {
+		log.Warn("cannot find submission datas")
+		return err
+	}
+	if count == 0 {
+		return fmt.Errorf("submission data not found")
+	}
+	if submission.Status != "Sent" {
+		log.Warn("submission status not 'sent'")
+		return errors.New("submission status are not 'Sent'")
+	}
+	if err := sm.db.Delete(&submission).Error; err != nil {
+		log.Errorf("failed to delete submission")
+		return err
+	}
+
+	return nil
+}
+
+func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) error {
+	tx := sm.db.Begin()
+
+	var submission Submission
+	if err := tx.Where("id = ?", editedData.SubmissionID).First(&submission).Error; err != nil {
+		tx.Rollback()
+		log.Error("cannot find submission data")
+		return errors.New("submission data not found")
+	}
+	if submission.Status != "Sent" {
+		tx.Rollback()
+		log.Errorf("submisison status not 'sent'")
+		return errors.New("submission status not 'sent'")
+	}
+
+	if err := tx.Exec(`
+		UPDATE submissions
+		SET message = ?, status = ?
+		WHERE id = ? AND user_id = ?
+	`, editedData.Message, "sent", editedData.SubmissionID, editedData.UserID).Error; err != nil {
+		tx.Rollback()
+		log.Errorf("error on update submission data")
+		return err
+	}
+
+	if err := tx.Exec(`
+		UPDATE files
+		SET name = ?, link = ?
+		WHERE submission_id = ?
+	`, editedData.AttachmentName, editedData.AttachmentLink, editedData.SubmissionID).Error; err != nil {
+		tx.Rollback()
+		log.Errorf("error on saving new attachment")
+		return err
+	}
+
+	if err := tx.Exec(`
+		DELETE FROM signs 
+		WHERE submission_id = ?
+	`, editedData.SubmissionID).Error; err != nil {
+		tx.Rollback()
+		log.Errorf("error on delete signs data in database")
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
+func (sm *submissionModel) FindFileData(submissionID int, fileName string) bool {
+	var file File
+	result := sm.db.Where("name = ? AND submission_id = ?", fileName, submissionID).First(&file)
+
+	if result.Error != nil {
+		log.Errorf("error querying file data %s", result.Error)
+	}
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+
+	return true
 }
