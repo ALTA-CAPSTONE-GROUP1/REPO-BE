@@ -39,9 +39,11 @@ func (cm *ccModel) GetAllCc(userID string) ([]cc.CcCore, error) {
 			log.Errorf("error on finding submissions for user %s: %v", userID, err)
 			return []cc.CcCore{}, err
 		}
-	
-		for _, submission := range submissions {
 
+		for _, submission := range submissions {
+			if submission.Status != "Approved" {
+				continue
+			}
 			var toUser admin.Users
 			if err := cm.db.Where("id = ?", submission.Tos[len(submission.Tos)-1].UserID).Preload("Position").First(&toUser).Error; err != nil {
 				log.Errorf("error on finding to user %w", err)
