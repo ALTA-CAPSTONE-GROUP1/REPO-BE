@@ -100,3 +100,18 @@ func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int, userId strin
 
 	return result, nil
 }
+
+func (sr *submissionLogic) DeleteSubmissionLogic(submissionID int, userID string) error {
+	if err := sr.sl.DeleteSubmissionByID(submissionID, userID); err!= nil{
+		log.Errorf("error on calling delte submission ID")
+		if strings.Contains(err.Error(),"not found"){
+return errors.New("data not found")
+		}
+		if strings.Contains(err.Error(),"sent"){
+			return errors.New("unauthorized submission status is sent")
+		}
+		log.Errorf("unexpected error %w", err)
+		return fmt.Errorf("unexppected error %w", err)
+	}
+	return nil
+}

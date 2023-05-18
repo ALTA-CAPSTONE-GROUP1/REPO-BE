@@ -342,7 +342,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			}
 			response.CC = append(response.CC, tmp)
 		}
-		
+
 		response.Attachment = result.Attachment
 		response.Title = result.Title
 		response.ActionMessage = result.ActionMessage
@@ -353,6 +353,47 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			http.StatusOK,
 			"succes to get submission by id",
 			response,
+		))
+	}
+}
+
+func (sc *submissionController) DeleteSubmissionHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userID := helper.DecodeToken(c)
+		if userID == "" {
+			c.Logger().Error("invalid or expired jwt")
+			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "invalid or expired JWT", nil))
+		}
+		submissionParam := c.Param("submission_id")
+
+		submissionID, err := strconv.Atoi(submissionParam)
+		if err != nil {
+			log.Error("parameter is not a number")
+			return c.JSON(helper.ResponseFormat(http.StatusNotFound, "data not found", nil))
+		}
+		if err := sc.sc.DeleteSubmissionLogic(submissionID, userID); err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return c.JSON(helper.ResponseFormat(http.StatusNotFound, "data not found", nil))
+			}
+			if strings.Contains(err.Error(), "sent") {
+				return c.JSON(helper.ResponseFormat(
+					http.StatusUnauthorized,
+					"submission has been updated by approve",
+					nil,
+				))
+			}
+
+			log.Error("unexpected error", err)
+			return c.JSON(helper.ResponseFormat(
+				http.StatusInternalServerError,
+				"server error",
+				nil,
+			))
+		}
+
+		return c.JSON(helper.ResponseFormat(http.StatusOK,
+			"succes to delete data",
+			nil,
 		))
 	}
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -318,4 +319,26 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.ActionMessage = toActions[(len(toActions) - 1)].Message
 
 	return result, nil
+}
+
+func (sm *submissionModel) DeleteSubmissionByID(submissionID int, userID string) error {
+	var submission Submission
+	var count int64
+	if err := sm.db.Where("id = ? AND user_id = ?", submissionID, userID).Find(&submission).Count(&count).Error; err != nil {
+		log.Warn("cannot find submission datas")
+		return err
+	}
+	if count == 0 {
+		return fmt.Errorf("submission data not found")
+	}
+	if submission.Status != "Sent" {
+		log.Warn("submission status not 'sent'")
+		return errors.New("submission status are not 'Sent'")
+	}
+	if err := sm.db.Delete(&submission).Error; err != nil {
+		log.Errorf("failed to delete submission")
+		return err
+	}
+
+	return nil
 }
