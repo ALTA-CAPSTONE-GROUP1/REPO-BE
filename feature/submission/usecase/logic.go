@@ -83,8 +83,8 @@ func (sr *submissionLogic) GetAllSubmissionLogic(userID string, pr submission.Ge
 	return allsubmission, typelist, nil
 }
 
-func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int) (submission.GetSubmissionByIDCore, error) {
-	result, err := sr.sl.SelectSubmissionByID(submissionID)
+func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int, userId string) (submission.GetSubmissionByIDCore, error) {
+	result, err := sr.sl.SelectSubmissionByID(submissionID, userId)
 	if err != nil {
 		if strings.Contains(err.Error(), "record not found") {
 			return submission.GetSubmissionByIDCore{}, errors.New("record not found")

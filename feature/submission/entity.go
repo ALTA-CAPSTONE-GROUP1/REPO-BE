@@ -17,14 +17,14 @@ type UseCase interface {
 	FindRequirementLogic(userID string, typeName string, value int) (Core, error)
 	AddSubmissionLogic(newSub AddSubmissionCore, subFile *multipart.FileHeader) error
 	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
-	GetSubmissionByIDLogic(submissionID int) (GetSubmissionByIDCore, error)
+	GetSubmissionByIDLogic(submissionID int, userID string) (GetSubmissionByIDCore, error)
 }
 
 type Repository interface {
 	FindRequirement(userID string, typeName string, value int) (Core, error)
 	InsertSubmission(newSub AddSubmissionCore) error
 	SelectAllSubmissions(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
-	SelectSubmissionByID(submissionID int) (GetSubmissionByIDCore, error)
+	SelectSubmissionByID(submissionID int, userID string) (GetSubmissionByIDCore, error)
 }
 
 type AllSubmiisionCore struct {
@@ -55,6 +55,8 @@ type GetSubmissionByIDCore struct {
 	ActionMessage   string
 	Attachment      string
 	Message         string
+	Status          string
+	Signs           []string
 }
 
 type ApproverActions struct {

@@ -295,7 +295,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			))
 		}
 
-		result, err := sc.sc.GetSubmissionByIDLogic(subID)
+		result, err := sc.sc.GetSubmissionByIDLogic(subID, userID)
 		if err != nil {
 			log.Errorf("error in calling submissionID Logic", err)
 			if strings.Contains(err.Error(), "syntax") {
