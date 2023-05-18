@@ -48,7 +48,6 @@ func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCor
 			log.Errorf("error fron third party upload file %w", err)
 			return err
 		}
-		fmt.Println(uploadUrl)
 		newSub.AttachmentLink = uploadUrl[0]
 		newSub.Attachment = subFile.Filename
 	}
@@ -62,6 +61,46 @@ func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCor
 			return errors.New("syntax error")
 		}
 		return errors.New("unexpected error on inserting data")
+	}
+
+	return nil
+}
+
+func (sr *submissionLogic) UpdateDataByOwnerLogic(submission submission.UpdateCore, subFile *multipart.FileHeader) error {
+
+	exist := sr.sl.FindFileData(submission.SubmissionID, subFile.Filename)
+
+	if exist {
+		return errors.New("cannot upload same file and same file name to revise")
+	}
+
+	uploadFile, err := subFile.Open()
+	if err != nil {
+		log.Errorf("cannot open subfile attachment data")
+		return errors.New("cannot open subfile attachment data")
+	}
+	uploadUrl, err := helper.UploadFile(&uploadFile, "/"+submission.UserID)
+	if err != nil {
+		log.Errorf("error fron third party upload file %w", err)
+		return err
+	}
+	if len(uploadUrl) > 0 {
+		submission.AttachmentLink = uploadUrl[0]
+		submission.AttachmentName = subFile.Filename
+	}
+	err = sr.sl.UpdateDataByOwner(submission)
+	if err != nil {
+		if strings.Contains(err.Error(), "submission data not found") {
+			return errors.New("submission data not found")
+		}
+		if strings.Contains(err.Error(), "status not") {
+			return errors.New("user status not sent")
+		}
+		if strings.Contains(err.Error(), "syntax") {
+			return errors.New("submission data not found")
+		}
+		log.Errorf("unexpected error %w", err)
+		return errors.New("server error, unexpected error")
 	}
 
 	return nil
@@ -102,12 +141,12 @@ func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int, userId strin
 }
 
 func (sr *submissionLogic) DeleteSubmissionLogic(submissionID int, userID string) error {
-	if err := sr.sl.DeleteSubmissionByID(submissionID, userID); err!= nil{
+	if err := sr.sl.DeleteSubmissionByID(submissionID, userID); err != nil {
 		log.Errorf("error on calling delte submission ID")
-		if strings.Contains(err.Error(),"not found"){
-return errors.New("data not found")
+		if strings.Contains(err.Error(), "not found") {
+			return errors.New("data not found")
 		}
-		if strings.Contains(err.Error(),"sent"){
+		if strings.Contains(err.Error(), "sent") {
 			return errors.New("unauthorized submission status is sent")
 		}
 		log.Errorf("unexpected error %w", err)

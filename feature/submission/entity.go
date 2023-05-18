@@ -12,6 +12,7 @@ type Handler interface {
 	GetAllSubmissionHandler() echo.HandlerFunc
 	GetSubmissionByIdHandler() echo.HandlerFunc
 	DeleteSubmissionHandler() echo.HandlerFunc
+	UpdateSubmissionHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
@@ -20,6 +21,7 @@ type UseCase interface {
 	GetAllSubmissionLogic(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
 	GetSubmissionByIDLogic(submissionID int, userID string) (GetSubmissionByIDCore, error)
 	DeleteSubmissionLogic(submissionID int, userID string) error
+	UpdateDataByOwnerLogic(updatedata UpdateCore, subFile *multipart.FileHeader) error
 }
 
 type Repository interface {
@@ -29,6 +31,7 @@ type Repository interface {
 	SelectSubmissionByID(submissionID int, userID string) (GetSubmissionByIDCore, error)
 	DeleteSubmissionByID(submissionID int, userID string) error
 	UpdateDataByOwner(UpdateCore) error
+	FindFileData(subID int, fileName string) bool
 }
 
 type AllSubmiisionCore struct {
@@ -44,7 +47,7 @@ type AllSubmiisionCore struct {
 }
 
 type UpdateCore struct {
-	SubmissionID   string
+	SubmissionID   int
 	UserID         string
 	Message        string
 	Status         string

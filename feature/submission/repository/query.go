@@ -352,6 +352,11 @@ func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) e
 		log.Error("cannot find submission data")
 		return errors.New("submission data not found")
 	}
+	if submission.Status != "Sent" {
+		tx.Rollback()
+		log.Errorf("submisison status not 'sent'")
+		return errors.New("submission status not 'sent'")
+	}
 
 	if err := tx.Exec(`
 		UPDATE submissions
@@ -384,4 +389,18 @@ func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) e
 
 	tx.Commit()
 	return nil
+}
+
+func (sm *submissionModel) FindFileData(submissionID int, fileName string) bool {
+	var file File
+	result := sm.db.Where("name = ? AND submission_id = ?", fileName, submissionID).First(&file)
+
+	if result.Error != nil {
+		log.Errorf("error querying file data %s", result.Error)
+	}
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+
+	return true
 }
