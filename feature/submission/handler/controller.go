@@ -342,7 +342,7 @@ func (sc *submissionController) GetSubmissionByIdHandler() echo.HandlerFunc {
 			}
 			response.CC = append(response.CC, tmp)
 		}
-
+		
 		response.Attachment = result.Attachment
 		response.Title = result.Title
 		response.ActionMessage = result.ActionMessage

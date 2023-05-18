@@ -251,7 +251,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		result         submission.GetSubmissionByIDCore
 		submissionByID Submission
 	)
-	if err := sm.db.Where("user_id = ? AND submissionID = ?", userID, submissionID).
+	if err := sm.db.Where("user_id = ? AND id = ?", userID, submissionID).
 		Preload("Files").
 		Preload("Tos").
 		Preload("Ccs").
@@ -280,6 +280,16 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 			ApproverPosition: toDetails.Position.Name,
 			Message:          to.Message,
 		})
+		var signs []Sign
+		if err := sm.db.Where("id = ? AND user_id = ?", submissionByID.ID, to.UserID).Find(&signs).Error; err != nil {
+			log.Errorf("error on finding sign datas %w", err)
+			return submission.GetSubmissionByIDCore{}, err
+		}
+
+		for _, v := range signs {
+			result.Signs = append(result.Signs, v.Name)
+		}
+
 	}
 	var ccApprover []submission.CcApprover
 	for _, cc := range submissionByID.Ccs {
@@ -299,16 +309,13 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		result.Attachment = submissionByID.Files[0].Link
 	}
 
-	if len(submissionByID.Signs) > 0 {
-		result.Signs = append(result.Signs)
-	}
-
 	result.To = append(result.To, toApprover...)
 	result.ApproverActions = append(result.ApproverActions, toActions...)
 	result.CC = append(result.CC, ccApprover...)
 	result.Title = submissionByID.Title
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
+	result.ActionMessage = toActions[(len(toActions) - 1)].Message
 
 	return result, nil
 }
