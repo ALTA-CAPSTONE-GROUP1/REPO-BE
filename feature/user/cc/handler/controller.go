@@ -12,16 +12,16 @@ import (
 )
 
 type ccController struct {
-	cu cc.UseCase
+	ch cc.UseCase
 }
 
 func New(cl cc.UseCase) cc.Handler {
 	return &ccController{
-		cu: cl,
+		ch: cl,
 	}
 }
 
-func (cu *ccController) GetAllCcHander() echo.HandlerFunc {
+func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := helper.DecodeToken(c)
 		if userID == "" {
@@ -60,7 +60,7 @@ func (cu *ccController) GetAllCcHander() echo.HandlerFunc {
 				nil, nil))
 		}
 
-		ccDatas, err := cu.cu.GetAllCcLogic(userID)
+		ccDatas, err := ch.ch.GetAllCcLogic(userID)
 		if err != nil {
 			if strings.Contains(err.Error(), "record") {
 				return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError,
