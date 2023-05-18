@@ -6,11 +6,11 @@ type Handler interface {
 	GetAllCcHander() echo.HandlerFunc
 }
 
-type Repository interface {
-	GetAllCcLogic() ([]CcCore, error)
+type UseCase interface {
+	GetAllCcLogic(userID string) ([]CcCore, error)
 }
 
-type UseCase interface {
+type Repository interface {
 	GetAllCc(userID string) ([]CcCore, error)
 }
 
