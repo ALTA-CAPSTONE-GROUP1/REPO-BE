@@ -342,3 +342,46 @@ func (sm *submissionModel) DeleteSubmissionByID(submissionID int, userID string)
 
 	return nil
 }
+
+func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) error {
+	tx := sm.db.Begin()
+
+	var submission Submission
+	if err := tx.Where("id = ?", editedData.SubmissionID).First(&submission).Error; err != nil {
+		tx.Rollback()
+		log.Error("cannot find submission data")
+		return errors.New("submission data not found")
+	}
+
+	if err := tx.Exec(`
+		UPDATE submissions
+		SET message = ?, status = ?
+		WHERE id = ? AND user_id = ?
+	`, editedData.Message, "sent", editedData.SubmissionID, editedData.UserID).Error; err != nil {
+		tx.Rollback()
+		log.Errorf("error on update submission data")
+		return err
+	}
+
+	if err := tx.Exec(`
+		UPDATE files
+		SET name = ?, link = ?
+		WHERE submission_id = ?
+	`, editedData.AttachmentName, editedData.AttachmentLink, editedData.SubmissionID).Error; err != nil {
+		tx.Rollback()
+		log.Errorf("error on saving new attachment")
+		return err
+	}
+
+	if err := tx.Exec(`
+		DELETE FROM signs 
+		WHERE submission_id = ?
+	`, editedData.SubmissionID).Error; err != nil {
+		tx.Rollback()
+		log.Errorf("error on delete signs data in database")
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}

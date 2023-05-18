@@ -28,6 +28,7 @@ type Repository interface {
 	SelectAllSubmissions(userID string, pr GetAllQueryParams) ([]AllSubmiisionCore, []SubTypeChoices, error)
 	SelectSubmissionByID(submissionID int, userID string) (GetSubmissionByIDCore, error)
 	DeleteSubmissionByID(submissionID int, userID string) error
+	UpdateDataByOwner(UpdateCore) error
 }
 
 type AllSubmiisionCore struct {
@@ -40,6 +41,15 @@ type AllSubmiisionCore struct {
 	Opened         bool
 	Attachment     string
 	SubmissionType string
+}
+
+type UpdateCore struct {
+	SubmissionID   string
+	UserID         string
+	Message        string
+	Status         string
+	AttachmentName string
+	AttachmentLink string
 }
 
 type GetAllQueryParams struct {
