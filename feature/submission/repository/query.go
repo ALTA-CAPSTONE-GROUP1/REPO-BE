@@ -261,9 +261,6 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		return submission.GetSubmissionByIDCore{}, err
 	}
 
-
-
-
 	var toApprover []submission.ToApprover
 	var toActions []submission.ApproverActions
 	for _, to := range submissionByID.Tos {
