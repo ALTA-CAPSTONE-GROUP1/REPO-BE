@@ -61,8 +61,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Find(&tos).Error; err != nil {
 		return submission.Core{}, err
 	}
-	// fmt.Println(tos)
-	fmt.Println(tos[0].Position)
+	
 	var result submission.Core
 
 	result.Requirement = typeDetail.Requirement
