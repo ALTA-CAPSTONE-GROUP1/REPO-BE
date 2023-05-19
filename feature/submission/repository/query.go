@@ -26,6 +26,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 	var typeDetail admin.Type
 	var tos []admin.Users
 	var ccs []admin.Users
+	var office []admin.Office
 
 	applicant.ID = userID
 
@@ -39,7 +40,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		return submission.Core{}, err
 	}
 
-	if err := sm.db.Preload("Position").Preload("Offices").
+	if err := sm.db.Preload("Position").
 		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
 		Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
 		Joins("INNER JOIN offices ON offices.id = users.office_id").
@@ -50,7 +51,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		return submission.Core{}, err
 	}
 
-	if err := sm.db.Preload("Position").Preload("Offices").
+	if err := sm.db.Preload("Position").
 		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
 		Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
 		Joins("INNER JOIN offices ON offices.id = users.office_id").
@@ -61,7 +62,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Find(&tos).Error; err != nil {
 		return submission.Core{}, err
 	}
-	
+
 	var result submission.Core
 
 	result.Requirement = typeDetail.Requirement
