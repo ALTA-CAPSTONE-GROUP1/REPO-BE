@@ -31,6 +31,7 @@ type Position struct {
 	Name      string         `gorm:"size:50;not null"`
 	Tag       string         `gorm:"size:50;not null"`
 	Types     []Type         `gorm:"many2many:position_has_types;constraint:OnDelete:CASCADE;"`
+	PositionHasTypes []PositionHasType `gorm:"foreignKey:PositionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
@@ -39,6 +40,7 @@ type Type struct {
 	Name        string         `gorm:"size:50;not null;unique"`
 	Requirement string         `gorm:"size:255;not null"`
 	Positions   []Position     `gorm:"many2many:position_has_types;constraint:OnDelete:CASCADE;"`
+	PositionHasTypes []PositionHasType `gorm:"foreignKey:TypeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
