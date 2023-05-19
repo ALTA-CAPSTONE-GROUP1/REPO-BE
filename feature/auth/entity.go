@@ -22,12 +22,22 @@ type Core struct {
 
 type Handler interface {
 	LoginHandler() echo.HandlerFunc
+	SignValidationLogic() echo.HandlerFunc
 }
 
 type UseCase interface {
 	LogInLogic(id string, password string) (Core, error)
+	SignVallidationLogic(signID string) (SignCore, error)
 }
 
 type Repository interface {
 	Login(id string, password string) (Core, error)
+	SignVaidation(signID string) (SignCore, error)
+}
+
+type SignCore struct {
+	Title            string
+	Officialname     string
+	Officialposition string
+	Date             string
 }

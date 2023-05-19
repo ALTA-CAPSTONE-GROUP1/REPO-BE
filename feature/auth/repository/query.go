@@ -3,7 +3,9 @@ package repository
 import (
 	"errors"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth"
+	subRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/repository"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
@@ -61,4 +63,42 @@ func (um *authModel) Login(id string, password string) (auth.Core, error) {
 		PhoneNumber: input.PhoneNumber,
 		Password:    input.Password,
 	}, nil
+}
+
+func (um *authModel) SignVaidation(signID string) (auth.SignCore, error) {
+	var (
+		user         admin.Users
+		sign         subRepo.Sign
+		result       auth.SignCore
+		dbsubmission subRepo.Submission
+	)
+
+	if err := um.db.Where("id = ?", signID).First(&sign).Error; err != nil {
+		log.Errorf("error in finding sign %w", err)
+		return auth.SignCore{}, err
+	}
+
+	if err := um.db.Where("id = ?", sign.SubmissionID).First(&dbsubmission).
+		Error; err != nil {
+		log.Errorf("error in finding submission %w", err)
+		return auth.SignCore{}, err
+	}
+
+	if err := um.db.Where("id = ?", sign.UserID).
+		Preload("Position").
+		First(&user).
+		Error; err != nil {
+		log.Errorf("error in finding user by sign userid %w", err)
+		return auth.SignCore{}, err
+	}
+
+	result = auth.SignCore{
+		Title:            dbsubmission.Title,
+		Officialname:     user.Name,
+		Officialposition: user.Position.Name,
+		Date:             sign.CreatedAt.Format("2006-01-02 15:04"),
+	}
+
+	
+	return result, nil
 }
