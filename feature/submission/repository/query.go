@@ -26,8 +26,6 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 	var typeDetail admin.Type
 	var tos []admin.Users
 	var ccs []admin.Users
-	var office []admin.Office
-
 	applicant.ID = userID
 
 	if err := sm.db.Where("name = ? ", typeName).Find(&typeDetail).Error; err != nil {
