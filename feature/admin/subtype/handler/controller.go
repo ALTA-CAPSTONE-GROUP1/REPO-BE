@@ -179,17 +179,26 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 				res.SubmissionType = append(res.SubmissionType, newSubmissionType)
 			}
 		}
-		if offsetInt+limitInt > len(filteredData) {
-			limitInt = len(filteredData) - offsetInt
-		}
-		if offsetInt+limitInt> len(res.SubmissionType){
-			limitInt = len(res.SubmissionType) - offsetInt
-		}
-		res.SubmissionType = res.SubmissionType[offsetInt : offsetInt+limitInt]
 
-		totalData := len(filteredData)
-		totalPage := int(math.Ceil(float64(totalData) / float64(limitInt)))
+		if offsetInt < len(res.SubmissionType) {
+			endIndex := offsetInt + limitInt
+			if endIndex > len(res.SubmissionType) {
+				endIndex = len(res.SubmissionType)
+			}
+			res.SubmissionType = res.SubmissionType[offsetInt:endIndex]
+		} else {
+			res.SubmissionType = []SubmissionType{}
+		}
+
+		totalData := len(res.SubmissionType)
+		totalPage := 1
+		if len(res.SubmissionType) > 0 {
+			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
+		}
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+		if currentPage > totalPage {
+			currentPage = totalPage
+		}
 
 		meta := Meta{
 			CurrentLimit:  limitInt,

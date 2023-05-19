@@ -48,6 +48,19 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Find(&ccs).Error; err != nil {
 		return submission.Core{}, err
 	}
+	var findTypeId int
+
+	if err := sm.db.Raw("SELECT id FROM types WHERE name = ?", typeName).Find(&findTypeId).Error; err != nil {
+		return submission.Core{}, err
+	}
+
+	fmt.Println(findTypeId)
+	fmt.Println(applicant.Position.ID)
+
+	var applicantToLevel int
+	if err := sm.db.Raw("SELECT to_level FROM position_has_types WHERE type_id = ? AND position_id = ?", &findTypeId, applicant.Position.ID).Find(&applicantToLevel).Error; err != nil {
+		return submission.Core{}, err
+	}
 
 	if err := sm.db.Preload("Position").
 		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
@@ -66,16 +79,23 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 	result.Requirement = typeDetail.Requirement
 
 	for _, to := range tos {
+		if to.ID == userID {
+			continue
+		}
+
 		tmp := submission.ToApprover{
 			ApproverPosition: to.Position.Name,
 			ApproverId:       to.ID,
 			ApproverName:     to.Name,
 		}
-		fmt.Println(to.Position.Name)
 		result.To = append(result.To, tmp)
 	}
 
 	for _, cc := range ccs {
+		if cc.ID == userID {
+			continue
+		}
+
 		tmp := submission.CcApprover{
 			CcPosition: cc.Position.Name,
 			CcId:       cc.ID,
@@ -177,8 +197,6 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			choices = append(choices, subTypeChoices)
 		}
 	}
-
-	fmt.Println(choices)
 
 	if err := sm.db.Where("user_id = ?", userID).
 		Preload("Files").
