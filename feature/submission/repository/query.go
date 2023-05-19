@@ -155,6 +155,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		}
 		existingIndex := -1
 		for i, choice := range choices {
+			fmt.Println(len(choices))
 			if choice.SubTypeName == v.Name {
 				existingIndex = i
 				break
