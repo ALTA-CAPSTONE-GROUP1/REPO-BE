@@ -69,10 +69,8 @@ func (st *subTypeModel) InsertSubType(req subtype.RepoData) error {
 
 			values = append(values, newOwner)
 		}
-
+		level := 1
 		for _, approver := range approverPositions {
-			level := 1
-
 			newApprover := admin.PositionHasType{
 				TypeID:     typeData.ID,
 				PositionID: approver.ID,

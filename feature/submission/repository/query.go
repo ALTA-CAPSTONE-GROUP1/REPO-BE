@@ -39,7 +39,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		return submission.Core{}, err
 	}
 
-	if err := sm.db.Preload("Position").
+	if err := sm.db.Preload("Position").Preload("Offices").
 		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
 		Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
 		Joins("INNER JOIN offices ON offices.id = users.office_id").
@@ -50,7 +50,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		return submission.Core{}, err
 	}
 
-	if err := sm.db.Preload("Position").
+	if err := sm.db.Preload("Position").Preload("Offices").
 		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
 		Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
 		Joins("INNER JOIN offices ON offices.id = users.office_id").
