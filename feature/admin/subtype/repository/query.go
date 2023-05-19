@@ -69,19 +69,17 @@ func (st *subTypeModel) InsertSubType(req subtype.RepoData) error {
 
 			values = append(values, newOwner)
 		}
-		level := 1
-		for _, approver := range approverPositions { 
+
+		for i, approver := range approverPositions {
 			newApprover := admin.PositionHasType{
 				TypeID:     typeData.ID,
 				PositionID: approver.ID,
 				Value:      value,
 				As:         "To",
-				ToLevel:    level,
+				ToLevel:    i + 1,
 			}
 
 			values = append(values, newApprover)
-
-			level++
 		}
 
 		for _, cc := range ccPositions {
@@ -175,9 +173,36 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 }
 
 func (st *subTypeModel) DeleteSubType(subTypeName string) error {
-	if err := st.db.Where("name = ?", subTypeName).Delete(&admin.Type{}).Error; err != nil {
-		log.Errorf("error on delete subtype by name, %w", err)
-		return fmt.Errorf("failed to delete subtype by name %w", err)
+
+	tx := st.db.Begin()
+	if tx.Error != nil {
+		log.Errorf("failed to begin transaction: %v", tx.Error)
+		return tx.Error
 	}
+
+	var typeID int
+	if err := tx.Model(&admin.Type{}).Where("name = ?", subTypeName).Select("id").First(&typeID).Error; err != nil {
+		log.Errorf("error on delete subtype by name: %v", err)
+		tx.Rollback()
+		return fmt.Errorf("failed to delete subtype by name: %w", err)
+	}
+
+	if err := tx.Where("name = ?", subTypeName).Delete(&admin.Type{}).Error; err != nil {
+		log.Errorf("error on delete subtype by name: %v", err)
+		tx.Rollback()
+		return fmt.Errorf("failed to delete subtype by name: %w", err)
+	}
+
+	if err := tx.Where("type_id = ?", typeID).Delete(&admin.PositionHasType{}).Error; err != nil {
+		log.Errorf("error on delete position_has_types by type_id: %v", err)
+		tx.Rollback()
+		return fmt.Errorf("failed to delete position_has_types by type_id: %w", err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Errorf("failed to commit transaction: %v", err)
+		return err
+	}
+
 	return nil
 }

@@ -48,6 +48,16 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Find(&ccs).Error; err != nil {
 		return submission.Core{}, err
 	}
+	var findTypeId int
+
+	if err := sm.db.Raw("SELECT id FROM types WHERE name = ?", typeName).Error; err != nil {
+		return submission.Core{}, err``
+	}
+
+	var applicantToLevel int
+	if err := sm.db.Raw("SELECT to_level FROM position_has_types WHERE type_id = ? AND position_id = ?", findTypeId, applicant.Position.ID).Error; err != nil {
+		return submission.Core{}, err
+	}
 
 	if err := sm.db.Preload("Position").
 		Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
@@ -56,6 +66,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Joins("INNER JOIN types ON types.id = position_has_types.type_id").
 		Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
 		Where("types.name = ? AND position_has_types.as = 'To' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, typeValue, applicant.Office.ID).
+		Where("position_has_types.to_level > ?", applicantToLevel).
 		Order("position_has_types.to_level ASC").
 		Find(&tos).Error; err != nil {
 		return submission.Core{}, err
@@ -177,8 +188,6 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			choices = append(choices, subTypeChoices)
 		}
 	}
-
-	fmt.Println(choices)
 
 	if err := sm.db.Where("user_id = ?", userID).
 		Preload("Files").
