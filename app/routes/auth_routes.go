@@ -13,5 +13,6 @@ func AuthRoutes(e *echo.Echo, uc auth.Handler) {
 	e.Use(middleware.Logger())
 
 	e.POST("/login", uc.LoginHandler())
+	e.POST("/sign_validation", uc.SignValidationLogic())
 
 }
