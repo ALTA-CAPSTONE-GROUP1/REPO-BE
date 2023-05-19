@@ -6,5 +6,5 @@ type LoginInput struct {
 }
 
 type SignVaidation struct{
-	signID string `json:"sign_id"`
+	SignID string `json:"sign_id"`
 }
