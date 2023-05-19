@@ -187,20 +187,20 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		}
 
 		var submissions []Submission
-		filteredData := []submission.AllSubmiisionCore{}
+		filteredData := submissionDatas
 
 		if searchInTitle != "" {
 			for _, data := range submissionDatas {
+				filteredData = make([]submission.AllSubmiisionCore, 0)
 				if strings.Contains(strings.ToLower(data.Title), strings.ToLower(searchInTitle)) {
 					filteredData = append(filteredData, data)
 				}
 			}
-		} else {
-			filteredData = submissionDatas
 		}
 
 		if searchInTo != "" {
-			for _, data := range filteredData {
+			filteredData = make([]submission.AllSubmiisionCore, 0)
+			for _, data := range submissionDatas {
 				for _, to := range data.Tos {
 					if strings.Contains(strings.ToLower(to.ApproverName), strings.ToLower(searchInTo)) ||
 						strings.Contains(strings.ToLower(to.ApproverId), strings.ToLower(searchInTo)) ||
@@ -247,19 +247,26 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 				Values: v.SubtypeValue,
 			})
 		}
-
-		if offsetInt+limitInt > len(filteredData) {
-			limitInt = len(filteredData) - offsetInt
+		if offsetInt < len(submissions) {
+			endIndex := offsetInt + limitInt
+			if endIndex > len(submissions) {
+				endIndex = len(submissions)
+			}
+			submissions = submissions[offsetInt:endIndex]
+		} else {
+			submissions = []Submission{}
 		}
-		submissions = submissions[offsetInt : offsetInt+limitInt]
+
 		var totalData int
-		var totalPage int
-		if len(filteredData) > 0 {
-			totalData = len(filteredData)
+		totalPage := 1
+		if len(submissions) > 0 {
+			totalData = len(submissions)
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
-
+		if currentPage > totalPage{
+			currentPage = totalPage
+		}
 		meta := Meta{
 			CurrentLimit:  limitInt,
 			CurrentOffset: offsetInt,

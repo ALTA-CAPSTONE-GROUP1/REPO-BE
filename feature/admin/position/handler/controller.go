@@ -111,17 +111,27 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			}
 			response = append(response, tmp)
 		}
-		if offsetInt >= len(filteredPositions) {
-			return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest, "offset exceeds the number of positions", nil, nil))
+
+		if offsetInt < len(filteredPositions) {
+			endIndex := offsetInt + limitInt
+			if endIndex > len(filteredPositions) {
+				endIndex = len(filteredPositions)
+			}
+			filteredPositions = filteredPositions[offsetInt:endIndex]
+		} else {
+			filteredPositions = []position.Core{}
 		}
-		if offsetInt+limitInt > len(filteredPositions) {
-			limitInt = len(filteredPositions) - offsetInt
+
+		var totalData int
+		totalPage := 1
+		if len(filteredPositions) > 0 {
+			totalData = len(filteredPositions)
+			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
-		response = response[offsetInt : offsetInt+limitInt]
-		
-		totalData := len(filteredPositions)
-		totalPage := int(math.Ceil(float64(totalData) / float64(limitInt)))
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+		if currentPage > totalPage {
+			currentPage = totalPage
+		}
 		meta := Meta{
 			CurrentLimit:  limitInt,
 			CurrentOffset: offsetInt,
