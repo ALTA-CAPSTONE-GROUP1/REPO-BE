@@ -45,7 +45,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Joins("INNER JOIN offices ON offices.id = users.office_id").
 		Joins("INNER JOIN types ON types.id = position_has_types.type_id").
 		Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
-		Where("types.name = ? AND position_has_types.as = 'Cc' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, 30000000, applicant.Office.ID).
+		Where("types.name = ? AND position_has_types.as = 'Cc' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, typeValue, applicant.Office.ID).
 		Find(&ccs).Error; err != nil {
 		return submission.Core{}, err
 	}
@@ -56,7 +56,7 @@ func (sm *submissionModel) FindRequirement(userID string, typeName string, typeV
 		Joins("INNER JOIN offices ON offices.id = users.office_id").
 		Joins("INNER JOIN types ON types.id = position_has_types.type_id").
 		Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
-		Where("types.name = ? AND position_has_types.as = 'To' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, 30000000, applicant.Office.ID).
+		Where("types.name = ? AND position_has_types.as = 'To' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')", typeName, typeValue, applicant.Office.ID).
 		Order("position_has_types.to_level ASC").
 		Find(&tos).Error; err != nil {
 		return submission.Core{}, err
