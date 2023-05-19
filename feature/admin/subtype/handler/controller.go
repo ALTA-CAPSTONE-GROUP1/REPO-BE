@@ -182,6 +182,9 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 		if offsetInt+limitInt > len(filteredData) {
 			limitInt = len(filteredData) - offsetInt
 		}
+		if offsetInt+limitInt> len(res.SubmissionType){
+			limitInt = len(res.SubmissionType) - offsetInt
+		}
 		res.SubmissionType = res.SubmissionType[offsetInt : offsetInt+limitInt]
 
 		totalData := len(filteredData)
