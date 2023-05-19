@@ -17,7 +17,7 @@ servers:
     url: URL will be update soon
 
 paths:
-  /sign-validation:
+  /sign_validation:
     post:
       tags:
         - Authentication
@@ -157,14 +157,12 @@ paths:
             example: Robin Hood
         - name: limit
           description: limit
-          required: true
           in: query
           schema:
             type: integer
             example: 10
         - name: offset
           description: offset
-          required: true
           in: query
           schema:
             type: integer
@@ -184,6 +182,12 @@ paths:
                     hp: 08123456789
                     position: Product
                     office: Jakarta
+                meta:
+                  current_limit: 20
+                  current_offset: 0
+                  current_page: 1
+                  total_data: 50
+                  total_page: 3
                 code: 200
                 message: "success show users"
         '400':
@@ -328,7 +332,6 @@ paths:
         - name: offset
           in: query
           description: The number of items to skip before stating to collect the data
-          required: true
           schema:
             type: integer
             minimum: 0
@@ -336,7 +339,6 @@ paths:
         - name: limit
           in: query
           description: the maximum number of items to return in the response data
-          required: true
           schema:
             type: integer
             minimum: 1
@@ -357,6 +359,12 @@ paths:
                   - position_id: 13
                     position: Sales Supervisor
                     tag: SSpv
+                meta:
+                  current_limit: 20
+                  current_offset: 0
+                  current_page: 1
+                  total_data: 50
+                  total_page: 3
                 code: 200
                 message: succes to get positions data
         '400':
@@ -450,7 +458,6 @@ paths:
         - name: offset
           in: query
           description: The number of items to skip before stating to collect the data
-          required: true
           schema:
             type: integer
             minimum: 0
@@ -458,7 +465,6 @@ paths:
         - name: limit
           in: query
           description: the maximum number of items to return in the response data
-          required: true
           schema:
             type: integer
             minimum: 1
@@ -477,6 +483,12 @@ paths:
                     office_name: Head Office
                   - office_id: 2
                     office_name: Jakarta
+                meta:
+                  current_limit: 20
+                  current_offset: 0
+                  current_page: 1
+                  total_data: 50
+                  total_page: 3
                 code: 200
                 message: succes to get positions data
         '400':
@@ -497,7 +509,7 @@ paths:
             schema:
               type: object
               properties:
-                office:
+                name:
                   type: string
                   example: Jakarta
               required:
@@ -524,7 +536,7 @@ paths:
       security:
         - JWTAuth: []
       parameters:
-        - name: office_id
+        - name: id
           in: query
           schema:
             type: integer
@@ -566,7 +578,6 @@ paths:
         - name: offset
           in: query
           description: The number of items to skip before stating to collect the data
-          required: true
           schema:
             type: integer
             minimum: 0
@@ -574,7 +585,6 @@ paths:
         - name: limit
           in: query
           description: the maximum number of items to return in the response data
-          required: true
           schema:
             type: integer
             minimum: 1
@@ -607,6 +617,12 @@ paths:
                           position_tag: ARM
                         - position_name: Regional Manager
                           position_tag: RM
+                meta:
+                  current_limit: 20
+                  current_offset: 0
+                  current_page: 1
+                  total_data: 50
+                  total_page: 3
                 code: 200
                 message: succes to get submission types
         '400':
@@ -634,10 +650,10 @@ paths:
                   type: array
                   items:
                     type: string
-                    example:
-                      - SLS
-                      - SSPV
-                      - ARM
+                  example:
+                    - SLS
+                    - SSPV
+                    - ARM
                 submission_value:
                   type: array
                   items:
@@ -816,7 +832,7 @@ paths:
         '500':
           $ref: '#/components/responses/Response500'
 
-  /profile/{user_id}:
+  /profile:
     get:
       tags:
         - User
@@ -825,13 +841,6 @@ paths:
       description: Feature user for show detail user
       security:
         - JWTAuth: []
-      parameters:
-        - in: path
-          name: user_id
-          schema:
-            type: string
-            example: PO01
-          required: true
       responses:
         '200':
           description: show detail user profile
@@ -844,7 +853,9 @@ paths:
                   id: "PO01"
                   name: "Robin Hood"
                   email: "robin@mail.com"
-                  hp: 08123456789
+                  hp: "08123456789"
+                  position: "Regional Manager"
+                  office: "Malang"
                 code: 200
                 message: "success show profile"
         '400':
@@ -859,18 +870,32 @@ paths:
       description: Feature user for update user data
       security:
         - JWTAuth: []
-      parameters:
-        - in: path
-          name: user_id
-          schema:
-            type: string
-            example: PO01
-          required: true
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsersSchema'
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Robin Hood
+                email:
+                  type: string
+                  format: email
+                  example: robin@mail.com
+                hp:
+                  type: string
+                  example: "08123456789"
+                position:
+                  type: string
+                  example: Product
+                office:
+                  type: string
+                  example: Jakarta
+                password:
+                  type: string
+                  example: qwerty123
+            
       responses:
         '200':
           description: update user data
@@ -975,14 +1000,12 @@ paths:
             example: National Sales Manager
         - name: limit
           description: limit
-          required: true
           in: query
           schema:
             type: integer
             example: 10
         - name: offset
           description: offset
-          required: true
           in: query
           schema:
             type: integer
@@ -1062,6 +1085,24 @@ paths:
                                 example:
                                   - 2000000
                                   - 10000000
+                    meta:
+                      type: object
+                      properties:
+                        current_limit:
+                          type: integer
+                          example: 20
+                        current_offset:
+                          type: integer
+                          example: 0
+                        current_page:
+                          type: integer
+                          example: 1
+                        total_data:
+                          type: integer
+                          example: 50
+                        total_page: 
+                          type: integer
+                          example: 3
           '400':
             $ref: '#/components/responses/Response400'
           '500':
@@ -1198,9 +1239,61 @@ paths:
           required: true
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/SubmissionSchema'
+              type: object
+              properties:
+                to:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      approver_position:
+                        type: string
+                      approver_name:
+                        type: string
+                    example: 
+                      - approver_position: Manager
+                        approver_name: John
+                      - approver_position: Director
+                        approver_name: Jane
+                cc:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      cc_position:
+                        type: string
+                      cc_name:
+                        type: string
+                    example: 
+                      - cc_position: Back Engineer
+                        cc_name: Saka
+                      - cc_position: Front Engineer
+                        cc_name: Soko
+                      - cc_position: Quality Engineer
+                        cc_name: Suku
+                submission_type:
+                  type: string
+                  example: Program
+                title:
+                  type: string
+                  example: title
+                message:
+                  type: string
+                  example: message
+                attachment:
+                  type: string
+                  format: binary
+                  example: file.pdf
+              required:
+                - to
+                - cc
+                - submission_type
+                - submission_value
+                - title
+                - message
+                - attachment
       responses:
         '200':
           description: update submission
@@ -1285,14 +1378,12 @@ paths:
             example: Pengadaan
         - name: limit
           description: limit
-          required: true
           in: query
           schema:
             type: integer
             example: 10
         - name: offset
           description: offset
-          required: true
           in: query
           schema:
             type: integer
@@ -1320,6 +1411,12 @@ paths:
                     status: Waiting
                     receive_date: 2023-05-10 14:30
                     opened: true
+                meta:
+                  current_limit: 20
+                  current_offset: 0
+                  current_page: 1
+                  total_data: 50
+                  total_page: 3
                 code: 200
                 message: "success show all submissions to be approved"
         '400':
@@ -1465,14 +1562,12 @@ paths:
             example: Reimbursement
         - name: limit
           description: limit
-          required: true
           in: query
           schema:
             type: integer
             example: 10
         - name: offset
           description: offset
-          required: true
           in: query
           schema:
             type: integer
@@ -1495,6 +1590,12 @@ paths:
                     title: title
                     submission_type: Program
                     attachment: cloudinary.com/sjadoauwdioadawd/
+                meta:
+                  current_limit: 20
+                  current_offset: 0
+                  current_page: 1
+                  total_data: 50
+                  total_page: 3
                 code: 200
                 message: "success show all submissions to be approved"
         '400':
@@ -1590,50 +1691,3 @@ components:
         office:
           type: string
           example: Jakarta
-    SubmissionSchema:
-      type: object
-      properties:
-        to:
-          type: array
-          items:
-            type: object
-          properties:
-            approver_position:
-              type: string
-            approver_name:
-              type: string
-          example: 
-            - approver_id: PD0001
-            - approver_id: PD0002
-        cc:
-          type: array
-          items:
-            type: object
-          properties:
-            cc_position:
-              type: string
-            cc_name:
-              type: string
-          example: 
-            - cc_position: Back Engineer
-              cc_name: Saka
-            - cc_position: Front Engineer
-              cc_name: Soko
-            - cc_position: Quality Engineer
-              cc_name: Suku
-        submission_type:
-          type: string
-          example: Program
-        submission_value:
-          type: integer
-          example: 30000000
-        title:
-          type: string
-          example: title
-        message:
-          type: string
-          example: message
-        attachment:
-          type: string
-          format: binary
-          example: file.pdf
