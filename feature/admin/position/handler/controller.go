@@ -111,7 +111,8 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			}
 			response = append(response, tmp)
 		}
-
+	
+		totalData := len(filteredPositions)
 		if offsetInt < len(filteredPositions) {
 			endIndex := offsetInt + limitInt
 			if endIndex > len(filteredPositions) {
@@ -122,10 +123,8 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			filteredPositions = []position.Core{}
 		}
 
-		var totalData int
 		totalPage := 1
 		if len(filteredPositions) > 0 {
-			totalData = len(filteredPositions)
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))

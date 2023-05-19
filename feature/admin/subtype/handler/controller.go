@@ -190,10 +190,9 @@ func (sc *subTypeController) GetTypesHandler() echo.HandlerFunc {
 			res.SubmissionType = []SubmissionType{}
 		}
 
-		var totalData int
+		totalData := len(res.SubmissionType)
 		totalPage := 1
-		if len(res.SubmissionType ) > 0 {
-			totalData = len(res.SubmissionType )
+		if len(res.SubmissionType) > 0 {
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))

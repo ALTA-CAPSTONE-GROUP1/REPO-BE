@@ -257,14 +257,13 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 			submissions = []Submission{}
 		}
 
-		var totalData int
+		totalData := len(submissions)
 		totalPage := 1
 		if len(submissions) > 0 {
-			totalData = len(submissions)
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
-		if currentPage > totalPage{
+		if currentPage > totalPage {
 			currentPage = totalPage
 		}
 		meta := Meta{
