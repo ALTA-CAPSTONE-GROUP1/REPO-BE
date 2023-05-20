@@ -3,9 +3,12 @@ package handler
 import (
 	"time"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
+	aMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
+	// aRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/users/approve/repository"
 )
 
 type SubmissionResponse struct {
@@ -23,7 +26,7 @@ func CoreToApproveResponse(data approve.Core) SubmissionResponse {
 		ID:             data.ID,
 		Title:          data.Title,
 		From:           data.UserID,
-		SubmissionType: data.Type.Name,
+		SubmissionType: data.Type.SubmissionTypeName,
 		Status:         data.Status,
 		CreatedAt:      time.Time{},
 		Is_Opened:      false,
@@ -38,16 +41,26 @@ func CoreToGetAllApproveResponse(data []approve.Core) []SubmissionResponse {
 	return res
 }
 
+// ===========================================================================================
+// ===========================================================================================
+// ===========================================================================================
+// ===========================================================================================
+
 type SubmissionByIdResponse struct {
 	ID             int           `json:"submission_id"`
-	From           string        `json:"from"`
+	From           FromApp       `json:"from"`
 	To             []ToApp       `json:"to"`
 	Cc             []CcRecipient `json:"cc"`
 	Title          string        `json:"title"`
 	SubmissionType string        `json:"submission_type"`
-	Sign           []Action      `json:"status_by"`
+	StatusBy       []Action      `json:"status_by"`
 	Message        string        `json:"message"`
 	Attachment     string        `json:"attachment"`
+}
+
+type FromApp struct {
+	Name     string `json:"name"`
+	Position string `json:"position"`
 }
 
 type ToApp struct {
@@ -67,40 +80,49 @@ type Action struct {
 
 func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 	result := SubmissionByIdResponse{
-		ID:             data.ID,
-		From:           data.UserID,
-		Title:          data.Title,
-		Message:        data.Message,
-		SubmissionType: data.Type.Name,
-	}
-	for _, v := range data.Tos {
-		cTos := ToApp{
-			ToName:     v.User.Name,
-			ToPosition: v.User.Position.Name,
-		}
-		result.To = append(result.To, cTos)
+		ID: data.ID,
+		To: make([]ToApp, len(data.Tos)),
+		Cc: make([]CcRecipient, len(data.Ccs)),
 	}
 
-	for _, y := range data.Ccs {
-		cCcs := CcRecipient{
-			CcName:     y.User.Name,
-			CcPosition: y.User.Position.Name,
-		}
-		result.Cc = append(result.Cc, cCcs)
+	fromUser := data.User
+	result.From = FromApp{
+		Name:     fromUser.Name,
+		Position: fromUser.Position.Name,
 	}
 
-	for _, z := range data.Signs {
-		cSigns := Action{
-			Action:    z.Name,
-			AppAction: z.User.Position.Name,
+	result.Title = data.Title
+	result.Message = data.Message
+	result.SubmissionType = data.Type.SubmissionTypeName
+	// result.Attachment = data.Attachment
+
+	for i, v := range data.Tos {
+		toUser := v.User
+		result.To[i] = ToApp{
+			ToName:     toUser.Name,
+			ToPosition: toUser.Position.Name,
 		}
-		result.Sign = append(result.Sign, cSigns)
 	}
+
+	for i, y := range data.Ccs {
+		ccUser := y.User
+		result.Cc[i] = CcRecipient{
+			CcName:     ccUser.Name,
+			CcPosition: ccUser.Position.Name,
+		}
+	}
+
+	// for _, z := range data.StatusBy {
+	// 	result.StatusBy = append(result.StatusBy, Action{
+	// 		Action:    z.Status,
+	// 		AppAction: z.By,
+	// 	})
+	// }
 
 	return result
 }
 
-func SubmissionToCore(data user.Submission) approve.Core {
+func SubmissionToCore(data aMod.Submission) approve.Core {
 	result := approve.Core{
 		ID:        data.ID,
 		UserID:    data.UserID,
@@ -109,36 +131,44 @@ func SubmissionToCore(data user.Submission) approve.Core {
 		Message:   data.Message,
 		Status:    data.Status,
 		Is_Opened: false,
-		CreatedAt: time.Time{},
-		Type:      admin.Type{Name: data.Type.Name},
-		User:      admin.Users{Name: data.User.Name, Position: data.User.Position},
+		CreatedAt: data.CreatedAt,
+		Type:      subtype.Core{SubmissionTypeName: data.Type.Name},
 	}
 
+	result.User.Name = data.User.Name
+	result.User.Position.Name = data.User.Position.Name
+
 	for _, v := range data.Tos {
-		cTos := user.To{
-			User: user.Users{
-				Position: v.User.Position,
-				Name:     v.User.Name,
+		cTos := approve.ToCore{
+			User: user.Core{
+				Name: v.User.Name,
+				Position: position.Core{
+					Name: v.User.Position.Name,
+				},
 			},
 		}
 		result.Tos = append(result.Tos, cTos)
 	}
 
 	for _, y := range data.Ccs {
-		cCcs := user.Cc{
-			User: user.Users{
-				Position: y.User.Position,
-				Name:     y.User.Name,
+		cCcs := approve.CcCore{
+			User: user.Core{
+				Name: y.User.Name,
+				Position: position.Core{
+					Name: y.User.Position.Name,
+				},
 			},
 		}
 		result.Ccs = append(result.Ccs, cCcs)
 	}
 
 	for _, z := range data.Signs {
-		cSigns := user.Sign{
-			User: user.Users{
-				Position: z.User.Position,
-				Name:     z.User.Name,
+		cSigns := approve.SignCore{
+			User: user.Core{
+				Name: z.User.Name,
+				Position: position.Core{
+					Name: z.User.Position.Name,
+				},
 			},
 		}
 		result.Signs = append(result.Signs, cSigns)

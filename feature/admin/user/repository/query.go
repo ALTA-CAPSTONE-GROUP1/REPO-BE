@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
-
-	// office "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
-	// position "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
 
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
@@ -235,7 +233,7 @@ func (um *usersModel) InsertUser(newUser user.Core) error {
 	}
 	inputUser.ID = id
 
-	samePassword := "kadal123"
+	samePassword := config.PasswordUser
 
 	hashedPassword, err := helper.HashPassword(samePassword)
 	if err != nil {

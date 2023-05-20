@@ -99,10 +99,6 @@ func (uc *userController) GetUserByIdHandler() echo.HandlerFunc {
 		}
 
 		userPath := c.Param("id")
-		// if err != nil {
-		// 	c.Logger().Error("cannot use path param", err.Error())
-		// 	return c.JSON(helper.ResponseFormat(http.StatusNotFound, "path invalid", nil))
-		// }
 
 		data, err := uc.service.GetUserById(userPath)
 		if err != nil {
