@@ -29,6 +29,7 @@ func uploadFile(content *multipart.File, path string) (*uploader.UploadResult, e
 	useFileName := true
 	useFileNameDisplay := true
 	uploadParams := uploader.UploadParams{
+		PublicID:                 "epropProject",
 		Folder:                   config.CloudinaryUploadFolder + path,
 		UseFilename:              &useFileName,
 		Overwrite:                &overwrite,
@@ -41,3 +42,7 @@ func uploadFile(content *multipart.File, path string) (*uploader.UploadResult, e
 	}
 	return uploadResult, nil
 }
+
+// func AddStamp(signName string, currentLink string, path string)(string, error){
+
+// }
