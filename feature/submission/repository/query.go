@@ -123,6 +123,7 @@ func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore)
 	submissionDB.Is_Opened = false
 	submissionDB.UserID = newSub.OwnerID
 	submissionDB.Status = "Sent"
+	submissionDB.Message = newSub.Message
 
 	for _, v := range newSub.ToApprover {
 		tmp := To{
@@ -269,6 +270,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	var (
 		result         submission.GetSubmissionByIDCore
 		submissionByID Submission
+		subTypeDetails admin.Type
 	)
 	if err := sm.db.Where("user_id = ? AND id = ?", userID, submissionID).
 		Preload("Files").
@@ -277,6 +279,11 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		Preload("Signs").
 		First(&submissionByID).Error; err != nil {
 		log.Errorf("error on finding submissions for by userid and submissionid %s: %v", userID, err)
+		return submission.GetSubmissionByIDCore{}, err
+	}
+
+	if err := sm.db.Where("id = ?", submissionByID.TypeID).Find(&subTypeDetails).Error; err != nil {
+		log.Errorf("error in finding submissionType Name %w", err)
 		return submission.GetSubmissionByIDCore{}, err
 	}
 
@@ -335,6 +342,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
 	result.ActionMessage = toActions[(len(toActions) - 1)].Message
+	result.SubmissionType = subTypeDetails.Name
 
 	return result, nil
 }

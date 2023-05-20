@@ -38,4 +38,7 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            docker stop ${{ secrets.CNAME }}
+            docker rm ${{ secrets.CNAME }}
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/e_prop:latest
             docker run --name ${{ secrets.CNAME }} -d -p 80:8080 --link mysqlku -e DBUSER=${{ secrets.DBUSER }} -e TOKEN_SUPER_ADMIN=${{ secrets.TOKEN_SUPER_ADMIN }} -e DBPASSWORD=${{ secrets.DBPASSWORD }} -e DBHOST=${{ secrets.DBHOST }} -e DBPORT=${{ secrets.DBPORT }} -e DBNAME=${{ secrets.DBNAME }} -e JWT=${{ secrets.JWT }} -e CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }} -e CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }} -e CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }} -e CLOUDINARY_UPLOAD_FOLDER=${{ secrets.CLOUDINARY_UPLOAD_FOLDER }} ${{ secrets.DOCKERHUB_USERNAME }}/e_prop:latest
