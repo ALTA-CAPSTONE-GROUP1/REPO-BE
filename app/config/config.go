@@ -126,7 +126,7 @@ func ReadEnv() *AppConfig {
 		CloudinaryApiKey = viper.Get("CLOUDINARY_API_KEY").(string)
 		CloudinaryApiScret = viper.Get("CLOUDINARY_API_SECRET").(string)
 		CloudinaryUploadFolder = viper.Get("CLOUDINARY_UPLOAD_FOLDER").(string)
-		TokenSuperAdmin = viper.Get("TOKEN_SUPER_ADMIN").(string)
+		TokenSuperAdmin = viper.Get("TOKEN_SUPER_ADMIN").(string) //done
 		EmailSecret = viper.Get("EMAIL_SECRET").(string)
 		Email = viper.Get("EMAIL").(string)
 		PasswordUser = viper.Get("PASSWORD_USER").(string)
