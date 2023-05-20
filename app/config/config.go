@@ -16,6 +16,8 @@ var (
 	TokenSuperAdmin        string
 	EmailSecret            string
 	Email                  string
+	PasswordUser           string
+	AutoMessageHyperApp    string
 )
 
 type AppConfig struct {
@@ -91,6 +93,16 @@ func ReadEnv() *AppConfig {
 		isRead = false
 	}
 
+	if val, found := os.LookupEnv("PASSWORD_USER"); found {
+		PasswordUser = val
+		isRead = false
+	}
+
+	if val, found := os.LookupEnv("AUTO_MESSAGE"); found {
+		AutoMessageHyperApp = val
+		isRead = false
+	}
+
 	if isRead {
 		viper.AddConfigPath(".")
 		viper.SetConfigName("local")
@@ -117,6 +129,8 @@ func ReadEnv() *AppConfig {
 		TokenSuperAdmin = viper.Get("TOKEN_SUPER_ADMIN").(string)
 		EmailSecret = viper.Get("EMAIL_SECRET").(string)
 		Email = viper.Get("EMAIL").(string)
+		PasswordUser = viper.Get("PASSWORD_USER").(string)
+		AutoMessageHyperApp = viper.Get("AUTO_MESSAGE").(string)
 
 	}
 	return &app

@@ -37,7 +37,8 @@ func (ac *approveController) UpdateSubmissionApproveHandler() echo.HandlerFunc {
 		}
 
 		input := approve.Core{
-			Status: updateInput.Action,
+			Status:  updateInput.Action,
+			Message: updateInput.Message,
 		}
 
 		if err := ac.service.UpdateApprove(userID, submissionID, input); err != nil {
@@ -107,11 +108,6 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 			}
 			offset = offsetInt
 		}
-
-		// if limit < 0 || offset < 0 {
-		// 	c.Logger().Error("error occurs because limit or offset is negative")
-		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
-		// }
 
 		data, err := ac.service.GetSubmissionAprrove(userID, limit, offset, search)
 		if err != nil {
