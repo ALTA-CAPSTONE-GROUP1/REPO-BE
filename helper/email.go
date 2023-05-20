@@ -3,28 +3,41 @@ package helper
 import (
 	"fmt"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/labstack/gommon/log"
 	"gopkg.in/gomail.v2"
 )
 
-func SendSimpleEmail(subTitle string, subject string, recipientEmail []string, recipentName []string, senderName string) {
-
-	mailer := gomail.NewDialer("smtp.gmail.com", 587, "eprop.unit3@gmail.com", "ozlxhlzyywzoenji")
+func SendSimpleEmail(subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
+	mailer := gomail.NewDialer("smtp.gmail.com", 587, config.Email, config.EmailSecret)
 
 	for i := 0; i < len(recipientEmail); i++ {
-		body := "Hello! " + recipentName[i] + "\n\nThere is an update for you eProposal Account! \n\nPlease Check it Out! \n\nFrom: " + senderName
+		var recipientName string
+		if len(recipientNames)<= i{
+			recipientName = ""
+		} else{
+			recipientName = recipientNames[i]
+		}
+		body := fmt.Sprintf(`Hello, %s!
+
+There is an update for your eProposal Account!
+
+Please check it out.
+
+From: %s
+`, recipientName, senderName)
 
 		email := gomail.NewMessage()
-		email.SetHeader("From", "eprop.unit3@gmail.com")
+		email.SetHeader("From", config.Email)
 		email.SetHeader("To", recipientEmail[i])
 		email.SetHeader("Subject", subject)
 		email.SetBody("text/plain", body)
 
 		err := mailer.DialAndSend(email)
 		if err != nil {
-			log.Errorf("error on sending email %w", err)
+			log.Errorf("Error sending email: %v", err)
 		} else {
-			fmt.Println("succes to send email!")
+			fmt.Println("Email sent successfully!")
 		}
 	}
 }

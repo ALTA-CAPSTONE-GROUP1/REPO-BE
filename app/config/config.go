@@ -14,6 +14,8 @@ var (
 	CloudinaryApiScret     string
 	CloudinaryUploadFolder string
 	TokenSuperAdmin        string
+	EmailSecret            string
+	Email                  string
 )
 
 type AppConfig struct {
@@ -80,6 +82,15 @@ func ReadEnv() *AppConfig {
 		isRead = false
 	}
 
+	if val, found := os.LookupEnv("EMAIL_SECRET"); found {
+		TokenSuperAdmin = val
+		isRead = false
+	}
+	if val, found := os.LookupEnv("EMAIL"); found {
+		TokenSuperAdmin = val
+		isRead = false
+	}
+
 	if isRead {
 		viper.AddConfigPath(".")
 		viper.SetConfigName("local")
@@ -104,6 +115,8 @@ func ReadEnv() *AppConfig {
 		CloudinaryApiScret = viper.Get("CLOUDINARY_API_SECRET").(string)
 		CloudinaryUploadFolder = viper.Get("CLOUDINARY_UPLOAD_FOLDER").(string)
 		TokenSuperAdmin = viper.Get("TOKEN_SUPER_ADMIN").(string)
+		EmailSecret = viper.Get("EMAIL_SECRET").(string)
+		Email = viper.Get("EMAIL").(string)
 
 	}
 	return &app
