@@ -212,7 +212,8 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		var toApprover []submission.ToApprover
 		for _, to := range sub.Tos {
 			var toDetails admin.Users
-			if err := sm.db.Where("id = ?", to.UserID).Preload("Position").First(&toDetails).Error; err != nil {
+			fmt.Println(to.UserID)
+			if err := sm.db.Where("id = ?", to.UserID).Preload("Position").Find(&toDetails).Error; err != nil {
 				log.Errorf("failed on finding positions of tos %w", err)
 				return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 			}
@@ -225,13 +226,13 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		var ccApprover []submission.CcApprover
 		for _, cc := range sub.Ccs {
 			var ccDetails admin.Users
-			if err := sm.db.Where("id = ?", cc.UserID).Preload("Position").First(&ccDetails).Error; err != nil {
+			if err := sm.db.Where("id = ?", cc.UserID).Preload("Position").Find(&ccDetails).Error; err != nil {
 				log.Error("failed on finding positions of tos")
 				return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 			}
 			ccApprover = append(ccApprover, submission.CcApprover{
 				CcPosition: ccDetails.Position.Name,
-				CcName:     cc.Name,
+				CcName:     ccDetails.Name,
 				CcId:       cc.UserID,
 			})
 		}
