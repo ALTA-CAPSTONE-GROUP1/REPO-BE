@@ -4,8 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
+	uMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/handler"
 	"github.com/labstack/gommon/log"
@@ -61,6 +62,30 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		return tx.Error
 	}
 
+	to := user.To{}
+	tx = ar.db.Model(&user.To{}).
+		Preload("User").
+		Where("user_id = ? AND submission_id = ?", userID, submission.ID).
+		First(&to)
+
+	if tx.RowsAffected == 0 {
+		log.Error("no rows found for the given user and submission ID in user.To")
+		return errors.New("no data found in user.To")
+	}
+
+	tx = ar.db.Model(&to).
+		Updates(user.To{Message: input.Message})
+
+	if tx.RowsAffected == 0 {
+		log.Error("no rows affected on update to message")
+		return errors.New("data is up to date")
+	}
+
+	if tx.Error != nil {
+		log.Error("error on update to message")
+		return tx.Error
+	}
+
 	actionType := ""
 	switch submission.Status {
 	case "waiting":
@@ -86,25 +111,21 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 // SelectSubmissionById implements approve.Repository
 func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Core, error) {
-	var dbsub user.Submission
+	var dbsub uMod.Submission
 
 	query := ar.db.
 		Table("submissions").
+		// Preload("Position").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
 		Joins("JOIN users ON tos.user_id = users.id").
 		Joins("JOIN types ON submissions.type_id = types.id").
-		Where("tos.user_id = ? AND submissions.id = ?", userID, id).
+		Joins("JOIN positions ON positions.id = users.position_id").
+		Where("users.id = ? AND submissions.id = ?", userID, id).
 		Preload("Type").
 		Preload("User").
-		Preload("Tos", func(db *gorm.DB) *gorm.DB {
-			return db.Where("submission_id = ?", id)
-		}).
-		Preload("Ccs", func(db *gorm.DB) *gorm.DB {
-			return db.Where("submission_id = ?", id)
-		}).
-		Preload("Signs", func(db *gorm.DB) *gorm.DB {
-			return db.Where("submission_id = ?", id)
-		}).
+		Preload("Tos", "submission_id = ?", id).
+		Preload("Ccs", "submission_id = ?", id).
+		Preload("Signs", "submission_id = ?", id).
 		Find(&dbsub)
 
 	if query.Error != nil {
@@ -121,7 +142,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 // SelectSubmissionApprove implements approve.Repository
 func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset int, search string) ([]approve.Core, error) {
 	var res []approve.Core
-	var dbsub []user.Submission
+	var dbsub []uMod.Submission
 
 	query := ar.db.Table("submissions").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
@@ -149,8 +170,8 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset in
 			Status:    v.Status,
 			Is_Opened: false,
 			CreatedAt: time.Time{},
-			Type: admin.Type{
-				Name: v.Type.Name,
+			Type: subtype.Core{
+				SubmissionTypeName: v.Type.Name,
 			},
 		}
 		res = append(res, tmp)

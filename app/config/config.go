@@ -14,6 +14,8 @@ var (
 	CloudinaryApiScret     string
 	CloudinaryUploadFolder string
 	TokenSuperAdmin        string
+	PasswordUser           string
+	AutoMessageHyperApp    string
 )
 
 type AppConfig struct {
@@ -80,6 +82,16 @@ func ReadEnv() *AppConfig {
 		isRead = false
 	}
 
+	if val, found := os.LookupEnv("PASSWORD_USER"); found {
+		PasswordUser = val
+		isRead = false
+	}
+
+	if val, found := os.LookupEnv("AUTO_MESSAGE"); found {
+		AutoMessageHyperApp = val
+		isRead = false
+	}
+
 	if isRead {
 		viper.AddConfigPath(".")
 		viper.SetConfigName("local")
@@ -104,6 +116,8 @@ func ReadEnv() *AppConfig {
 		CloudinaryApiScret = viper.Get("CLOUDINARY_API_SECRET").(string)
 		CloudinaryUploadFolder = viper.Get("CLOUDINARY_UPLOAD_FOLDER").(string)
 		TokenSuperAdmin = viper.Get("TOKEN_SUPER_ADMIN").(string)
+		PasswordUser = viper.Get("PASSWORD_USER").(string)
+		AutoMessageHyperApp = viper.Get("AUTO_MESSAGE").(string)
 
 	}
 	return &app

@@ -67,19 +67,16 @@ type SignCore struct {
 }
 
 type Handler interface {
-	GetSubmissionAprroveHandler() echo.HandlerFunc
-	GetSubmissionByIdHandler() echo.HandlerFunc
-	UpdateSubmissionApproveHandler() echo.HandlerFunc
+	GetSubmissionByHyperApprovalHandler() echo.HandlerFunc
+	UpdateByHyperApprovalHandler() echo.HandlerFunc
 }
 
 type UseCase interface {
-	GetSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
-	GetSubmissionById(userID string, id int) (Core, error)
-	UpdateApprove(userID string, id int, updateInput Core) error
+	GetSubmissionByHyperApproval(userID string, id int, token string) (Core, error)
+	UpdateByHyperApproval(userID string, updateInput Core) error
 }
 
 type Repository interface {
-	SelectSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
-	SelectSubmissionById(userID string, id int) (Core, error)
-	UpdateApprove(userID string, id int, input Core) error
+	SelectSubmissionByHyperApproval(userID string, id int, token string) (Core, error)
+	UpdateByHyperApproval(userID string, input Core) error
 }
