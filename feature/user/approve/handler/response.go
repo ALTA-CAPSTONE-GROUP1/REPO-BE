@@ -1,11 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	aMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
 	// aRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/users/approve/repository"
@@ -81,14 +80,11 @@ type Action struct {
 func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 	result := SubmissionByIdResponse{
 		ID: data.ID,
-		To: make([]ToApp, len(data.Tos)),
-		Cc: make([]CcRecipient, len(data.Ccs)),
 	}
 
-	fromUser := data.User
 	result.From = FromApp{
-		Name:     fromUser.Name,
-		Position: fromUser.Position.Name,
+		Name:     data.User.Name,
+		Position: data.User.Position.Name,
 	}
 
 	result.Title = data.Title
@@ -96,20 +92,20 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 	result.SubmissionType = data.Type.SubmissionTypeName
 	// result.Attachment = data.Attachment
 
-	for i, v := range data.Tos {
-		toUser := v.User
-		result.To[i] = ToApp{
-			ToName:     toUser.Name,
-			ToPosition: toUser.Position.Name,
+	for _, v := range data.Tos {
+		tmp := ToApp{
+			ToName:     v.Name,
+			ToPosition: v.Position,
 		}
+		result.To = append(result.To, tmp)
 	}
 
-	for i, y := range data.Ccs {
-		ccUser := y.User
-		result.Cc[i] = CcRecipient{
-			CcName:     ccUser.Name,
-			CcPosition: ccUser.Position.Name,
+	for _, v := range data.Ccs {
+		tmp := CcRecipient{
+			CcName:     v.Name,
+			CcPosition: v.Position,
 		}
+		result.Cc = append(result.Cc, tmp)
 	}
 
 	// for _, z := range data.StatusBy {
@@ -122,57 +118,41 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 	return result
 }
 
-func SubmissionToCore(data aMod.Submission) approve.Core {
-	result := approve.Core{
-		ID:        data.ID,
-		UserID:    data.UserID,
-		TypeID:    data.TypeID,
-		Title:     data.Title,
-		Message:   data.Message,
-		Status:    data.Status,
+func SubmissionToCore(rcv []admin.Users, ccs []admin.Users, submissiondatas aMod.Submission) approve.Core {
+	var res approve.Core
+	var tos []approve.ToCore
+	var ccsCore []approve.CcCore
+
+	for _, v := range rcv {
+		tos = append(tos, approve.ToCore{
+			SubmissionID: submissiondatas.ID,
+			Name:         v.Name,
+			Position:     v.Position.Name,
+			UserID:       v.ID,
+		})
+	}
+
+	for _, v := range ccs {
+		ccsCore = append(ccsCore, approve.CcCore{
+			SubmissionID: submissiondatas.ID,
+			UserID:       v.ID,
+			Name:         v.Name,
+			Position:     v.Position.Name,
+		})
+	}
+	res = approve.Core{
+		ID:        submissiondatas.ID,
+		UserID:    submissiondatas.UserID,
+		TypeID:    submissiondatas.TypeID,
+		Title:     submissiondatas.Title,
+		Message:   submissiondatas.Message,
+		Status:    submissiondatas.Status,
 		Is_Opened: false,
-		CreatedAt: data.CreatedAt,
-		Type:      subtype.Core{SubmissionTypeName: data.Type.Name},
+		CreatedAt: submissiondatas.CreatedAt,
+		Tos:       tos,
+		Ccs:       ccsCore,
 	}
-
-	result.User.Name = data.User.Name
-	result.User.Position.Name = data.User.Position.Name
-
-	for _, v := range data.Tos {
-		cTos := approve.ToCore{
-			User: user.Core{
-				Name: v.User.Name,
-				Position: position.Core{
-					Name: v.User.Position.Name,
-				},
-			},
-		}
-		result.Tos = append(result.Tos, cTos)
-	}
-
-	for _, y := range data.Ccs {
-		cCcs := approve.CcCore{
-			User: user.Core{
-				Name: y.User.Name,
-				Position: position.Core{
-					Name: y.User.Position.Name,
-				},
-			},
-		}
-		result.Ccs = append(result.Ccs, cCcs)
-	}
-
-	for _, z := range data.Signs {
-		cSigns := approve.SignCore{
-			User: user.Core{
-				Name: z.User.Name,
-				Position: position.Core{
-					Name: z.User.Position.Name,
-				},
-			},
-		}
-		result.Signs = append(result.Signs, cSigns)
-	}
-
-	return result
+	fmt.Println(tos)
+	fmt.Println(ccsCore)
+	return res
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	uMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
@@ -112,6 +113,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 // SelectSubmissionById implements approve.Repository
 func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Core, error) {
 	var dbsub uMod.Submission
+	var toDetail admin.Users
+	var ccDetail admin.Users
+	var toDetails []admin.Users
+	var ccDetails []admin.Users
 
 	query := ar.db.
 		Table("submissions").
@@ -128,6 +133,21 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		Preload("Signs", "submission_id = ?", id).
 		Find(&dbsub)
 
+	for _, to := range dbsub.Tos {
+		if err := ar.db.Where("id = ?", to.UserID).Preload("Position").Find(&toDetail).Error; err != nil {
+			log.Error(err)
+			return approve.Core{}, err
+		}
+		toDetails = append(toDetails, toDetail)
+	}
+	for _, cc := range dbsub.Ccs {
+		if err := ar.db.Where("id = ?", cc.UserID).Preload("Position").Find(&ccDetail).Error; err != nil {
+			log.Error(err)
+			return approve.Core{}, err
+		}
+		ccDetails = append(ccDetails, ccDetail)
+	}
+
 	if query.Error != nil {
 		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 			return approve.Core{}, errors.New("submission not found")
@@ -136,7 +156,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		return approve.Core{}, errors.New("failed to retrieve submission")
 	}
 
-	return handler.SubmissionToCore(dbsub), nil
+	return handler.SubmissionToCore(toDetails, ccDetails, dbsub), nil
 }
 
 // SelectSubmissionApprove implements approve.Repository

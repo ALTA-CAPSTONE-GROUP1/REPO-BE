@@ -42,6 +42,7 @@ type CcCore struct {
 	CreatedAt    time.Time
 	User         cUser.Core
 	Submission   Core
+	Position     string
 }
 
 type ToCore struct {
@@ -55,6 +56,7 @@ type ToCore struct {
 	CreatedAt    time.Time
 	User         cUser.Core
 	Submission   Core
+	Position     string
 }
 
 type SignCore struct {
