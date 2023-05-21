@@ -4,6 +4,7 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/database"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/routes"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 
 	uAdminHandler "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user/handler"
 	uAdminRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/user/repository"
@@ -55,7 +56,7 @@ func main() {
 	database.Migrate(db)
 
 	submissioMdl := submissionRepo.New(db)
-	submissionSrv := submissionLogic.New(submissioMdl)
+	submissionSrv := submissionLogic.New(submissioMdl, helper.New())
 	submissionCtl := submissionHandler.New(submissionSrv)
 
 	subtypeMdl := stRepo.New(db)

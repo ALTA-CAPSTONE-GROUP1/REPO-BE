@@ -26,13 +26,13 @@ func (_m *UseCase) AddPositionLogic(newPosition position.Core) error {
 	return r0
 }
 
-// DeletePositionLogic provides a mock function with given fields: _a0, tag
-func (_m *UseCase) DeletePositionLogic(_a0 string, tag string) error {
-	ret := _m.Called(_a0, tag)
+// DeletePositionLogic provides a mock function with given fields: _a0
+func (_m *UseCase) DeletePositionLogic(_a0 int) error {
+	ret := _m.Called(_a0)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(_a0, tag)
+	if rf, ok := ret.Get(0).(func(int) error); ok {
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -41,12 +41,13 @@ func (_m *UseCase) DeletePositionLogic(_a0 string, tag string) error {
 }
 
 // GetPositionsLogic provides a mock function with given fields: limit, offset, search
-func (_m *UseCase) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) {
+func (_m *UseCase) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, int64, error) {
 	ret := _m.Called(limit, offset, search)
 
 	var r0 []position.Core
-	var r1 error
-	if rf, ok := ret.Get(0).(func(int, int, string) ([]position.Core, error)); ok {
+	var r1 int64
+	var r2 error
+	if rf, ok := ret.Get(0).(func(int, int, string) ([]position.Core, int64, error)); ok {
 		return rf(limit, offset, search)
 	}
 	if rf, ok := ret.Get(0).(func(int, int, string) []position.Core); ok {
@@ -57,13 +58,19 @@ func (_m *UseCase) GetPositionsLogic(limit int, offset int, search string) ([]po
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int, int, string) error); ok {
+	if rf, ok := ret.Get(1).(func(int, int, string) int64); ok {
 		r1 = rf(limit, offset, search)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(int64)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(int, int, string) error); ok {
+		r2 = rf(limit, offset, search)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 type mockConstructorTestingTNewUseCase interface {

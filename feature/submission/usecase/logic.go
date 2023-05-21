@@ -13,11 +13,13 @@ import (
 
 type submissionLogic struct {
 	sl submission.Repository
+	u  helper.UploadInterface
 }
 
-func New(sr submission.Repository) submission.UseCase {
+func New(sr submission.Repository, u helper.UploadInterface) submission.UseCase {
 	return &submissionLogic{
 		sl: sr,
+		u:  u,
 	}
 }
 
@@ -37,20 +39,13 @@ func (sr *submissionLogic) FindRequirementLogic(userID string, typeName string, 
 }
 
 func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCore, subFile *multipart.FileHeader) error {
-	if subFile != nil {
-		uploadFile, err := subFile.Open()
-		if err != nil {
-			log.Errorf("error in open subfile file", err)
-			return fmt.Errorf("error on opening file %w", err)
-		}
-		uploadUrl, err := helper.UploadFile(&uploadFile, "/"+newSub.OwnerID)
+		uploadUrl, err := sr.u.UploadFile(subFile, "/"+newSub.OwnerID)
 		if err != nil {
 			log.Errorf("error fron third party upload file %w", err)
 			return err
 		}
 		newSub.AttachmentLink = uploadUrl[0]
 		newSub.Attachment = subFile.Filename
-	}
 
 	if err := sr.sl.InsertSubmission(newSub); err != nil {
 		log.Errorf("error on insert submission %w", err)
@@ -74,12 +69,7 @@ func (sr *submissionLogic) UpdateDataByOwnerLogic(submission submission.UpdateCo
 		return errors.New("cannot upload same file and same file name to revise")
 	}
 
-	uploadFile, err := subFile.Open()
-	if err != nil {
-		log.Errorf("cannot open subfile attachment data")
-		return errors.New("cannot open subfile attachment data")
-	}
-	uploadUrl, err := helper.UploadFile(&uploadFile, "/"+submission.UserID)
+	uploadUrl, err := sr.u.UploadFile(subFile, "/"+submission.UserID)
 	if err != nil {
 		log.Errorf("error fron third party upload file %w", err)
 		return err

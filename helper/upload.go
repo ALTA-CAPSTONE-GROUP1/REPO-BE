@@ -10,9 +10,20 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
-func UploadFile(fileContents *multipart.File, path string) ([]string, error) {
+type Upload struct {
+}
+
+type UploadInterface interface {
+	UploadFile(fileContents *multipart.FileHeader, path string) ([]string, error)
+}
+
+func New() UploadInterface {
+	return &Upload{}
+}
+func (u Upload) UploadFile(fileContents *multipart.FileHeader, path string) ([]string, error) {
+
 	var urls []string
-	uploadResult, err := uploadFile(fileContents, path)
+	uploadResult, err := u.doUpload(fileContents, path)
 	if err != nil {
 		return nil, err
 	}
@@ -20,11 +31,17 @@ func UploadFile(fileContents *multipart.File, path string) ([]string, error) {
 	return urls, nil
 }
 
-func uploadFile(content *multipart.File, path string) (*uploader.UploadResult, error) {
+func (u Upload) doUpload(content *multipart.FileHeader, path string) (*uploader.UploadResult, error) {
 	cld, err := cloudinary.NewFromParams(config.CloudinaryName, config.CloudinaryApiKey, config.CloudinaryApiScret)
 	if err != nil {
 		return nil, err
 	}
+	contentmulti, err := content.Open()
+	if err != nil {
+		panic(err)
+	}
+	defer contentmulti.Close()
+
 	overwrite := true
 	useFileName := true
 	useFileNameDisplay := true
@@ -36,7 +53,7 @@ func uploadFile(content *multipart.File, path string) (*uploader.UploadResult, e
 		UseFilenameAsDisplayName: &useFileNameDisplay,
 	}
 
-	uploadResult, err := cld.Upload.Upload(context.Background(), *content, uploadParams)
+	uploadResult, err := cld.Upload.Upload(context.Background(), contentmulti, uploadParams)
 	if err != nil {
 		return nil, fmt.Errorf("error in uploadin file %w", err)
 	}

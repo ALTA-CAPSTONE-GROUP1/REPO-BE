@@ -37,7 +37,7 @@ func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string)
 
 	positions, count, err := pl.pl.GetPositions(limit, offset, search)
 	if err != nil {
-		log.Error("error on getpositions query")
+		log.Error("error on getpositions query:", err)
 		return nil, 0, err
 	}
 
