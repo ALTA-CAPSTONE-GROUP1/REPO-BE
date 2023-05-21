@@ -143,8 +143,8 @@ func ReadEnv() *AppConfig {
 		Email = viper.Get("EMAIL").(string)
 		PasswordUser = viper.Get("PASSWORD_USER").(string)
 		AutoMessageHyperApp = viper.Get("AUTO_MESSAGE").(string)
-		TokenTelegram = viper.Get("TOKEN_TELEGRAM").(string)
-		IdChat = viper.Get("ID_CHAT").(string)
+		// TokenTelegram = viper.Get("TOKEN_TELEGRAM").(string)
+		// IdChat = viper.Get("ID_CHAT").(string)
 
 	}
 	return &app

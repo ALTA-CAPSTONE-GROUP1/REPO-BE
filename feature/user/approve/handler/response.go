@@ -46,15 +46,15 @@ func CoreToGetAllApproveResponse(data []approve.Core) []SubmissionResponse {
 // ===========================================================================================
 
 type SubmissionByIdResponse struct {
-	ID             int                `json:"submission_id"`
-	From           FromApp            `json:"from"`
-	To             []ToApp            `json:"to"`
-	Cc             []CcRecipient      `json:"cc"`
-	Title          string             `json:"title"`
-	SubmissionType string             `json:"submission_type"`
-	StatusBy       []Action           `json:"status_by"`
-	Message        string             `json:"message"`
-	Attachment     []approve.FileCore `json:"attachment"`
+	ID             int           `json:"submission_id"`
+	From           FromApp       `json:"from"`
+	To             []ToApp       `json:"to"`
+	Cc             []CcRecipient `json:"cc"`
+	Title          string        `json:"title"`
+	SubmissionType string        `json:"submission_type"`
+	StatusBy       []Action      `json:"status_by"`
+	Message        string        `json:"message"`
+	Attachment     string        `json:"attachment"`
 }
 
 type FromApp struct {
@@ -107,30 +107,30 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 		result.Cc = append(result.Cc, tmp)
 	}
 
-	for _, v := range data.Signs {
+	for _, v := range data.Tos {
 		tmp := Action{
-			Action:    v.Submission.Status,
+			Action:    v.Action_Type,
 			AppAction: v.User.ID,
 		}
 		result.StatusBy = append(result.StatusBy, tmp)
 	}
 
-	result.Attachment = data.Files
+	result.Attachment = data.Files[0].Link
 
 	return result
 }
 
-func SubmissionToCore(usr admin.Users, sgn []aMod.Sign, fl []aMod.File, rcv []admin.Users, ccs []admin.Users, submissiondatas aMod.Submission) approve.Core {
+func SubmissionToCore(usr admin.Users, file []aMod.File, receivers []admin.Users, ccs []admin.Users, subData aMod.Submission) approve.Core {
 	var res approve.Core
 	var tos []approve.ToCore
 	var ccsCore []approve.CcCore
-	var file []approve.FileCore
 	var sign []approve.SignCore
 	var owner approve.OwnerCore
+	var coreFile []approve.FileCore
 
-	for _, v := range rcv {
+	for _, v := range receivers {
 		tos = append(tos, approve.ToCore{
-			SubmissionID: submissiondatas.ID,
+			SubmissionID: subData.ID,
 			Name:         v.Name,
 			Position:     v.Position.Name,
 			UserID:       v.ID,
@@ -139,48 +139,38 @@ func SubmissionToCore(usr admin.Users, sgn []aMod.Sign, fl []aMod.File, rcv []ad
 
 	for _, v := range ccs {
 		ccsCore = append(ccsCore, approve.CcCore{
-			SubmissionID: submissiondatas.ID,
+			SubmissionID: subData.ID,
 			UserID:       v.ID,
 			Name:         v.Name,
 			Position:     v.Position.Name,
 		})
 	}
 
-	for _, v := range sgn {
-		sign = append(sign, approve.SignCore{
-			SubmissionID: submissiondatas.ID,
-			UserID:       v.User.ID,
-			Submission: approve.Core{
-				Status: v.Submission.Status,
-			},
-		})
-	}
-
-	for _, v := range fl {
-		file = append(file, approve.FileCore{
-			SubmissionID: submissiondatas.ID,
+	for _, v := range file {
+		coreFile = append(coreFile, approve.FileCore{
+			SubmissionID: subData.ID,
 			Name:         v.Name,
 			Link:         v.Link,
 		})
 	}
 
 	owner = approve.OwnerCore{
-		SubmissionID: submissiondatas.ID,
+		SubmissionID: subData.ID,
 		Name:         usr.Name,
 		Position:     usr.Position.Name,
 	}
 
 	res = approve.Core{
-		ID:        submissiondatas.ID,
-		UserID:    submissiondatas.UserID,
-		TypeID:    submissiondatas.TypeID,
-		Title:     submissiondatas.Title,
-		Message:   submissiondatas.Message,
-		Status:    submissiondatas.Status,
+		ID:        subData.ID,
+		UserID:    subData.UserID,
+		TypeID:    subData.TypeID,
+		Title:     subData.Title,
+		Message:   subData.Message,
+		Status:    subData.Status,
 		Is_Opened: false,
-		CreatedAt: submissiondatas.CreatedAt,
-		Type:      subtype.Core{SubmissionTypeName: submissiondatas.Type.Name},
-		Files:     file,
+		CreatedAt: subData.CreatedAt,
+		Type:      subtype.Core{SubmissionTypeName: subData.Type.Name},
+		Files:     coreFile,
 		Tos:       tos,
 		Ccs:       ccsCore,
 		Signs:     sign,
