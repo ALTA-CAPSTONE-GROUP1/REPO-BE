@@ -113,12 +113,9 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 // SelectSubmissionById implements approve.Repository
 func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Core, error) {
 	var dbsub uMod.Submission
-	var fileDetail uMod.File
-	var signDetail uMod.Sign
 	var toDetails []admin.Users
 	var ccDetails []admin.Users
 	var fileDetails []uMod.File
-	var signDetails []uMod.Sign
 
 	query := ar.db.
 		Table("submissions").
@@ -128,11 +125,9 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Where("users.id = ? AND submissions.id = ?", userID, id).
 		Preload("Type").
-		Preload("User").
-		Preload("Tos", "submission_id = ?", id).
-		Preload("Ccs", "submission_id = ?", id).
-		Preload("Signs", "submission_id = ?", id).
-		// Preload("File", "submission_id = ?", id).
+		Preload("Tos").
+		Preload("Ccs").
+		Preload("Signs").
 		Find(&dbsub)
 
 	if query.Error != nil {
@@ -161,34 +156,20 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		ccDetails = append(ccDetails, ccDetail)
 	}
 
-	for _, file := range dbsub.Files {
-		if err := ar.db.Where("id = ?", file.SubmissionID).Preload("File").Find(&fileDetail).Error; err != nil {
-			log.Error(err)
-			return approve.Core{}, err
-		}
-		fileDetails = append(fileDetails, fileDetail)
+	var fileDetail uMod.File
+	if err := ar.db.Where("submission_id = ?", dbsub.ID).Find(&fileDetail).Error; err != nil {
+		log.Error(err)
+		return approve.Core{}, err
 	}
-
-	for _, sign := range dbsub.Signs {
-		if err := ar.db.Where("id = ?", sign.SubmissionID).Preload("Sign").Find(&signDetail).Error; err != nil {
-			log.Error(err)
-			return approve.Core{}, err
-		}
-		signDetails = append(signDetails, signDetail)
-	}
+	fileDetails = append(fileDetails, fileDetail)
 
 	var owner admin.Users
-	if err := ar.db.Model(&dbsub).Association("User").Find(&owner); err != nil {
+	if err := ar.db.Where("id = ?", dbsub.UserID).Preload("Position").Find(&owner).Error; err != nil {
 		log.Error(err)
 		return approve.Core{}, err
 	}
 
-	if err := ar.db.Model(&owner).Preload("Position").Find(&owner).Error; err != nil {
-		log.Error(err)
-		return approve.Core{}, err
-	}
-
-	return handler.SubmissionToCore(owner, signDetails, fileDetails, toDetails, ccDetails, dbsub), nil
+	return handler.SubmissionToCore(owner, fileDetails, toDetails, ccDetails, dbsub), nil
 }
 
 // SelectSubmissionApprove implements approve.Repository
