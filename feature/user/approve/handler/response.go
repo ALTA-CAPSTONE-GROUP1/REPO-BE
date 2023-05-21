@@ -11,13 +11,13 @@ import (
 )
 
 type SubmissionResponse struct {
-	ID             int       `json:"submission_id"`
-	Title          string    `json:"title"`
-	From           string    `json:"from"`
-	SubmissionType string    `json:"submission_type"`
-	Status         string    `json:"status"`
-	CreatedAt      time.Time `json:"receive_date"`
-	Is_Opened      bool      `json:"opened"`
+	ID             int    `json:"submission_id"`
+	Title          string `json:"title"`
+	From           string `json:"from"`
+	SubmissionType string `json:"submission_type"`
+	Status         string `json:"status"`
+	CreatedAt      string `json:"receive_date"`
+	Is_Opened      bool   `json:"opened"`
 }
 
 func CoreToApproveResponse(data approve.Core) SubmissionResponse {
@@ -27,7 +27,7 @@ func CoreToApproveResponse(data approve.Core) SubmissionResponse {
 		From:           data.UserID,
 		SubmissionType: data.Type.SubmissionTypeName,
 		Status:         data.Status,
-		CreatedAt:      time.Time{},
+		CreatedAt:      data.CreatedAt.Add(7 * time.Hour).Format("2006-01-02 15:04"),
 		Is_Opened:      false,
 	}
 }

@@ -82,6 +82,14 @@ type StatusBy struct {
 	Position string
 }
 
+type GetAllQueryParams struct {
+	FromTo string
+	Title  string
+	Type   string
+	Limit  int
+	Offset int
+}
+
 type Handler interface {
 	GetSubmissionAprroveHandler() echo.HandlerFunc
 	GetSubmissionByIdHandler() echo.HandlerFunc
@@ -89,13 +97,13 @@ type Handler interface {
 }
 
 type UseCase interface {
-	GetSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
+	GetSubmissionAprrove(userID string, search GetAllQueryParams) ([]Core, error)
 	GetSubmissionById(userID string, id int) (Core, error)
 	UpdateApprove(userID string, id int, updateInput Core) error
 }
 
 type Repository interface {
-	SelectSubmissionAprrove(userID string, limit, offset int, search string) ([]Core, error)
+	SelectSubmissionAprrove(userID string, search GetAllQueryParams) ([]Core, error)
 	SelectSubmissionById(userID string, id int) (Core, error)
 	UpdateApprove(userID string, id int, input Core) error
 }
