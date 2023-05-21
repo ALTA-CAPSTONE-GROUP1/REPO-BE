@@ -4,8 +4,9 @@ import (
 	"errors"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/approve"
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
+	sRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/repository"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/labstack/gommon/log"
 
@@ -23,71 +24,59 @@ func New(db *gorm.DB) approve.Repository {
 }
 
 // / SelectSubmissionByHyperApproval implements approve.Repository
-func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, id int, token string) (approve.Core, error) {
-	var dbsub user.Submission
+func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, id int, token string) (approve.GetSubmissionByIDCore, error) {
+	var (
+		result         approve.GetSubmissionByIDCore
+		submissionByID sRepo.Submission
+		subTypeDetails admin.Type
+	)
 
-	query := ar.db.
-		Table("submissions").
-		Select("submissions.title, users.name as user_name, positions.name as user_position").
-		Joins("JOIN tos ON submissions.id = tos.submission_id").
-		Joins("JOIN users ON tos.user_id = users.id").
-		Joins("JOIN types ON submissions.type_id = types.id").
-		Joins("JOIN positions ON positions.id = users.position_id").
-		Where("submissions.id = ?", id).
-		Preload("Type").
-		Preload("User").
-		Preload("Tos", "submission_id = ?", id).
-		Preload("Ccs", "submission_id = ?", id).
-		Preload("Signs", "submission_id = ?", id).
-		Find(&dbsub)
+	if token != config.TokenSuperAdmin {
+		return approve.GetSubmissionByIDCore{}, errors.New("Invalid token")
+	}
 
-	if query.Error != nil {
-		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-			return approve.Core{}, errors.New("submission not found")
+	if err := ar.db.Where("id = ?", id).
+		Preload("Files").
+		Preload("Tos").
+		Preload("Ccs").
+		Preload("Signs").
+		First(&submissionByID).Error; err != nil {
+		log.Errorf("error on finding submissions for by submissionid %s:", err)
+		return approve.GetSubmissionByIDCore{}, err
+	}
+
+	if err := ar.db.Where("id = ?", submissionByID.TypeID).Find(&subTypeDetails).Error; err != nil {
+		log.Errorf("error in finding submissionType Name %w", err)
+		return approve.GetSubmissionByIDCore{}, err
+	}
+
+	// var toApprover []submission.ToApprover
+	var toActions []approve.ApproverActions
+	for _, to := range submissionByID.Tos {
+		var toDetails admin.Users
+		if err := ar.db.Where("id = ?", to.UserID).Preload("Position").First(&toDetails).Error; err != nil {
+			log.Errorf("failed on finding positions of tos %w", err)
+			return approve.GetSubmissionByIDCore{}, err
 		}
-		log.Error("failed to find submission:", query.Error.Error())
-		return approve.Core{}, errors.New("failed to retrieve submission")
+		toActions = append(toActions, approve.ApproverActions{
+			Action:           to.Action_Type,
+			ApproverName:     toDetails.Name,
+			ApproverPosition: toDetails.Position.Name,
+		})
+
 	}
 
-	var submissionTypeName string
-	if token == config.TokenSuperAdmin {
-		submissionTypeName = dbsub.Type.Name
-	} else {
-		return approve.Core{}, errors.New("invalid token")
+	if len(submissionByID.Files) > 0 {
+		result.Attachment = submissionByID.Files[0].Link
 	}
 
-	coreData := approve.Core{
-		ID:        dbsub.ID,
-		UserID:    dbsub.UserID,
-		TypeID:    dbsub.TypeID,
-		Title:     dbsub.Title,
-		Message:   dbsub.Message,
-		Status:    dbsub.Status,
-		Is_Opened: false,
-		CreatedAt: dbsub.CreatedAt,
-		Type:      subtype.Core{SubmissionTypeName: submissionTypeName},
-	}
+	result.ApproverActions = append(result.ApproverActions, toActions...)
+	result.Title = submissionByID.Title
+	result.Message = submissionByID.Message
+	result.Status = submissionByID.Status
+	result.SubmissionType = subTypeDetails.Name
 
-	for _, v := range dbsub.Tos {
-		cTos := approve.ToCore{
-			SubmissionID: v.SubmissionID,
-			UserID:       v.User.ID,
-			Action_Type:  v.Action_Type,
-			User:         v.User.Name,
-			Position:     v.User.Position.Name,
-		}
-		coreData.Tos = append(coreData.Tos, cTos)
-	}
-	for _, v := range dbsub.Files {
-		cFiles := approve.FileCore{
-			SubmissionID: v.SubmissionID,
-			Name:         v.Name,
-			Link:         v.Link,
-		}
-		coreData.Files = append(coreData.Files, cFiles)
-	}
-
-	return coreData, nil
+	return result, nil
 }
 
 // UpdateUser implements approve.Repository

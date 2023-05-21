@@ -24,6 +24,7 @@ type Core struct {
 	Ccs       []CcCore
 	Signs     []SignCore
 	Owner     OwnerCore
+	StatusBy  []StatusBy
 }
 
 type FileCore struct {
@@ -74,6 +75,11 @@ type OwnerCore struct {
 	SubmissionID int
 	Name         string
 	Position     string
+}
+
+type StatusBy struct {
+	Action   string
+	Position string
 }
 
 type Handler interface {

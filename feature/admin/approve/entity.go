@@ -25,6 +25,21 @@ type Core struct {
 	Signs     []SignCore
 }
 
+type GetSubmissionByIDCore struct {
+	Title           string
+	SubmissionType  string
+	ApproverActions []ApproverActions
+	Attachment      string
+	Message         string
+	Status          string
+}
+
+type ApproverActions struct {
+	Action           string
+	ApproverName     string
+	ApproverPosition string
+}
+
 type FileCore struct {
 	ID           int
 	SubmissionID int
@@ -40,10 +55,9 @@ type CcCore struct {
 	Name         string
 	Is_Opened    bool
 	CreatedAt    time.Time
-	// User         cUser.Core
-	Submission Core
-	Position   string
-	User       string
+	Submission   Core
+	Position     string
+	User         string
 }
 
 type ToCore struct {
@@ -55,10 +69,9 @@ type ToCore struct {
 	Is_Opened    bool
 	Message      string
 	CreatedAt    time.Time
-	// User         cUser.Core
-	Submission Core
-	Position   string
-	User       string
+	Submission   Core
+	Position     string
+	User         string
 }
 
 type SignCore struct {
@@ -75,11 +88,11 @@ type Handler interface {
 }
 
 type UseCase interface {
-	GetSubmissionByHyperApproval(userID string, id int, token string) (Core, error)
+	GetSubmissionByHyperApproval(userID string, id int, token string) (GetSubmissionByIDCore, error)
 	UpdateByHyperApproval(userID string, updateInput Core) error
 }
 
 type Repository interface {
-	SelectSubmissionByHyperApproval(userID string, id int, token string) (Core, error)
+	SelectSubmissionByHyperApproval(userID string, id int, token string) (GetSubmissionByIDCore, error)
 	UpdateByHyperApproval(userID string, input Core) error
 }
