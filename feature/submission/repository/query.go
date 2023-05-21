@@ -378,7 +378,7 @@ func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) e
 		log.Error("cannot find submission data")
 		return errors.New("submission data not found")
 	}
-	if submission.Status != "Sent" {
+	if submission.Status != "Sent" && submission.Status != "Revise" {
 		tx.Rollback()
 		log.Errorf("submisison status not 'sent'")
 		return errors.New("submission status not 'sent'")
@@ -388,7 +388,7 @@ func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) e
 		UPDATE submissions
 		SET message = ?, status = ?
 		WHERE id = ? AND user_id = ?
-	`, editedData.Message, "sent", editedData.SubmissionID, editedData.UserID).Error; err != nil {
+	`, editedData.Message, "Sent", editedData.SubmissionID, editedData.UserID).Error; err != nil {
 		tx.Rollback()
 		log.Errorf("error on update submission data")
 		return err
