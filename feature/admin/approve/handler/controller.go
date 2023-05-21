@@ -47,14 +47,32 @@ func (ac *approveController) GetSubmissionByHyperApprovalHandler() echo.HandlerF
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Invalid submission ID", nil))
 		}
 
-		data, err := ac.service.GetSubmissionByHyperApproval(userID, submissionIDInt, token)
+		result, err := ac.service.GetSubmissionByHyperApproval(userID, submissionIDInt, token)
 		if err != nil {
 			c.Logger().Error("error on calling get submission by hyper approval logic:", err.Error())
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
 
-		dataResponse := CoreToSubmissionByHyperApprovalResponse(data)
-		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved submission", dataResponse))
+		var response ResponseByID
+		for _, to := range result.ApproverActions {
+			tmpAction := ApproverAction{
+				ApproverName:     to.ApproverName,
+				ApproverPosition: to.ApproverPosition,
+				Action:           to.Action,
+			}
+			response.ApproverAction = append(response.ApproverAction, tmpAction)
+		}
+
+		response.Attachment = result.Attachment
+		response.Title = result.Title
+		response.Message = result.Message
+		response.SubmissionType = result.SubmissionType
+
+		return c.JSON(helper.ResponseFormat(
+			http.StatusOK,
+			"succes to get submission by id",
+			response,
+		))
 	}
 }
 
