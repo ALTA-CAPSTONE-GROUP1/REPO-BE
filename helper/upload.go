@@ -59,7 +59,3 @@ func (u Upload) doUpload(content *multipart.FileHeader, path string) (*uploader.
 	}
 	return uploadResult, nil
 }
-
-// func AddStamp(signName string, currentLink string, path string)(string, error){
-
-// }
