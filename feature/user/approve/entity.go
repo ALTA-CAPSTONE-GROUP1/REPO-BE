@@ -23,6 +23,7 @@ type Core struct {
 	Tos       []ToCore
 	Ccs       []CcCore
 	Signs     []SignCore
+	Owner     OwnerCore
 }
 
 type FileCore struct {
@@ -67,6 +68,12 @@ type SignCore struct {
 	UserID       string
 	User         cUser.Core
 	Submission   Core
+}
+
+type OwnerCore struct {
+	SubmissionID int
+	Name         string
+	Position     string
 }
 
 type Handler interface {

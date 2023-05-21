@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
@@ -47,15 +46,15 @@ func CoreToGetAllApproveResponse(data []approve.Core) []SubmissionResponse {
 // ===========================================================================================
 
 type SubmissionByIdResponse struct {
-	ID             int           `json:"submission_id"`
-	From           FromApp       `json:"from"`
-	To             []ToApp       `json:"to"`
-	Cc             []CcRecipient `json:"cc"`
-	Title          string        `json:"title"`
-	SubmissionType string        `json:"submission_type"`
-	StatusBy       []Action      `json:"status_by"`
-	Message        string        `json:"message"`
-	Attachment     string        `json:"attachment"`
+	ID             int                `json:"submission_id"`
+	From           FromApp            `json:"from"`
+	To             []ToApp            `json:"to"`
+	Cc             []CcRecipient      `json:"cc"`
+	Title          string             `json:"title"`
+	SubmissionType string             `json:"submission_type"`
+	StatusBy       []Action           `json:"status_by"`
+	Message        string             `json:"message"`
+	Attachment     []approve.FileCore `json:"attachment"`
 }
 
 type FromApp struct {
@@ -84,14 +83,13 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 	}
 
 	result.From = FromApp{
-		Name:     data.User.Name,
-		Position: data.User.Position.Name,
+		Name:     data.Owner.Name,
+		Position: data.Owner.Position,
 	}
 
 	result.Title = data.Title
 	result.Message = data.Message
 	result.SubmissionType = data.Type.SubmissionTypeName
-	// result.Attachment = data.Files
 
 	for _, v := range data.Tos {
 		tmp := ToApp{
@@ -117,15 +115,18 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 		result.StatusBy = append(result.StatusBy, tmp)
 	}
 
+	result.Attachment = data.Files
+
 	return result
 }
 
-func SubmissionToCore(sgn []aMod.Sign, fl []aMod.File, rcv []admin.Users, ccs []admin.Users, submissiondatas aMod.Submission) approve.Core {
+func SubmissionToCore(usr admin.Users, sgn []aMod.Sign, fl []aMod.File, rcv []admin.Users, ccs []admin.Users, submissiondatas aMod.Submission) approve.Core {
 	var res approve.Core
 	var tos []approve.ToCore
 	var ccsCore []approve.CcCore
 	var file []approve.FileCore
 	var sign []approve.SignCore
+	var owner approve.OwnerCore
 
 	for _, v := range rcv {
 		tos = append(tos, approve.ToCore{
@@ -163,6 +164,12 @@ func SubmissionToCore(sgn []aMod.Sign, fl []aMod.File, rcv []admin.Users, ccs []
 		})
 	}
 
+	owner = approve.OwnerCore{
+		SubmissionID: submissiondatas.ID,
+		Name:         usr.Name,
+		Position:     usr.Position.Name,
+	}
+
 	res = approve.Core{
 		ID:        submissiondatas.ID,
 		UserID:    submissiondatas.UserID,
@@ -177,8 +184,8 @@ func SubmissionToCore(sgn []aMod.Sign, fl []aMod.File, rcv []admin.Users, ccs []
 		Tos:       tos,
 		Ccs:       ccsCore,
 		Signs:     sign,
+		Owner:     owner,
 	}
-	fmt.Println(tos)
-	fmt.Println(ccsCore)
+
 	return res
 }
