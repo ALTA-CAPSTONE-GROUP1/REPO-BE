@@ -104,19 +104,19 @@ func (pl *positionLogic) AddPositionLogic(newPosition position.Core) error <span
         <span class="cov8" title="1">return nil</span>
 }
 
-func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, error) <span class="cov8" title="1">{
+func (pl *positionLogic) GetPositionsLogic(limit int, offset int, search string) ([]position.Core, int64, error) <span class="cov8" title="1">{
 
-        positions, err := pl.pl.GetPositions(limit, offset, search)
+        positions, count, err := pl.pl.GetPositions(limit, offset, search)
         if err != nil </span><span class="cov8" title="1">{
-                log.Error("error on getpositions query")
-                return nil, err
+                log.Error("error on getpositions query:", err)
+                return nil, 0, err
         }</span>
 
-        <span class="cov8" title="1">return positions, nil</span>
+        <span class="cov8" title="1">return positions, count, nil</span>
 }
 
-func (pl *positionLogic) DeletePositionLogic(position string, tag string) error <span class="cov8" title="1">{
-        if err := pl.pl.DeletePosition(position, tag); err != nil </span><span class="cov8" title="1">{
+func (pl *positionLogic) DeletePositionLogic(position int) error <span class="cov8" title="1">{
+        if err := pl.pl.DeletePosition(position); err != nil </span><span class="cov8" title="1">{
                 if strings.Contains(err.Error(), "count query error") </span><span class="cov0" title="0">{
                         log.Error("errors occurs when countin the datas for delete")
                         return fmt.Errorf("count position query error %w", err)
