@@ -113,8 +113,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 // SelectSubmissionById implements approve.Repository
 func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Core, error) {
 	var dbsub uMod.Submission
-	var toDetail admin.Users
-	var ccDetail admin.Users
 	var fileDetail uMod.File
 	var signDetail uMod.Sign
 	var toDetails []admin.Users
@@ -124,7 +122,6 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 
 	query := ar.db.
 		Table("submissions").
-		// Preload("Position").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
 		Joins("JOIN users ON tos.user_id = users.id").
 		Joins("JOIN types ON submissions.type_id = types.id").
@@ -135,9 +132,19 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		Preload("Tos", "submission_id = ?", id).
 		Preload("Ccs", "submission_id = ?", id).
 		Preload("Signs", "submission_id = ?", id).
+		// Preload("File", "submission_id = ?", id).
 		Find(&dbsub)
 
+	if query.Error != nil {
+		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
+			return approve.Core{}, errors.New("submission not found")
+		}
+		log.Error("failed to find submission:", query.Error.Error())
+		return approve.Core{}, errors.New("failed to retrieve submission")
+	}
+
 	for _, to := range dbsub.Tos {
+		var toDetail admin.Users
 		if err := ar.db.Where("id = ?", to.UserID).Preload("Position").Find(&toDetail).Error; err != nil {
 			log.Error(err)
 			return approve.Core{}, err
@@ -146,6 +153,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 	}
 
 	for _, cc := range dbsub.Ccs {
+		var ccDetail admin.Users
 		if err := ar.db.Where("id = ?", cc.UserID).Preload("Position").Find(&ccDetail).Error; err != nil {
 			log.Error(err)
 			return approve.Core{}, err
@@ -169,15 +177,18 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		signDetails = append(signDetails, signDetail)
 	}
 
-	if query.Error != nil {
-		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-			return approve.Core{}, errors.New("submission not found")
-		}
-		log.Error("failed to find submission:", query.Error.Error())
-		return approve.Core{}, errors.New("failed to retrieve submission")
+	var owner admin.Users
+	if err := ar.db.Model(&dbsub).Association("User").Find(&owner); err != nil {
+		log.Error(err)
+		return approve.Core{}, err
 	}
 
-	return handler.SubmissionToCore(signDetails, fileDetails, toDetails, ccDetails, dbsub), nil
+	if err := ar.db.Model(&owner).Preload("Position").Find(&owner).Error; err != nil {
+		log.Error(err)
+		return approve.Core{}, err
+	}
+
+	return handler.SubmissionToCore(owner, signDetails, fileDetails, toDetails, ccDetails, dbsub), nil
 }
 
 // SelectSubmissionApprove implements approve.Repository
