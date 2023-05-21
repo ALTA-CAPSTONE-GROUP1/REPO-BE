@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>usecase: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/usecase/logic.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package usecase
+
+import (
+        "errors"
+        "fmt"
+        "mime/multipart"
+        "strings"
+
+        "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission"
+        "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
+        "github.com/labstack/gommon/log"
+)
+
+type submissionLogic struct {
+        sl submission.Repository
+        u  helper.UploadInterface
+}
+
+func New(sr submission.Repository, u helper.UploadInterface) submission.UseCase <span class="cov8" title="1">{
+        return &amp;submissionLogic{
+                sl: sr,
+                u:  u,
+        }
+}</span>
+
+func (sr *submissionLogic) FindRequirementLogic(userID string, typeName string, value int) (submission.Core, error) <span class="cov8" title="1">{
+        result, err := sr.sl.FindRequirement(userID, typeName, value)
+        if err != nil </span><span class="cov8" title="1">{
+                if strings.Contains(err.Error(), "record not found") </span><span class="cov8" title="1">{
+                        return submission.Core{}, fmt.Errorf("data not found %w", err)
+                }</span> else<span class="cov8" title="1"> if strings.Contains(err.Error(), "syntax") </span><span class="cov8" title="1">{
+                        return submission.Core{}, fmt.Errorf("internal server error %w", err)
+                }</span> else<span class="cov8" title="1"> {
+                        return submission.Core{}, fmt.Errorf("unexpected error %w", err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return result, nil</span>
+}
+
+func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCore, subFile *multipart.FileHeader) error <span class="cov8" title="1">{
+                uploadUrl, err := sr.u.UploadFile(subFile, "/"+newSub.OwnerID)
+                if err != nil </span><span class="cov8" title="1">{
+                        log.Errorf("error from third party upload file %w", err)
+                        return err
+                }</span>
+                <span class="cov8" title="1">newSub.AttachmentLink = uploadUrl[0]
+                newSub.Attachment = subFile.Filename
+
+        if err := sr.sl.InsertSubmission(newSub); err != nil </span><span class="cov8" title="1">{
+                log.Errorf("error on insert submission %w", err)
+                if strings.Contains(err.Error(), "record not found") </span><span class="cov8" title="1">{
+                        return errors.New("record not found")
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "syntax") </span><span class="cov8" title="1">{
+                        return errors.New("syntax error")
+                }</span>
+                <span class="cov8" title="1">return errors.New("unexpected error on inserting data")</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (sr *submissionLogic) UpdateDataByOwnerLogic(submission submission.UpdateCore, subFile *multipart.FileHeader) error <span class="cov8" title="1">{
+
+        exist := sr.sl.FindFileData(submission.SubmissionID, subFile.Filename)
+
+        if exist </span><span class="cov8" title="1">{
+                return errors.New("cannot upload same file and same file name to revise")
+        }</span>
+
+        <span class="cov8" title="1">uploadUrl, err := sr.u.UploadFile(subFile, "/"+submission.UserID)
+        if err != nil </span><span class="cov8" title="1">{
+                log.Errorf("error fron third party upload file %w", err)
+                return err
+        }</span>
+        <span class="cov8" title="1">if len(uploadUrl) &gt; 0 </span><span class="cov8" title="1">{
+                submission.AttachmentLink = uploadUrl[0]
+                submission.AttachmentName = subFile.Filename
+        }</span>
+        <span class="cov8" title="1">err = sr.sl.UpdateDataByOwner(submission)
+        if err != nil </span><span class="cov8" title="1">{
+                if strings.Contains(err.Error(), "submission data not found") </span><span class="cov8" title="1">{
+                        return errors.New("submission data not found")
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "status not") </span><span class="cov8" title="1">{
+                        return errors.New("submission status not sent")
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "syntax") </span><span class="cov8" title="1">{
+                        return errors.New("internal server error(syntax)")
+                }</span>
+                <span class="cov8" title="1">log.Errorf("unexpected error %w", err)
+                return errors.New("server error, unexpected error")</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (sr *submissionLogic) GetAllSubmissionLogic(userID string, pr submission.GetAllQueryParams) ([]submission.AllSubmiisionCore, []submission.SubTypeChoices, error) <span class="cov8" title="1">{
+        allsubmission, typelist, err := sr.sl.SelectAllSubmissions(userID, pr)
+        if err != nil </span><span class="cov8" title="1">{
+                log.Errorf("error on get all submission data", err)
+                if strings.Contains(err.Error(), "record not found") </span><span class="cov8" title="1">{
+                        return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, errors.New("record not found")
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "syntax") </span><span class="cov8" title="1">{
+                        return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, errors.New("syntax error")
+                }</span>
+                <span class="cov8" title="1">return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, errors.New("unexpected error on inserting data")</span>
+        }
+
+        <span class="cov8" title="1">return allsubmission, typelist, nil</span>
+}
+
+func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int, userId string) (submission.GetSubmissionByIDCore, error) <span class="cov8" title="1">{
+        result, err := sr.sl.SelectSubmissionByID(submissionID, userId)
+        if err != nil </span><span class="cov8" title="1">{
+                if strings.Contains(err.Error(), "record not found") </span><span class="cov8" title="1">{
+                        return submission.GetSubmissionByIDCore{}, errors.New("record not found")
+                }</span>
+
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "syntax") </span><span class="cov8" title="1">{
+                        return submission.GetSubmissionByIDCore{}, errors.New("syntax error")
+                }</span>
+
+                <span class="cov8" title="1">log.Errorf("unexpected error on getsubmissionByID")
+                return submission.GetSubmissionByIDCore{}, fmt.Errorf("unexpected error %w", err)</span>
+        }
+
+        <span class="cov8" title="1">return result, nil</span>
+}
+
+func (sr *submissionLogic) DeleteSubmissionLogic(submissionID int, userID string) error <span class="cov8" title="1">{
+        if err := sr.sl.DeleteSubmissionByID(submissionID, userID); err != nil </span><span class="cov8" title="1">{
+                log.Errorf("error on calling delte submission ID")
+                if strings.Contains(err.Error(), "not found") </span><span class="cov8" title="1">{
+                        return errors.New("data not found")
+                }</span>
+                <span class="cov8" title="1">if strings.Contains(err.Error(), "sent") </span><span class="cov8" title="1">{
+                        return errors.New("unauthorized submission status is sent")
+                }</span>
+                <span class="cov8" title="1">log.Errorf("unexpected error %w", err)
+                return fmt.Errorf("unexppected error %w", err)</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

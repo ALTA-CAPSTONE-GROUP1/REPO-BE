@@ -41,7 +41,7 @@ func (sr *submissionLogic) FindRequirementLogic(userID string, typeName string, 
 func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCore, subFile *multipart.FileHeader) error {
 		uploadUrl, err := sr.u.UploadFile(subFile, "/"+newSub.OwnerID)
 		if err != nil {
-			log.Errorf("error fron third party upload file %w", err)
+			log.Errorf("error from third party upload file %w", err)
 			return err
 		}
 		newSub.AttachmentLink = uploadUrl[0]
@@ -84,10 +84,10 @@ func (sr *submissionLogic) UpdateDataByOwnerLogic(submission submission.UpdateCo
 			return errors.New("submission data not found")
 		}
 		if strings.Contains(err.Error(), "status not") {
-			return errors.New("user status not sent")
+			return errors.New("submission status not sent")
 		}
 		if strings.Contains(err.Error(), "syntax") {
-			return errors.New("submission data not found")
+			return errors.New("internal server error(syntax)")
 		}
 		log.Errorf("unexpected error %w", err)
 		return errors.New("server error, unexpected error")
