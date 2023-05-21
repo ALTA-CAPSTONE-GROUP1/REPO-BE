@@ -26,15 +26,25 @@ func New(db *gorm.DB) profile.Repository {
 func (um *userModel) UpdateUser(id string, input profile.Core) error {
 	var updateUser user.Users
 
-	hashedPassword, err := helper.HashPassword(input.Password)
-	if err != nil {
-		log.Error("error occurs on hashing password", err.Error())
-		return errors.New("hashing password failed")
+	if input.Password != "" {
+		hashedPassword, err := helper.HashPassword(input.Password)
+		if err != nil {
+			log.Error("error occurs on hashing password", err.Error())
+			return errors.New("hashing password failed")
+		}
+		updateUser.Password = hashedPassword
+	} else {
+		// Jika input password kosong, tidak mengubah password di database
+		profileData, err := um.Profile(id)
+		if err != nil {
+			log.Error("failed to get user profile:", err.Error())
+			return errors.New("failed to retrieve user profile")
+		}
+		updateUser.Password = profileData.Password
 	}
 
 	updateUser.Email = input.Email
 	updateUser.PhoneNumber = input.PhoneNumber
-	updateUser.Password = hashedPassword
 
 	// Update the user in the database
 	tx := um.db.Model(&user.Users{}).Where("id = ?", id).Updates(&updateUser)
