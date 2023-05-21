@@ -133,10 +133,10 @@ func (sm *submissionModel) InsertSubmission(newSub submission.AddSubmissionCore)
 		submissionDB.Tos = append(submissionDB.Tos, tmp)
 	}
 
-	for _, v := range newSub.CC {
+	for _, x := range newSub.CC {
 		tmp := Cc{
-			Name:   v.CcName,
-			UserID: v.CcId,
+			Name:   x.CcName,
+			UserID: x.CcId,
 		}
 		submissionDB.Ccs = append(submissionDB.Ccs, tmp)
 	}
@@ -256,7 +256,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			CCs:            ccApprover,
 			Title:          sub.Title,
 			Status:         sub.Status,
-			ReceiveDate:    sub.CreatedAt.Format(time.RFC3339),
+			ReceiveDate:    sub.CreatedAt.Add(7 * time.Hour).Format("2006-01-02 15:04"),
 			Opened:         sub.Is_Opened,
 			Attachment:     attachment.Link,
 			SubmissionType: subTypeByID.Name,
@@ -341,7 +341,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.Title = submissionByID.Title
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
-	result.ActionMessage = toActions[(len(toActions) - 1)].Message
+	result.ActionMessage = toActions[0].Message
 	result.SubmissionType = subTypeDetails.Name
 
 	return result, nil
