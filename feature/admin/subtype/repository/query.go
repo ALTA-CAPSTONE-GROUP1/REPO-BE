@@ -146,7 +146,7 @@ func (st *subTypeModel) GetSubTypes(limit int, offset int, search string) ([]sub
 		resPositions = append(resPositions, tmpPosition)
 	}
 
-	if err := st.db.Find(&types).Error; err != nil {
+	if err := st.db.Order("id DESC").Find(&types).Error; err != nil {
 		log.Errorf("failed on finding all submission types %w", err)
 		return nil, nil, fmt.Errorf("error when get all submission type %w", err)
 	}

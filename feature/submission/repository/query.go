@@ -199,7 +199,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		}
 	}
 
-	if err := sm.db.Where("user_id = ?", userID).
+	if err := sm.db.Where("user_id = ?", userID).Order("created_at DESC").
 		Preload("Files").
 		Preload("Tos").
 		Preload("Ccs").
@@ -272,6 +272,11 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		submissionByID Submission
 		subTypeDetails admin.Type
 	)
+	if err := sm.db.Model(&Submission{}).Where("id = ?", submissionID).Update("is_opened", 1).Error; err != nil {
+		log.Errorf("error in update status opened", err)
+		return submission.GetSubmissionByIDCore{}, err
+	}
+
 	if err := sm.db.Where("user_id = ? AND id = ?", userID, submissionID).
 		Preload("Files").
 		Preload("Tos").
