@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/auth"
@@ -96,9 +97,8 @@ func (um *authModel) SignVaidation(signID string) (auth.SignCore, error) {
 		Title:            dbsubmission.Title,
 		Officialname:     user.Name,
 		Officialposition: user.Position.Name,
-		Date:             sign.CreatedAt.Format("2006-01-02 15:04"),
+		Date:             sign.CreatedAt.Add(7 * time.Hour).Format("2006-01-02 15:04"),
 	}
 
-	
 	return result, nil
 }
