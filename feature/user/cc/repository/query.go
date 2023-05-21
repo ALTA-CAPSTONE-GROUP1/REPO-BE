@@ -45,7 +45,7 @@ func (cm *ccModel) GetAllCc(userID string) ([]cc.CcCore, error) {
 				continue
 			}
 			var toUser admin.Users
-			if err := cm.db.Where("id = ?", submission.Tos[len(submission.Tos)-1].UserID).Preload("Position").First(&toUser).Error; err != nil {
+			if err := cm.db.Where("id = ?", submission.Tos[0].UserID).Preload("Position").First(&toUser).Error; err != nil {
 				log.Errorf("error on finding to user %w", err)
 				return []cc.CcCore{}, err
 			}

@@ -126,14 +126,15 @@ func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 		if offsetInt+limitInt > len(response) {
 			limitInt = len(filteredData) - offsetInt
 		}
-		response = response[offsetInt : offsetInt+limitInt]
-		var totalData int
-		var totalPage int
+		totalData := len(response)
+		totalPage := 1
 		if len(response) > 0 {
-			totalData = len(response)
-			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
+			totalPage = int(math.Ceil(float64(totalData)/float64(limitInt)))
 		}
-		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+		currentPage := int(math.Ceil(float64(offsetInt+1)/float64(limitInt)))
+		if currentPage > totalPage{
+			currentPage = totalPage
+		}
 		meta := Meta{
 			CurrentLimit:  limitInt,
 			CurrentOffset: offsetInt,
