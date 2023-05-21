@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -42,11 +41,11 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 	switch input.Status {
 	case "approve":
-		submission.Status = "waiting"
+		submission.Status = "Waiting"
 	case "revise":
-		submission.Status = "revised"
+		submission.Status = "Revised"
 	case "reject":
-		submission.Status = "rejected"
+		submission.Status = "Rejected"
 	default:
 		return errors.New("invalid status")
 	}
@@ -89,11 +88,11 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 	actionType := ""
 	switch submission.Status {
-	case "waiting":
+	case "Waiting":
 		actionType = "approve"
-	case "revised":
+	case "Revised":
 		actionType = "revise"
-	case "rejected":
+	case "Rejected":
 		actionType = "reject"
 	}
 
@@ -173,24 +172,48 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 }
 
 // SelectSubmissionApprove implements approve.Repository
-func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset int, search string) ([]approve.Core, error) {
+func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.GetAllQueryParams) ([]approve.Core, error) {
 	var res []approve.Core
 	var dbsub []uMod.Submission
 
+	limit := search.Limit
+	offset := search.Offset
+	fromParm := search.FromTo
+	title := search.Title
+	types := search.Type
+
 	query := ar.db.Table("submissions").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
+		Joins("JOIN users ON tos.user_id = users.id").
 		Joins("JOIN types ON submissions.type_id = types.id").
-		Where("tos.user_id = ?", userID).
-		Limit(limit).
+		Joins("JOIN positions ON positions.id = users.position_id").
+		Preload("User").
+		Preload("Type").
+		Where("tos.user_id = ?", userID)
+
+	if title != "" {
+		query = query.Where("submissions.title LIKE ?", "%"+title+"%")
+	}
+
+	if fromParm != "" {
+		query = query.Where("positions.name LIKE ?", "%"+fromParm+"%")
+	}
+
+	if types != "" {
+		query = query.Where("types.name LIKE ?", "%"+types+"%")
+	}
+
+	query = query.Limit(limit).
 		Offset(offset).
 		Preload("Type").
 		Find(&dbsub)
+
 	if query.Error != nil {
 		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 			return []approve.Core{}, errors.New("submission not found")
 		}
-		log.Error("failed to find all submission:", query.Error.Error())
-		return []approve.Core{}, errors.New("failed to retrieve all submission")
+		log.Error("failed to find all submissions:", query.Error.Error())
+		return []approve.Core{}, errors.New("failed to retrieve all submissions")
 	}
 
 	for _, v := range dbsub {
@@ -202,7 +225,7 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, limit, offset in
 			Message:   v.Message,
 			Status:    v.Status,
 			Is_Opened: false,
-			CreatedAt: time.Time{},
+			CreatedAt: v.CreatedAt,
 			Type: subtype.Core{
 				SubmissionTypeName: v.Type.Name,
 			},
