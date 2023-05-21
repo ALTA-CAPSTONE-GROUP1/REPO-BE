@@ -66,6 +66,7 @@ type SignCore struct {
 	Name         string
 	UserID       string
 	User         cUser.Core
+	Submission   Core
 }
 
 type Handler interface {

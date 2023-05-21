@@ -53,7 +53,7 @@ func (ac *approveController) GetSubmissionByHyperApprovalHandler() echo.HandlerF
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
 
-		dataResponse := data
+		dataResponse := CoreToSubmissionByHyperApprovalResponse(data)
 		return c.JSON(helper.ResponseFormat(http.StatusOK, "Successfully retrieved submission", dataResponse))
 	}
 }
