@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
 	aMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
 	// aRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/users/approve/repository"
@@ -90,7 +91,7 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 	result.Title = data.Title
 	result.Message = data.Message
 	result.SubmissionType = data.Type.SubmissionTypeName
-	// result.Attachment = data.Attachment
+	// result.Attachment = data.Files
 
 	for _, v := range data.Tos {
 		tmp := ToApp{
@@ -108,20 +109,23 @@ func CoreToApproveByIdResponse(data approve.Core) SubmissionByIdResponse {
 		result.Cc = append(result.Cc, tmp)
 	}
 
-	// for _, z := range data.StatusBy {
-	// 	result.StatusBy = append(result.StatusBy, Action{
-	// 		Action:    z.Status,
-	// 		AppAction: z.By,
-	// 	})
-	// }
+	for _, v := range data.Signs {
+		tmp := Action{
+			Action:    v.Submission.Status,
+			AppAction: v.User.ID,
+		}
+		result.StatusBy = append(result.StatusBy, tmp)
+	}
 
 	return result
 }
 
-func SubmissionToCore(rcv []admin.Users, ccs []admin.Users, submissiondatas aMod.Submission) approve.Core {
+func SubmissionToCore(sgn []aMod.Sign, fl []aMod.File, rcv []admin.Users, ccs []admin.Users, submissiondatas aMod.Submission) approve.Core {
 	var res approve.Core
 	var tos []approve.ToCore
 	var ccsCore []approve.CcCore
+	var file []approve.FileCore
+	var sign []approve.SignCore
 
 	for _, v := range rcv {
 		tos = append(tos, approve.ToCore{
@@ -140,6 +144,25 @@ func SubmissionToCore(rcv []admin.Users, ccs []admin.Users, submissiondatas aMod
 			Position:     v.Position.Name,
 		})
 	}
+
+	for _, v := range sgn {
+		sign = append(sign, approve.SignCore{
+			SubmissionID: submissiondatas.ID,
+			UserID:       v.User.ID,
+			Submission: approve.Core{
+				Status: v.Submission.Status,
+			},
+		})
+	}
+
+	for _, v := range fl {
+		file = append(file, approve.FileCore{
+			SubmissionID: submissiondatas.ID,
+			Name:         v.Name,
+			Link:         v.Link,
+		})
+	}
+
 	res = approve.Core{
 		ID:        submissiondatas.ID,
 		UserID:    submissiondatas.UserID,
@@ -149,8 +172,11 @@ func SubmissionToCore(rcv []admin.Users, ccs []admin.Users, submissiondatas aMod
 		Status:    submissiondatas.Status,
 		Is_Opened: false,
 		CreatedAt: submissiondatas.CreatedAt,
+		Type:      subtype.Core{SubmissionTypeName: submissiondatas.Type.Name},
+		Files:     file,
 		Tos:       tos,
 		Ccs:       ccsCore,
+		Signs:     sign,
 	}
 	fmt.Println(tos)
 	fmt.Println(ccsCore)

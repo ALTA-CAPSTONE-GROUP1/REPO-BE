@@ -40,8 +40,10 @@ type CcCore struct {
 	Name         string
 	Is_Opened    bool
 	CreatedAt    time.Time
-	User         cUser.Core
-	Submission   Core
+	// User         cUser.Core
+	Submission Core
+	Position   string
+	User       string
 }
 
 type ToCore struct {
@@ -53,8 +55,10 @@ type ToCore struct {
 	Is_Opened    bool
 	Message      string
 	CreatedAt    time.Time
-	User         cUser.Core
-	Submission   Core
+	// User         cUser.Core
+	Submission Core
+	Position   string
+	User       string
 }
 
 type SignCore struct {
@@ -63,7 +67,6 @@ type SignCore struct {
 	CreatedAt    time.Time
 	Name         string
 	UserID       string
-	User         cUser.Core
 }
 
 type Handler interface {

@@ -78,5 +78,6 @@ type Sign struct {
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	Name         string
 	UserID       string
-	User         Users `gorm:"foreignKey:UserID"`
+	User         Users      `gorm:"foreignKey:UserID"`
+	Submission   Submission `gorm:"foreignKey:SubmissionID"`
 }

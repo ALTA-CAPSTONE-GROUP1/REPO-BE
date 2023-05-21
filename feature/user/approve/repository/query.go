@@ -115,8 +115,12 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 	var dbsub uMod.Submission
 	var toDetail admin.Users
 	var ccDetail admin.Users
+	var fileDetail uMod.File
+	var signDetail uMod.Sign
 	var toDetails []admin.Users
 	var ccDetails []admin.Users
+	var fileDetails []uMod.File
+	var signDetails []uMod.Sign
 
 	query := ar.db.
 		Table("submissions").
@@ -140,12 +144,29 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		}
 		toDetails = append(toDetails, toDetail)
 	}
+
 	for _, cc := range dbsub.Ccs {
 		if err := ar.db.Where("id = ?", cc.UserID).Preload("Position").Find(&ccDetail).Error; err != nil {
 			log.Error(err)
 			return approve.Core{}, err
 		}
 		ccDetails = append(ccDetails, ccDetail)
+	}
+
+	for _, file := range dbsub.Files {
+		if err := ar.db.Where("id = ?", file.SubmissionID).Preload("File").Find(&fileDetail).Error; err != nil {
+			log.Error(err)
+			return approve.Core{}, err
+		}
+		fileDetails = append(fileDetails, fileDetail)
+	}
+
+	for _, sign := range dbsub.Signs {
+		if err := ar.db.Where("id = ?", sign.SubmissionID).Preload("Sign").Find(&signDetail).Error; err != nil {
+			log.Error(err)
+			return approve.Core{}, err
+		}
+		signDetails = append(signDetails, signDetail)
 	}
 
 	if query.Error != nil {
@@ -156,7 +177,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		return approve.Core{}, errors.New("failed to retrieve submission")
 	}
 
-	return handler.SubmissionToCore(toDetails, ccDetails, dbsub), nil
+	return handler.SubmissionToCore(signDetails, fileDetails, toDetails, ccDetails, dbsub), nil
 }
 
 // SelectSubmissionApprove implements approve.Repository

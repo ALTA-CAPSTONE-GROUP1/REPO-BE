@@ -268,5 +268,15 @@ func (um *usersModel) InsertUser(newUser user.Core) error {
 		return err
 	}
 
+	// phoneNumber := inputUser.PhoneNumber
+
+	// err := helper.SendSimpleWhatsappNotif(phoneNumber, inputUser)
+	// if err != nil {
+	// 	// Handle the error
+	// 	fmt.Println("Failed to send whatsapp notifications:", err)
+	// } else {
+	// 	fmt.Println("Wahtsapp notifications sent successfully!")
+	// }
+
 	return nil
 }
