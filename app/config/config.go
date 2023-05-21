@@ -18,6 +18,8 @@ var (
 	Email                  string
 	PasswordUser           string
 	AutoMessageHyperApp    string
+	TokenTelegram          string
+	IdChat                 string
 )
 
 type AppConfig struct {
@@ -103,6 +105,16 @@ func ReadEnv() *AppConfig {
 		isRead = false
 	}
 
+	if val, found := os.LookupEnv("TOKEN_TELEGRAM"); found {
+		TokenTelegram = val
+		isRead = false
+	}
+
+	if val, found := os.LookupEnv("ID_CHAT"); found {
+		IdChat = val
+		isRead = false
+	}
+
 	if isRead {
 		viper.AddConfigPath(".")
 		viper.SetConfigName("local")
@@ -131,6 +143,8 @@ func ReadEnv() *AppConfig {
 		Email = viper.Get("EMAIL").(string)
 		PasswordUser = viper.Get("PASSWORD_USER").(string)
 		AutoMessageHyperApp = viper.Get("AUTO_MESSAGE").(string)
+		TokenTelegram = viper.Get("TOKEN_TELEGRAM").(string)
+		IdChat = viper.Get("ID_CHAT").(string)
 
 	}
 	return &app

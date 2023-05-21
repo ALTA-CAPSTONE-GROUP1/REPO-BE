@@ -268,15 +268,46 @@ func (um *usersModel) InsertUser(newUser user.Core) error {
 		return err
 	}
 
-	// phoneNumber := inputUser.PhoneNumber
+	// registrationData := fmt.Sprintf("Name: %s\nEmail: %s\nPhone Number: %s\nOffice: %s\nPosition: %s\nPassword: %s",
+	// 	newUser.Name,
+	// 	newUser.Email,
+	// 	newUser.PhoneNumber,
+	// 	newUser.Office.Name,
+	// 	newUser.Position.Name,
+	// 	samePassword,
+	// )
 
-	// err := helper.SendSimpleWhatsappNotif(phoneNumber, inputUser)
-	// if err != nil {
-	// 	// Handle the error
-	// 	fmt.Println("Failed to send whatsapp notifications:", err)
-	// } else {
-	// 	fmt.Println("Wahtsapp notifications sent successfully!")
+	// if err := helper.SendTelegramMessage(newUser.PhoneNumber, registrationData); err != nil {
+	// 	log.Error("failed to send notifications via Telegram:", err.Error())
+	// }
+
+	// if err := helper.SendSimpleEmail("Registration Update", "Registration Update", []string{newUser.Email}, []string{newUser.Name}, "eProposal Account"); err != nil {
+	// 	log.Error("failed to send email:", err.Error())
 	// }
 
 	return nil
+
 }
+
+// if err := sm.db.Preload("Position").
+//         Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
+//         Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
+//         Joins("INNER JOIN offices ON offices.id = users.office_id").
+//         Joins("INNER JOIN types ON types.id = position_has_types.type_id").
+//         Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
+//         Where("types.name = ? AND position_has_types.as = 'To' AND position_has_types.value = ? AND (users.office_id = ? OR offices.name = 'Head Office')",
+// 		typeName, typeValue, applicant.Office.ID).
+//         Order("position_has_types.to_level ASC").
+
+// 		if err := sm.db.Preload("Position").
+//         Joins("INNER JOIN position_has_types ON position_has_types.position_id = users.position_id").
+//         Joins("INNER JOIN positions ON positions.id = position_has_types.position_id").
+//         Joins("INNER JOIN offices ON offices.id = users.office_id").
+//         Joins("INNER JOIN types ON types.id = position_has_types.type_id").
+//         Where("positions.deleted_at IS NULL AND types.deleted_at IS NULL AND position_has_types.deleted_at IS NULL").
+//         Where("types.name = ? AND position_has_types.as = 'To' AND position_has_types.value = ? AND
+// 		(users.office_id = ? OR offices.name = 'Head Office')", typeName, typeValue, applicant.Office.ID).
+//         Order("position_has_types.to_level ASC").
+//         Find(&tos).Error; err != nil {
+//         return submission.Core{}, err
+//     }
