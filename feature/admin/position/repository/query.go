@@ -41,7 +41,7 @@ func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]p
 		count       int64
 	)
 
-	tx := pm.db.Find(&DBpositions)
+	tx := pm.db.Order("id DESC").Find(&DBpositions)
 	if tx.Error != nil {
 		log.Error("get posititons query error without search condition")
 		return nil, 0, tx.Error
