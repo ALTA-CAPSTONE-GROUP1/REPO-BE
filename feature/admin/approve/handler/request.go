@@ -6,6 +6,6 @@ type InputUpdate struct {
 }
 
 type InputGet struct {
-	SubID int    `json:"submission_id" form:"submission_id"`
-	Token string `json:"token" form:"token"`
+	SubID int    `json:"submission_id"`
+	Token string `json:"token"`
 }

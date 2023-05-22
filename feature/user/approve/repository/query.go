@@ -9,6 +9,7 @@ import (
 	uMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/handler"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
 
 	"gorm.io/gorm"
@@ -105,6 +106,51 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		log.Error("error on update action_type in 'to' table")
 		return tx.Error
 	}
+
+	sign, err := helper.GenerateUniqueSign(userID)
+	if err != nil {
+		log.Error("failed to generate unique sign")
+		return err
+	}
+
+	tx = ar.db.Model(&user.Sign{}).
+		Where("signs.user_id = ? AND signs.submission_id = ?", userID, submission.ID).
+		Update("sign.name", sign)
+
+	if tx.RowsAffected == 0 {
+		log.Error("no rows affected on update sign")
+		return errors.New("data is up to date")
+	}
+
+	if tx.Error != nil {
+		log.Error("error on update sign")
+		return tx.Error
+	}
+
+	// file := user.File{}
+	// tx = ar.db.Model(&user.File{}).
+	// 	Select("link").
+	// 	Where("submission_id = ?", submission.ID).
+	// 	First(&file)
+
+	// if tx.RowsAffected == 0 {
+	// 	log.Error("no file found for the given submission ID")
+	// 	return errors.New("no file found")
+	// }
+
+	// currentLink := fmt.Sprintf("link/to/submission/%d", submission.ID)
+	// currentFileName := file.Link
+	// submissionTitle := submission.Title
+	// signName := sign
+	// action := input.Status
+	// actionMessage := input.Message
+	// approverName := to.User.Name
+	// approverPosition := to.User.Position.Name
+
+	// fileHeader, err := helper.UpdateCreateSign(currentLink, currentFileName, approverName, submissionTitle, signName, approverPosition, action, actionMessage)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/approve"
@@ -28,26 +27,25 @@ func (ac *approveController) GetSubmissionByHyperApprovalHandler() echo.HandlerF
 			c.Logger().Error("user is not admin trying to access delete user account")
 			return c.JSON(helper.ResponseFormat(http.StatusUnauthorized, "You are not an admin", nil))
 		}
+		var request InputGet
+		if err := c.Bind(&request); err != nil {
+			c.Logger().Error("failed to bind request body:", err.Error())
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Invalid request body", nil))
+		}
 
-		submissionID := c.FormValue("submission_id")
-		if submissionID == "" {
+		submissionID := request.SubID
+		if submissionID == 0 {
 			c.Logger().Error("submission ID is missing")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Submission ID is required", nil))
 		}
 
-		token := c.FormValue("token")
+		token := request.Token
 		if token == "" {
 			c.Logger().Error("token is missing")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Token is required", nil))
 		}
 
-		submissionIDInt, err := strconv.Atoi(submissionID)
-		if err != nil {
-			c.Logger().Error("invalid submission ID")
-			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Invalid submission ID", nil))
-		}
-
-		result, err := ac.service.GetSubmissionByHyperApproval(userID, submissionIDInt, token)
+		result, err := ac.service.GetSubmissionByHyperApproval(userID, submissionID, token)
 		if err != nil {
 			c.Logger().Error("error on calling get submission by hyper approval logic:", err.Error())
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
