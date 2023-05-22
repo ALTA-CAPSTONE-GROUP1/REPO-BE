@@ -25,6 +25,7 @@ type Core struct {
 	Signs     []SignCore
 	Owner     OwnerCore
 	StatusBy  []StatusBy
+	Approv    ApproverCore
 }
 
 type FileCore struct {
@@ -75,6 +76,11 @@ type OwnerCore struct {
 	SubmissionID int
 	Name         string
 	Position     string
+}
+
+type ApproverCore struct {
+	SubmissionID int
+	Action       string
 }
 
 type StatusBy struct {

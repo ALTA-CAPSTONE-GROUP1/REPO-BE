@@ -282,6 +282,7 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Preload("User").
 		Preload("Type").
+		Preload("Tos").
 		Where("tos.user_id = ?", userID)
 
 	if title != "" {
@@ -316,10 +317,14 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 			Owner: approve.OwnerCore{
 				Name: v.User.Name,
 			},
-			TypeID:    v.TypeID,
-			Title:     v.Title,
-			Message:   v.Message,
-			Status:    v.Status,
+			TypeID:  v.TypeID,
+			Title:   v.Title,
+			Message: v.Message,
+			Tos: []approve.ToCore{
+				{
+					Action_Type: v.Status,
+				},
+			},
 			Is_Opened: false,
 			CreatedAt: v.CreatedAt,
 			Type: subtype.Core{

@@ -26,7 +26,7 @@ func CoreToApproveResponse(data approve.Core) SubmissionResponse {
 		Title:          data.Title,
 		From:           data.Owner.Name,
 		SubmissionType: data.Type.SubmissionTypeName,
-		Status:         data.Status,
+		Status:         data.Approv.Action,
 		CreatedAt:      data.CreatedAt.Add(7 * time.Hour).Format("2006-01-02 15:04"),
 		Is_Opened:      false,
 	}
