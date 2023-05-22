@@ -111,7 +111,7 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			}
 			response = append(response, tmp)
 		}
-	
+
 		totalData := len(filteredPositions)
 		if offsetInt < len(filteredPositions) {
 			endIndex := offsetInt + limitInt
