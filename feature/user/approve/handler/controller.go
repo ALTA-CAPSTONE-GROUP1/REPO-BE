@@ -91,7 +91,7 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 		fromParam := c.QueryParam("from")
 		types := c.QueryParam("type")
 
-		limit := -1
+		limit := 10
 		if limitStr != "" {
 			limitInt, err := strconv.Atoi(limitStr)
 			if err != nil {
@@ -101,7 +101,7 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 			limit = limitInt
 		}
 
-		offset := -1
+		offset := 0
 		if offsetStr != "" {
 			offsetInt, err := strconv.Atoi(offsetStr)
 			if err != nil {

@@ -6,7 +6,8 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
-	uMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
+
+	// uMod "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user/approve/handler"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
@@ -38,8 +39,16 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		Joins("JOIN users ON tos.user_id = users.id").
 		Where("tos.user_id = ? AND submissions.id = ?", userID, id).
 		Find(&submission)
+	if tx.RowsAffected == 0 {
+		log.Error("no rows found for the given user and submission ID")
+		return errors.New("no data found")
+	}
 
 	tx = ar.db.Where("id = ?", submission.UserID).First(&owner)
+	if tx.RowsAffected == 0 {
+		log.Error("no rows found for the given user and submission ID")
+		return errors.New("no data found")
+	}
 
 	tx = ar.db.Where("submission_id = ?", submission.ID).Find(&tos)
 	if tx.RowsAffected == 0 {
@@ -126,6 +135,7 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		return err
 	}
 	var signdb user.Sign
+	signdb.UserID = userID
 	signdb.Name = sign
 	signdb.SubmissionID = submission.ID
 	tx = ar.db.Create(&signdb)
@@ -194,10 +204,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 // SelectSubmissionById implements approve.Repository
 func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Core, error) {
-	var dbsub uMod.Submission
+	var dbsub user.Submission
 	var toDetails []admin.Users
 	var ccDetails []admin.Users
-	var fileDetails []uMod.File
+	var fileDetails []user.File
 
 	query := ar.db.
 		Table("submissions").
@@ -238,7 +248,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 		ccDetails = append(ccDetails, ccDetail)
 	}
 
-	var fileDetail uMod.File
+	var fileDetail user.File
 	if err := ar.db.Where("submission_id = ?", dbsub.ID).Find(&fileDetail).Error; err != nil {
 		log.Error(err)
 		return approve.Core{}, err
@@ -257,7 +267,7 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 // SelectSubmissionApprove implements approve.Repository
 func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.GetAllQueryParams) ([]approve.Core, error) {
 	var res []approve.Core
-	var dbsub []uMod.Submission
+	var dbsub []user.Submission
 
 	limit := search.Limit
 	offset := search.Offset
@@ -301,8 +311,11 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 
 	for _, v := range dbsub {
 		tmp := approve.Core{
-			ID:        v.ID,
-			UserID:    v.UserID,
+			ID:     v.ID,
+			UserID: v.UserID,
+			Owner: approve.OwnerCore{
+				Name: v.User.Name,
+			},
 			TypeID:    v.TypeID,
 			Title:     v.Title,
 			Message:   v.Message,

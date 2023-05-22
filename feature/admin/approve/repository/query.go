@@ -8,6 +8,7 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/approve"
 	sRepo "github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/submission/repository"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/user"
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/helper"
 	"github.com/labstack/gommon/log"
 
 	"gorm.io/gorm"
@@ -32,7 +33,7 @@ func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, id int, 
 	)
 
 	if token != config.TokenSuperAdmin {
-		return approve.GetSubmissionByIDCore{}, errors.New("Invalid token")
+		return approve.GetSubmissionByIDCore{}, errors.New("invalid token")
 	}
 
 	if err := ar.db.Where("id = ?", id).
@@ -79,104 +80,26 @@ func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, id int, 
 	return result, nil
 }
 
-// // UpdateUser implements approve.Repository
-// func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core) error {
-// 	// submission := approve.Core{}
-// 	dbsub := user.Submission{}
-// 	tx := ar.db.Model(&user.Submission{}).
-// 		Where("id = ?", input.ID).
-// 		First(&dbsub)
-
-// 	if tx.RowsAffected == 0 {
-// 		log.Error("no rows found for the given submission ID")
-// 		return errors.New("no data found")
-// 	}
-
-// 	switch input.Status {
-// 	case "approve":
-// 		input.Status = "Waiting"
-// 	case "revise":
-// 		input.Status = "Revised"
-// 	case "reject":
-// 		input.Status = "Rejected"
-// 	default:
-// 		return errors.New("invalid status")
-// 	}
-
-// 	tx = ar.db.Model(&dbsub).
-// 		Where("id = ?", input.ID).
-// 		Updates(user.Submission{Status: input.Status})
-
-// 	if tx.RowsAffected == 0 {
-// 		log.Error("no rows affected on update submission")
-// 		return errors.New("data is up to date")
-// 	}
-
-// 	if tx.Error != nil {
-// 		log.Error("error on update submission")
-// 		return tx.Error
-// 	}
-
-// 	to := user.To{}
-// 	tx = ar.db.Model(&user.To{}).
-// 		Where("submission_id = ?", input.ID).
-// 		First(&to)
-
-// 	if tx.RowsAffected == 0 {
-// 		log.Error("no rows found for the given submission ID in user.To")
-// 		return errors.New("no data found in user.To")
-// 	}
-
-// 	tx = ar.db.Model(&user.To{}).
-// 		Where("submission_id = ?", input.ID).
-// 		Updates(approve.ToCore{Message: config.AutoMessageHyperApp})
-
-// 	if tx.RowsAffected == 0 {
-// 		log.Error("no rows affected on update to message")
-// 		return errors.New("data is up to date")
-// 	}
-
-// 	if tx.Error != nil {
-// 		log.Error("error on update to message")
-// 		return tx.Error
-// 	}
-
-// 	actionType := ""
-// 	switch input.Status {
-// 	case "waiting":
-// 		actionType = "approve"
-// 	case "revised":
-// 		actionType = "revise"
-// 	case "rejected":
-// 		actionType = "reject"
-// 	}
-
-// 	tx = ar.db.Model(&user.To{}).
-// 		Joins("JOIN users ON user_id = users.id").
-// 		Where("submission_id = ?", input.ID).
-// 		Update("action_type", actionType)
-
-// 	if tx.Error != nil {
-// 		log.Error("error on update action_type in 'to' table")
-// 		return tx.Error
-// 	}
-
-//		return nil
-//	}
+// UpdateUser implements approve.Repository
 func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core) error {
-	dbsub := user.Submission{}
-	tx := ar.db.Model(&user.Submission{}).
-		Where("id = ?", input.ID).
-		First(&dbsub)
+	var dbsub user.Submission
+	var owner admin.Users
+	var tos []user.To
 
-	if tx.RowsAffected == 0 {
+	if err := ar.db.Model(&user.Submission{}).Where("id = ?", input.ID).First(&dbsub).Error; err != nil {
 		log.Error("no rows found for the given submission ID")
 		return errors.New("no data found")
 	}
 
-	//input punya yang keberapa
-	//status kaya tadi
-	//email notification
+	if err := ar.db.Where("id = ?", dbsub.UserID).First(&owner).Error; err != nil {
+		log.Error("no rows found for the given user and submission ID")
+		return errors.New("no data found")
+	}
+
+	if err := ar.db.Where("submission_id = ?", dbsub.ID).Find(&tos).Error; err != nil {
+		log.Error("no rows found for the given user and submission ID")
+		return errors.New("no data found")
+	}
 
 	switch input.Status {
 	case "approve":
@@ -189,79 +112,69 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		return errors.New("invalid status")
 	}
 
-	tx = ar.db.Model(&dbsub).
-		Where("id = ?", input.ID).
-		Updates(user.Submission{Status: input.Status})
+	if len(tos) > 0 && tos[len(tos)-1].UserID == userID {
+		dbsub.Status = "Approved"
+	}
 
-	if tx.RowsAffected == 0 {
+	if err := ar.db.Model(&dbsub).Where("id = ?", input.ID).Updates(user.Submission{Status: input.Status}).Error; err != nil {
 		log.Error("no rows affected on update submission")
 		return errors.New("data is up to date")
 	}
 
-	if tx.Error != nil {
-		log.Error("error on update submission")
-		return tx.Error
-	}
-
 	to := user.To{}
-	tx = ar.db.Model(&user.To{}).
-		Where("submission_id = ?", input.ID).
-		First(&to)
-
-	if tx.RowsAffected == 0 {
+	if err := ar.db.Model(&user.To{}).Where("submission_id = ?", input.ID).First(&to).Error; err != nil {
 		log.Error("no rows found for the given submission ID in user.To")
 		return errors.New("no data found in user.To")
 	}
 
-	if to.Action_Type == "" {
-		userID := to.UserID
-
-		userWithPosition := user.Users{}
-		tx = ar.db.Model(&user.Users{}).
-			Where("id = ?", userID).
-			Preload("Position").
-			First(&userWithPosition)
-
-		if tx.RowsAffected == 0 {
-			log.Error("no rows found for the given user ID in user.Users")
-			return errors.New("no data found in user.Users")
-		}
-
-		positionHasType := admin.PositionHasType{}
-		tx = ar.db.Model(&admin.PositionHasType{}).
-			Where("type_id = ? AND position_id = ?", input.TypeID, userWithPosition.Position.ID).
-			First(&positionHasType)
-
-		if tx.RowsAffected == 0 {
-			log.Error("no rows found for the given type and position in admin.PositionHasType")
-			return errors.New("no data found in admin.PositionHasType")
-		}
-
-		// cari user id dengan toLevel terkecil dari position_has_type
-		smallestToLevelUserID := ""
-		tx = ar.db.Raw("SELECT user_id FROM user.To WHERE action_type IS NOT NULL ORDER BY action_type LIMIT 1").
-			Scan(&smallestToLevelUserID)
-
-		if tx.Error != nil {
-			log.Error("error on retrieving the user ID with the smallest position_has_type to_level")
-			return tx.Error
-		}
-
-		// update action_type di user.to tabel yg toLevel terkecil dari user id
-		tx = ar.db.Model(&user.To{}).
-			Where("submission_id = ? AND user_id = ?", input.ID, smallestToLevelUserID).
-			Update("action_type", positionHasType.ToLevel)
-
-		if tx.RowsAffected == 0 {
-			log.Error("no rows affected on update to message")
-			return errors.New("data is up to date")
-		}
-
-		if tx.Error != nil {
+	if to.ID != 0 {
+		if err := ar.db.Model(&user.To{}).Where("submission_id = ?", input.ID).Updates(approve.ToCore{Message: "Action from Admin, thank you!"}).Error; err != nil {
 			log.Error("error on update to message")
-			return tx.Error
+			return err
 		}
 	}
+
+	actionType := ""
+	switch input.Status {
+	case "waiting":
+		actionType = "approve"
+	case "revised":
+		actionType = "revise"
+	case "rejected":
+		actionType = "reject"
+	}
+
+	if err := ar.db.Model(&user.To{}).Joins("JOIN users ON user_id = users.id").Where("submission_id = ?", input.ID).Update("action_type", actionType).Error; err != nil {
+		log.Error("error on update action_type in 'to' table")
+		return err
+	}
+
+	sign, err := helper.GenerateUniqueSign(userID)
+	if err != nil {
+		log.Error("failed to generate unique sign")
+		return err
+	}
+
+	signdb := user.Sign{
+		UserID:       userID,
+		Name:         sign,
+		SubmissionID: dbsub.ID,
+	}
+
+	if err := ar.db.Create(&signdb).Error; err != nil {
+		log.Error("error on update sign")
+		return err
+	}
+
+	file := user.File{}
+	if err := ar.db.Model(&user.File{}).Select("link").Where("submission_id = ?", dbsub.ID).First(&file).Error; err != nil {
+		log.Error("no file found for the given submission ID")
+		return errors.New("no file found")
+	}
+
+	recipient := []string{owner.Email}
+	receiverName := []string{"Admin"}
+	helper.SendSimpleEmail(signdb.Name, dbsub.Title, "Update on your submission", recipient, receiverName, owner.Email)
 
 	return nil
 }
