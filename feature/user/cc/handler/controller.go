@@ -129,10 +129,10 @@ func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 		totalData := len(response)
 		totalPage := 1
 		if len(response) > 0 {
-			totalPage = int(math.Ceil(float64(totalData)/float64(limitInt)))
+			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
-		currentPage := int(math.Ceil(float64(offsetInt+1)/float64(limitInt)))
-		if currentPage > totalPage{
+		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
+		if currentPage > totalPage {
 			currentPage = totalPage
 		}
 		meta := Meta{

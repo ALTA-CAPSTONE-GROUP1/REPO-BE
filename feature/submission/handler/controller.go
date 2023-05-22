@@ -191,7 +191,6 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 
 		if searchInTitle != "" {
 			for _, data := range submissionDatas {
-				filteredData = make([]submission.AllSubmiisionCore, 0)
 				if strings.Contains(strings.ToLower(data.Title), strings.ToLower(searchInTitle)) {
 					filteredData = append(filteredData, data)
 				}
@@ -199,7 +198,6 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		}
 
 		if searchInTo != "" {
-			filteredData = make([]submission.AllSubmiisionCore, 0)
 			for _, data := range submissionDatas {
 				for _, to := range data.Tos {
 					if strings.Contains(strings.ToLower(to.ApproverName), strings.ToLower(searchInTo)) ||

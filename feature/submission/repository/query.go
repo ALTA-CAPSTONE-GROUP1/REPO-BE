@@ -176,7 +176,6 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		}
 		existingIndex := -1
 		for i, choice := range choices {
-			fmt.Println(len(choices))
 			if choice.SubTypeName == v.Name {
 				existingIndex = i
 				break
@@ -195,8 +194,10 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			for _, detail := range phts {
 				subTypeChoices.SubtypeValue = append(subTypeChoices.SubtypeValue, detail.Value)
 			}
+			subTypeChoices.SubtypeValue = subTypeChoices.SubtypeValue[:(len(subTypeChoices.SubtypeValue)/2)-1]
 			choices = append(choices, subTypeChoices)
 		}
+
 	}
 
 	if err := sm.db.Where("user_id = ?", userID).Order("created_at DESC").
@@ -346,7 +347,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.Title = submissionByID.Title
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
-	result.ActionMessage = toActions[0].Message
+	result.ActionMessage = toActions[(len(toActions) - 1)].Message
 	result.SubmissionType = subTypeDetails.Name
 
 	return result, nil
@@ -383,7 +384,7 @@ func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) e
 		log.Error("cannot find submission data")
 		return errors.New("submission data not found")
 	}
-	if submission.Status != "Sent" && submission.Status != "Revise" {
+	if submission.Status != "Sent" && submission.Status != "Revised" {
 		tx.Rollback()
 		log.Errorf("submisison status not 'sent'")
 		return errors.New("submission status not 'sent'")
