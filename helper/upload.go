@@ -108,6 +108,7 @@ func UpdateCreateSign(current_link string, currentFileName string, approverName 
 		return nil, err
 	}
 	mergePDFs("merged.pdf", filePath, "output.pdf")
+
 	defer os.Remove("merged.pdf")
 	defer os.Remove("output.pdf")
 	defer os.Remove(filePath)

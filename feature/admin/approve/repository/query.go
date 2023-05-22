@@ -174,6 +174,10 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		return errors.New("no data found")
 	}
 
+	//input punya yang keberapa
+	//status kaya tadi
+	//email notification
+
 	switch input.Status {
 	case "approve":
 		input.Status = "Waiting"

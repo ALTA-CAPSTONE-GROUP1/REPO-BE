@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -17,17 +18,21 @@ import (
 
 type approverModel struct {
 	db *gorm.DB
+	u  helper.UploadInterface
 }
 
-func New(db *gorm.DB) approve.Repository {
+func New(db *gorm.DB, u helper.UploadInterface) approve.Repository {
 	return &approverModel{
 		db: db,
+		u:  u,
 	}
 }
 
 // UpdateUser implements approve.Repository
 func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core) error {
 	var submission user.Submission
+	var tos []user.To
+	var owner admin.Users
 
 	tx := ar.db.Model(&submission).
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
@@ -35,6 +40,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		Where("tos.user_id = ? AND submissions.id = ?", userID, id).
 		Find(&submission)
 
+	tx = ar.db.Where("id = ?", submission.UserID).First(&owner)
+
+	tx = ar.db.Where("submission_id = ?", submission.ID).Find(&tos)
+	fmt.Println(userID)
 	if tx.RowsAffected == 0 {
 		log.Error("no rows found for the given user and submission ID")
 		return errors.New("no data found")
@@ -49,6 +58,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		submission.Status = "Rejected"
 	default:
 		return errors.New("invalid status")
+	}
+	fmt.Println(submission.Tos)
+	if len(tos) > 0 && tos[len(tos)-1].UserID == userID {
+		submission.Status = "Approved"
 	}
 
 	tx = ar.db.Model(&submission).Updates(user.Submission{Status: submission.Status})
@@ -77,10 +90,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	tx = ar.db.Model(&to).
 		Updates(user.To{Message: input.Message})
 
-	if tx.RowsAffected == 0 {
-		log.Error("no rows affected on update to message")
-		return errors.New("data is up to date")
-	}
+	// if tx.RowsAffected == 0 {
+	// 	log.Error("no rows affected on update to message")
+	// 	return errors.New("data is up to date")
+	// }
 
 	if tx.Error != nil {
 		log.Error("error on update to message")
@@ -89,6 +102,8 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 	actionType := ""
 	switch submission.Status {
+	case "Approved":
+		actionType = "approve"
 	case "Waiting":
 		actionType = "approve"
 	case "Revised":
@@ -112,10 +127,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		log.Error("failed to generate unique sign")
 		return err
 	}
-
-	tx = ar.db.Model(&user.Sign{}).
-		Where("signs.user_id = ? AND signs.submission_id = ?", userID, submission.ID).
-		Update("sign.name", sign)
+	var signdb user.Sign
+	signdb.Name = sign
+	signdb.SubmissionID = submission.ID
+	tx = ar.db.Create(&signdb)
 
 	if tx.RowsAffected == 0 {
 		log.Error("no rows affected on update sign")
@@ -127,22 +142,27 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		return tx.Error
 	}
 
-	// file := user.File{}
-	// tx = ar.db.Model(&user.File{}).
-	// 	Select("link").
-	// 	Where("submission_id = ?", submission.ID).
-	// 	First(&file)
+	file := user.File{}
+	tx = ar.db.Model(&user.File{}).
+		Select("link").
+		Where("submission_id = ?", submission.ID).
+		First(&file)
 
-	// if tx.RowsAffected == 0 {
-	// 	log.Error("no file found for the given submission ID")
-	// 	return errors.New("no file found")
-	// }
+	fmt.Println(file.Link)
 
-	// currentLink := fmt.Sprintf("link/to/submission/%d", submission.ID)
-	// currentFileName := file.Link
+	if tx.RowsAffected == 0 {
+		log.Error("no file found for the given submission ID")
+		return errors.New("no file found")
+	}
+
+	recipient := []string{owner.Email}
+	receiverName := []string{"Kristain"}
+	helper.SendSimpleEmail(signdb.Name, submission.Title, "Update on your submission", recipient, receiverName, owner.Email)
+	// currentLink := file.Link
+	// currentFileName := file.Name
 	// submissionTitle := submission.Title
 	// signName := sign
-	// action := input.Status
+	// action := actionType
 	// actionMessage := input.Message
 	// approverName := to.User.Name
 	// approverPosition := to.User.Position.Name
@@ -151,6 +171,28 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	// if err != nil {
 	// 	return err
 	// }
+	// fmt.Println(fileHeader)
+
+	// newpath := helper.GenerateIDFromPositionTag(userID)
+	// realpath := "/" + newpath + "/" + userID
+	// newLink, err := ar.u.UploadFile(fileHeader, realpath)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(newLink)
+
+	// var newFile user.File
+	// newFile.Link = newLink[0]
+	// newFile.Name = (fileHeader.Filename + newpath)
+	// newFile.SubmissionID = submission.ID
+
+	// tx = ar.db.Where("submission_id = ?, id = ?", submission.ID, file.ID).Update("link", newFile.Link)
+	// time.Sleep(3 * time.Second)
+	// if tx.Error != nil {
+	// 	log.Errorf("errros on updating file lin %w", tx.Error)
+	// 	return tx.Error
+	// }
+
 
 	return nil
 }

@@ -347,7 +347,11 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.Title = submissionByID.Title
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
-	result.ActionMessage = toActions[(len(toActions) - 1)].Message
+	if len(toActions) > 0 {
+		result.ActionMessage = toActions[(len(toActions) - 1)].Message
+	}
+	result.ActionMessage = toActions[0].Message
+
 	result.SubmissionType = subTypeDetails.Name
 
 	return result, nil
