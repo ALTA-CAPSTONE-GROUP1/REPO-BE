@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -43,7 +42,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	tx = ar.db.Where("id = ?", submission.UserID).First(&owner)
 
 	tx = ar.db.Where("submission_id = ?", submission.ID).Find(&tos)
-	fmt.Println(userID)
 	if tx.RowsAffected == 0 {
 		log.Error("no rows found for the given user and submission ID")
 		return errors.New("no data found")
@@ -59,7 +57,7 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	default:
 		return errors.New("invalid status")
 	}
-	fmt.Println(submission.Tos)
+
 	if len(tos) > 0 && tos[len(tos)-1].UserID == userID {
 		submission.Status = "Approved"
 	}
@@ -148,8 +146,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		Where("submission_id = ?", submission.ID).
 		First(&file)
 
-	fmt.Println(file.Link)
-
 	if tx.RowsAffected == 0 {
 		log.Error("no file found for the given submission ID")
 		return errors.New("no file found")
@@ -192,7 +188,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	// 	log.Errorf("errros on updating file lin %w", tx.Error)
 	// 	return tx.Error
 	// }
-
 
 	return nil
 }
