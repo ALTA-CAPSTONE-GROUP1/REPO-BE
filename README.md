@@ -1,7 +1,11 @@
 
-# 🗃️ EpropApp 🗃️
+<p align="center">
+  <h1>🗃️ EpropApp 🗃️</h1>
+</p>
 
-📃 Simplify your application process, anytime, anywhere! 📃
+
+## <p align="center">📃 Simplify your application process, anytime, anywhere! 📃</p>
+
 
 
 <div align="center">
@@ -43,21 +47,17 @@ Final Project Capstone Program Immersive Alterra Academy
 
 <br>
 
+  <details>
+    <summary><h2>Run Locally</></h2></summary>
+    <pre><code>git clone https://github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE.git</code></pre>
+    <pre><code>cd e-proposal-BE</code></pre>
+    <p>Fill in the environment variables in the example.env file to configure your environment.</p>
+    <pre><code>go run main.go</code></pre>
+  </details>
+  <br>
 
-## Run Locally
 
-Clone the project
-
-```bash
-  git clone https://github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE.git
-```
-
-Go to the project directory
-
-```bash
-  cd REPO-BE
-```
-
+## Authors
 <div align="center">
   <a href="https://github.com/kristain09">
     <img src="https://img.shields.io/badge/Kristain%20Putra-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Kristain Putra">
