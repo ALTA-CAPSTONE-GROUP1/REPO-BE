@@ -112,9 +112,9 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		return errors.New("invalid status")
 	}
 
-	if len(tos) > 0 && tos[len(tos)-1].UserID == userID {
-		dbsub.Status = "Approved"
-	}
+	// if len(tos) > 0 && tos[len(tos)-1] == userID {
+	// 	dbsub.Status = "Approved"
+	// }
 
 	if err := ar.db.Model(&dbsub).Where("id = ?", input.ID).Updates(user.Submission{Status: input.Status}).Error; err != nil {
 		log.Error("no rows affected on update submission")
@@ -144,7 +144,10 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		actionType = "reject"
 	}
 
-	if err := ar.db.Model(&user.To{}).Joins("JOIN users ON user_id = users.id").Where("submission_id = ?", input.ID).Update("action_type", actionType).Error; err != nil {
+	if err := ar.db.Model(&user.To{}).
+		// Joins("JOIN users ON user_id = users.id").
+		Where("submission_id = ?", input.ID).
+		Update("action_type", actionType).Error; err != nil {
 		log.Error("error on update action_type in 'to' table")
 		return err
 	}
