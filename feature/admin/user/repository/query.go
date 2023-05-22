@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/office"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/position"
@@ -97,25 +96,44 @@ func (um *usersModel) DeleteUser(id string) error {
 func (um *usersModel) UpdateUser(id string, input user.Core) error {
 	var updateUser admin.Users
 
-	positionTag, err := um.GetPositionTagByID(input.PositionID)
+	// Fetch the existing user from the database
+	existingUser := admin.Users{}
+	err := um.db.Where("id = ?", id).First(&existingUser).Error
 	if err != nil {
-		log.Error("error getting position tag", err.Error())
-		return err
-	}
-
-	updatedID, err := um.GenerateIDFromPositionTag(positionTag)
-	if err != nil {
-		log.Error("error generating user ID", err.Error())
+		log.Error("error fetching existing user", err.Error())
 		return err
 	}
 
 	// Update the ID and other fields
-	updateUser.ID = updatedID
+	updateUser.ID = existingUser.ID
 	updateUser.Name = input.Name
 	updateUser.Email = input.Email
 	updateUser.PhoneNumber = input.PhoneNumber
-	updateUser.OfficeID = input.OfficeID
-	updateUser.PositionID = input.PositionID
+
+	// Check if the position ID is valid
+	if input.PositionID != 0 {
+		positionTag, err := um.GetPositionTagByID(input.PositionID)
+		if err != nil {
+			log.Error("error getting position tag", err.Error())
+			return err
+		}
+		updateUser.PositionID = input.PositionID
+		updatedID, err := um.GenerateIDFromPositionTag(positionTag)
+		if err != nil {
+			log.Error("error generating user ID", err.Error())
+			return err
+		}
+		updateUser.ID = updatedID
+	} else {
+		updateUser.PositionID = existingUser.PositionID
+	}
+
+	// Check if the office ID is valid
+	if input.OfficeID != 0 {
+		updateUser.OfficeID = input.OfficeID
+	} else {
+		updateUser.OfficeID = existingUser.OfficeID
+	}
 
 	// Update the user in the database
 	tx := um.db.Model(&admin.Users{}).Where("id = ?", id).Updates(&updateUser)
@@ -233,7 +251,7 @@ func (um *usersModel) InsertUser(newUser user.Core) error {
 	}
 	inputUser.ID = id
 
-	samePassword := config.PasswordUser
+	samePassword := "alta123"
 
 	hashedPassword, err := helper.HashPassword(samePassword)
 	if err != nil {
