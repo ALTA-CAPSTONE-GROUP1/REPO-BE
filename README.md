@@ -1,10 +1,12 @@
 
-# EpropApp
+# 🗃️ EpropApp 🗃️
 
-Simplify your application process, anytime, anywhere!
+📃 Simplify your application process, anytime, anywhere! 📃
 
 
-![Logo](https://res.cloudinary.com/dc0wgpho2/image/upload/v1684720861/eproplogo_koyqxz.jpg)
+<div align="center">
+  <img src="https://res.cloudinary.com/dc0wgpho2/image/upload/v1684720861/eproplogo_koyqxz.jpg" alt="Logo">
+</div>
 
 
 
@@ -21,12 +23,25 @@ Simplify your application process, anytime, anywhere!
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 ![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
+![Github Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 
-
+<br>
 
 ## 👨‍💻 ERD
 
-![ERD](https://media.discordapp.net/attachments/1105044800769622037/1106171832794632243/ERD.jpg?width=1032&height=1107)
+<div align="center">
+  <img src="https://media.discordapp.net/attachments/1105044800769622037/1106171832794632243/ERD.jpg" alt="ERD" width="1032" height="1107">
+</div>
+
+
+## OpenAPI
+Final Project Capstone Program Immersive Alterra Academy
+<br />
+<a href="https://app.swaggerhub.com/apis/123ADIYUDA/E-Proposal/1.0.0#/"><strong>Go to Open API »</strong></a>
+<br />
+<div>
+
+<br>
 
 
 ## Run Locally
@@ -43,3 +58,26 @@ Go to the project directory
   cd REPO-BE
 ```
 
+<div align="center">
+  <a href="https://github.com/kristain09">
+    <img src="https://img.shields.io/badge/Kristain%20Putra-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Kristain Putra">
+  </a>
+  <a href="https://github.com/Adiyuda123">
+    <img src="https://img.shields.io/badge/Adi%20Yuda-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Adi Yuda Pranata">
+  </a>
+</div>
+
+
+
+
+## Screenshots
+
+![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+
+
+
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+<h3>
+<p align="center">:copyright: May 2023 </p>
+</h3>
