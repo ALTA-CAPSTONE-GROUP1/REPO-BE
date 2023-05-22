@@ -103,7 +103,7 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 
 	switch input.Status {
 	case "approve":
-		input.Status = "Waiting"
+		input.Status = "Approved"
 	case "revise":
 		input.Status = "Revised"
 	case "reject":
@@ -127,30 +127,30 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		return errors.New("no data found in user.To")
 	}
 
-	if to.ID != 0 {
-		if err := ar.db.Model(&user.To{}).Where("submission_id = ?", input.ID).Updates(approve.ToCore{Message: "Action from Admin, thank you!"}).Error; err != nil {
-			log.Error("error on update to message")
-			return err
-		}
-	}
+	// if to.ID != 0 {
+	// 	if err := ar.db.Model(&user.To{}).Where("submission_id = ?", input.ID).Updates(approve.ToCore{Message: "Action from Admin, thank you!"}).Error; err != nil {
+	// 		log.Error("error on update to message")
+	// 		return err
+	// 	}
+	// }
 
-	actionType := ""
-	switch input.Status {
-	case "waiting":
-		actionType = "approve"
-	case "revised":
-		actionType = "revise"
-	case "rejected":
-		actionType = "reject"
-	}
+	// actionType := ""
+	// switch input.Status {
+	// case "waiting":
+	// 	actionType = "approve"
+	// case "revised":
+	// 	actionType = "revise"
+	// case "rejected":
+	// 	actionType = "reject"
+	// }
 
-	if err := ar.db.Model(&user.To{}).
-		// Joins("JOIN users ON user_id = users.id").
-		Where("submission_id = ?", input.ID).
-		Update("action_type", actionType).Error; err != nil {
-		log.Error("error on update action_type in 'to' table")
-		return err
-	}
+	// if err := ar.db.Model(&user.To{}).
+	// 	// Joins("JOIN users ON user_id = users.id").
+	// 	Where("submission_id = ?", input.ID).
+	// 	Update("action_type", actionType).Error; err != nil {
+	// 	log.Error("error on update action_type in 'to' table")
+	// 	return err
+	// }
 
 	sign, err := helper.GenerateUniqueSign(userID)
 	if err != nil {
