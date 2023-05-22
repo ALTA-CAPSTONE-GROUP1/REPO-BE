@@ -112,15 +112,15 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			response = append(response, tmp)
 		}
 
-		totalData := len(filteredPositions)
-		if offsetInt < len(filteredPositions) {
+		totalData := len(response)
+		if offsetInt < len(response) {
 			endIndex := offsetInt + limitInt
-			if endIndex > len(filteredPositions) {
-				endIndex = len(filteredPositions)
+			if endIndex > len(response) {
+				endIndex = len(response)
 			}
-			filteredPositions = filteredPositions[offsetInt:endIndex]
+			response = response[offsetInt:endIndex]
 		} else {
-			filteredPositions = []position.Core{}
+			response = []GetAllPositionResponse{}
 		}
 
 		totalPage := 1
@@ -131,6 +131,7 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 		if currentPage > totalPage {
 			currentPage = totalPage
 		}
+
 		meta := Meta{
 			CurrentLimit:  limitInt,
 			CurrentOffset: offsetInt,
