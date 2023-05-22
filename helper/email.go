@@ -8,24 +8,27 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendSimpleEmail(subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
+func SendSimpleEmail(sign string, subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
 	mailer := gomail.NewDialer("smtp.gmail.com", 587, config.Email, config.EmailSecret)
 
 	for i := 0; i < len(recipientEmail); i++ {
 		var recipientName string
-		if len(recipientNames)<= i{
+		if len(recipientNames) <= i {
 			recipientName = ""
-		} else{
+		} else {
 			recipientName = recipientNames[i]
 		}
-		body := fmt.Sprintf(`Hello, %s!
+		body := fmt.Sprintf(`%s
+Hello, %s!
 
 There is an update for your eProposal Account!
 
 Please check it out.
 
 From: %s
-`, recipientName, senderName)
+
+WITH SIGN ID : %s
+`, subTitle, recipientName, senderName, sign)
 
 		email := gomail.NewMessage()
 		email.SetHeader("From", config.Email)
