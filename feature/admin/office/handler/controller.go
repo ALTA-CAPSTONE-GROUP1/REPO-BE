@@ -73,7 +73,7 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 		limitStr := c.QueryParam("limit")
 		offsetStr := c.QueryParam("offset")
 
-		limit := -1
+		limit := 10
 		if limitStr != "" {
 			limitInt, err := strconv.Atoi(limitStr)
 			if err != nil {
@@ -83,7 +83,7 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			limit = limitInt
 		}
 
-		offset := -1
+		offset := 0
 		if offsetStr != "" {
 			offsetInt, err := strconv.Atoi(offsetStr)
 			if err != nil {
@@ -92,11 +92,6 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			}
 			offset = offsetInt
 		}
-
-		// if limit < 0 || offset < 0 {
-		// 	c.Logger().Error("error occurs because limit or offset is negative")
-		// 	return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Limit and offset cannot be negative", nil))
-		// }
 
 		office, err := oc.service.GetAllOfficeLogic(limit, offset, search)
 		if err != nil {
