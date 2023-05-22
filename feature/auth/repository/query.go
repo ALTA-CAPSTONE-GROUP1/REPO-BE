@@ -74,7 +74,7 @@ func (um *authModel) SignVaidation(signID string) (auth.SignCore, error) {
 		dbsubmission subRepo.Submission
 	)
 
-	if err := um.db.Where("id = ?", signID).First(&sign).Error; err != nil {
+	if err := um.db.Where("name = ?", signID).First(&sign).Error; err != nil {
 		log.Errorf("error in finding sign %w", err)
 		return auth.SignCore{}, err
 	}
