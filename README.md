@@ -27,3 +27,19 @@ Simplify your application process, anytime, anywhere!
 ## 👨‍💻 ERD
 
 ![ERD](https://media.discordapp.net/attachments/1105044800769622037/1106171832794632243/ERD.jpg?width=1032&height=1107)
+
+
+## Run Locally
+
+Clone the project
+
+```bash
+  git clone https://github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE.git
+```
+
+Go to the project directory
+
+```bash
+  cd REPO-BE
+```
+
