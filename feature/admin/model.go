@@ -57,3 +57,4 @@ type PositionHasType struct {
 	Position   Position `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Type       Type     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
+
