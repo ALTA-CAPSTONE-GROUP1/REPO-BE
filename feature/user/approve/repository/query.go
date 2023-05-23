@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -39,22 +40,25 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		Joins("JOIN users ON tos.user_id = users.id").
 		Where("tos.user_id = ? AND submissions.id = ?", userID, id).
 		Find(&submission)
-	if tx.RowsAffected == 0 {
-		log.Error("no rows found for the given user and submission ID")
-		return errors.New("no data found")
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
+	fmt.Println(submission)
 
 	tx = ar.db.Where("id = ?", submission.UserID).First(&owner)
-	if tx.RowsAffected == 0 {
-		log.Error("no rows found for the given user and submission ID")
-		return errors.New("no data found")
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
+	fmt.Println(owner)
 
 	tx = ar.db.Where("submission_id = ?", submission.ID).Find(&tos)
-	if tx.RowsAffected == 0 {
-		log.Error("no rows found for the given user and submission ID")
-		return errors.New("no data found")
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
+	fmt.Println(tos)
 
 	switch input.Status {
 	case "approve":
@@ -89,9 +93,9 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		Where("user_id = ? AND submission_id = ?", userID, submission.ID).
 		First(&to)
 
-	if tx.RowsAffected == 0 {
-		log.Error("no rows found for the given user and submission ID in user.To")
-		return errors.New("no data found in user.To")
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
 
 	tx = ar.db.Model(&to).
@@ -140,11 +144,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	signdb.SubmissionID = submission.ID
 	tx = ar.db.Create(&signdb)
 
-	if tx.RowsAffected == 0 {
-		log.Error("no rows affected on update sign")
-		return errors.New("data is up to date")
-	}
-
 	if tx.Error != nil {
 		log.Error("error on update sign")
 		return tx.Error
@@ -155,14 +154,20 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		Select("link").
 		Where("submission_id = ?", submission.ID).
 		First(&file)
-
-	if tx.RowsAffected == 0 {
-		log.Error("no file found for the given submission ID")
-		return errors.New("no file found")
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
 
+	// approverProfile := admin.Users{}
+	// tx = ar.db.Where("id = ?", userID).Find(&approverProfile)
+	// if tx.Error != nil {
+	// 	log.Errorf("error on finding owner%w", tx.Error)
+	// 	return tx.Error
+	// }
+
 	recipient := []string{owner.Email}
-	receiverName := []string{"Kristain"}
+	receiverName := []string{owner.Name}
 	helper.SendSimpleEmail(signdb.Name, submission.Title, "Update on your submission", recipient, receiverName, owner.Email)
 	// currentLink := file.Link
 	// currentFileName := file.Name
@@ -209,6 +214,10 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 	var ccDetails []admin.Users
 	var fileDetails []user.File
 
+	if err := ar.db.Model(&user.To{}).Where("id = ?", id).Update("is_opened", 1).Error; err != nil {
+		log.Errorf("error in update status opened", err)
+		return approve.Core{}, err
+	}
 	query := ar.db.
 		Table("submissions").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
@@ -317,14 +326,10 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 			Owner: approve.OwnerCore{
 				Name: v.User.Name,
 			},
-			TypeID:  v.TypeID,
-			Title:   v.Title,
-			Message: v.Message,
-			Tos: []approve.ToCore{
-				{
-					Action_Type: v.Status,
-				},
-			},
+			TypeID:    v.TypeID,
+			Title:     v.Title,
+			Message:   v.Message,
+			Status:    v.Status,
 			Is_Opened: false,
 			CreatedAt: v.CreatedAt,
 			Type: subtype.Core{
