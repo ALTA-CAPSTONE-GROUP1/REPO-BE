@@ -1,17 +1,13 @@
 package position
 
 import (
-	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type Core struct {
-	ID        int
-	Name      string
-	Tag       string
-	Types     []admin.Type
-	DeletedAt gorm.DeletedAt
+	ID   int
+	Name string
+	Tag  string
 }
 
 type Handler interface {

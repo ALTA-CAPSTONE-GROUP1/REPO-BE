@@ -40,6 +40,10 @@ func (pc *positionController) AddPositionHandler() echo.HandlerFunc {
 		}
 
 		if err := pc.service.AddPositionLogic(newPosition); err != nil {
+			if strings.Contains(err.Error(), "duplicate") {
+				c.Logger().Errorf("error on create position duplicate %w", err)
+				return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "duplicate data inserted", nil))
+			}
 			c.Logger().Errorf("error occurs on calling Position logic with data %v, %v", newPosition.Name, newPosition.Tag)
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "internal server error", nil))
 		}
@@ -83,27 +87,15 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest, "limit and offset cannot negative", nil, nil))
 		}
 
-		positions, _, err := pc.service.GetPositionsLogic(limitInt, offsetInt, search)
+		positions, totalData, err := pc.service.GetPositionsLogic(limitInt, offsetInt, search)
 		if err != nil {
 			c.Logger().Error("error occurs when calling GetPositionsLogic")
 			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "Server Error", nil, nil))
 		}
 
-		filteredPositions := []position.Core{}
-		if search != "" {
-			for _, pos := range positions {
-				if strings.Contains(strings.ToLower(pos.Name), strings.ToLower(search)) ||
-					strings.Contains(strings.ToLower(pos.Tag), strings.ToLower(search)) {
-					filteredPositions = append(filteredPositions, pos)
-				}
-			}
-		} else {
-			filteredPositions = positions
-		}
-
 		response := []GetAllPositionResponse{}
 
-		for _, v := range filteredPositions {
+		for _, v := range positions {
 			tmp := GetAllPositionResponse{
 				PositionID: v.ID,
 				Position:   v.Name,
@@ -112,19 +104,8 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			response = append(response, tmp)
 		}
 
-		totalData := len(response)
-		if offsetInt < len(response) {
-			endIndex := offsetInt + limitInt
-			if endIndex > len(response) {
-				endIndex = len(response)
-			}
-			response = response[offsetInt:endIndex]
-		} else {
-			response = []GetAllPositionResponse{}
-		}
-
 		totalPage := 1
-		if len(filteredPositions) > 0 {
+		if totalData > 0 {
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
 		}
 		currentPage := int(math.Ceil(float64(offsetInt+1) / float64(limitInt)))
@@ -136,7 +117,7 @@ func (pc *positionController) GetAllPositionHandler() echo.HandlerFunc {
 			CurrentLimit:  limitInt,
 			CurrentOffset: offsetInt,
 			CurrentPage:   currentPage,
-			TotalData:     totalData,
+			TotalData:     int(totalData),
 			TotalPage:     totalPage,
 		}
 

@@ -24,12 +24,14 @@ func (pl *positionLogic) AddPositionLogic(newPosition position.Core) error {
 		if strings.Contains(err.Error(), "column") {
 			log.Error("insert position error, COLUMN issue")
 			return errors.New("server error")
-		} else {
-			log.Error("unexpected error when insert position")
-			return err
+		} else if strings.Contains(err.Error(), "duplicate") {
+			log.Errorf("duplicate data position")
+			return errors.New("duplicate data of position")
 		}
+	} else {
+		log.Error("unexpected error when insert position")
+		return err
 	}
-
 	return nil
 }
 
@@ -51,7 +53,7 @@ func (pl *positionLogic) DeletePositionLogic(position int) error {
 			return fmt.Errorf("count position query error %w", err)
 		}
 
-		if strings.Contains(err.Error(), "data found") {
+		if strings.Contains(err.Error(), "not found") {
 			log.Error("no position data found for deletion")
 			return fmt.Errorf("no data found for deletion %w", err)
 		}
