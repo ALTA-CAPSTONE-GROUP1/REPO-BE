@@ -9,7 +9,7 @@ import (
 )
 
 func SendSimpleEmail(sign string, subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
-	mailer := gomail.NewDialer("smtp.gmail.com", 587, config.Email, config.EmailSecret)
+	mailer := gomail.NewDialer("smtp.gmail.com", 465, config.Email, config.EmailSecret)
 
 	for i := 0; i < len(recipientEmail); i++ {
 		var recipientName string
