@@ -87,11 +87,11 @@ func ReadEnv() *AppConfig {
 	}
 
 	if val, found := os.LookupEnv("EMAIL_SECRET"); found {
-		TokenSuperAdmin = val
+		EmailSecret = val
 		isRead = false
 	}
 	if val, found := os.LookupEnv("EMAIL"); found {
-		TokenSuperAdmin = val
+		Email = val
 		isRead = false
 	}
 
