@@ -134,23 +134,23 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 	// 	}
 	// }
 
-	// actionType := ""
-	// switch input.Status {
-	// case "waiting":
-	// 	actionType = "approve"
-	// case "revised":
-	// 	actionType = "revise"
-	// case "rejected":
-	// 	actionType = "reject"
-	// }
+	actionType := ""
+	switch input.Status {
+	case "Approved":
+		actionType = "approve from admin"
+	case "Revised":
+		actionType = "revise from admin"
+	case "Rejected":
+		actionType = "reject from admin"
+	}
 
-	// if err := ar.db.Model(&user.To{}).
-	// 	// Joins("JOIN users ON user_id = users.id").
-	// 	Where("submission_id = ?", input.ID).
-	// 	Update("action_type", actionType).Error; err != nil {
-	// 	log.Error("error on update action_type in 'to' table")
-	// 	return err
-	// }
+	if err := ar.db.Model(&user.To{}).
+		Joins("JOIN users ON user_id = users.id").
+		Where("submission_id = ?", input.ID).
+		Update("action_type", actionType).Error; err != nil {
+		log.Error("error on update action_type in 'to' table")
+		return err
+	}
 
 	sign, err := helper.GenerateUniqueSign(userID)
 	if err != nil {
