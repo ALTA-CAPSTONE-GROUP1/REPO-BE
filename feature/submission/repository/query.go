@@ -167,37 +167,42 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		log.Errorf("error on finding subTypes have by user", err)
 		return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 	}
-
+	var phts []admin.PositionHasType
+	var phtss []admin.PositionHasType
 	for _, v := range user.Position.Types {
-		var phts []admin.PositionHasType
-		if err := sm.db.Where("position_id = ? AND type_id = ? AND `as` = ?", user.Position.ID, v.ID, "Owner").Find(&phts).Error; err != nil {
+
+		if err := sm.db.Where("position_id = ? AND type_id = ? AND `as` = ?", user.Position.ID, v.ID, "Owner").Preload("Type").Find(&phts).Error; err != nil {
 			log.Errorf("error on finding subTypes have by user", err)
 			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 		}
-		existingIndex := -1
-		for i, choice := range choices {
-			if choice.SubTypeName == v.Name {
-				existingIndex = i
-				break
-			}
-		}
-		
-		if existingIndex != -1 {
-			for _, detail := range phts {
-				choices[existingIndex].SubtypeValue = append(choices[existingIndex].SubtypeValue, detail.Value)
-			}
-		} else { 
-			subTypeChoices := submission.SubTypeChoices{
-				SubTypeName:  v.Name,
-				SubtypeValue: make([]int, 0, len(phts)),
-			}
-			for _, detail := range phts {
-				subTypeChoices.SubtypeValue = append(subTypeChoices.SubtypeValue, detail.Value)
-			}
-			subTypeChoices.SubtypeValue = subTypeChoices.SubtypeValue[:(len(subTypeChoices.SubtypeValue)/2)-1] 
-			choices = append(choices, subTypeChoices)
-		}
 
+		phtss = append(phtss, phts...)
+	}
+
+	typeValues := make(map[string][]int)
+	valueExist := make(map[string]map[int]bool)
+
+	for _, v := range phtss {
+		key := v.Type.Name
+		value := v.Value
+
+		if valueExist[key] == nil {
+			typeValues[key] = append(typeValues[key], value)
+			valueExist[key] = map[int]bool{value: true}
+		} else {
+			if !valueExist[key][value] {
+				typeValues[key] = append(typeValues[key], value)
+				valueExist[key][value] = true
+			}
+		}
+	}
+
+	for key, v := range typeValues {
+		tmp := submission.SubTypeChoices{
+			SubTypeName:  key,
+			SubtypeValue: v,
+		}
+		choices = append(choices, tmp)
 	}
 
 	if err := sm.db.Where("user_id = ?", userID).Order("created_at DESC").
@@ -214,7 +219,6 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		var toApprover []submission.ToApprover
 		for _, to := range sub.Tos {
 			var toDetails admin.Users
-			fmt.Println(to.UserID)
 			if err := sm.db.Where("id = ?", to.UserID).Preload("Position").Find(&toDetails).Error; err != nil {
 				log.Errorf("failed on finding positions of tos %w", err)
 				return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
