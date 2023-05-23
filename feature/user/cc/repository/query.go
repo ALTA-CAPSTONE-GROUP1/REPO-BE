@@ -33,7 +33,6 @@ func (cm *ccModel) GetAllCc(userID string) ([]cc.CcCore, error) {
 			Preload("Files").
 			Preload("Tos").
 			Preload("Ccs").
-			Preload("Signs").
 			Find(&submissions).
 			Error; err != nil {
 			log.Errorf("error on finding submissions for user %s: %v", userID, err)
@@ -82,3 +81,16 @@ func (cm *ccModel) GetAllCc(userID string) ([]cc.CcCore, error) {
 	}
 	return result, nil
 }
+
+// SELECT submissions.id, submissions.title, submissions.type_id, files.link, tos.id as to_id , `types`.`name`, users.`id`, positions.`name`
+// 		FROM submissions
+// 		JOIN files ON submissions.id = files.submission_id
+// 		JOIN tos ON submissions.id = tos.submission_id
+// 		JOIN ccs ON submissions.id = ccs.submission_id
+//         JOIN `types` ON submissions.type_id = `types`.id
+//         JOIN users ON submissions.user_id = users.id
+//         JOIN positions ON users.position_id = positions.id
+// 		WHERE submissions.id IN (7,8) AND ccs.user_id = 'AASpv1'
+// 		ORDER BY submissions.id ASC
+// 		LIMIT 10
+// 		OFFSET 0;

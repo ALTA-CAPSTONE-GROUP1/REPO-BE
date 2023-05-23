@@ -3,6 +3,7 @@ package handler
 import (
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,7 @@ func New(cl cc.UseCase) cc.Handler {
 
 func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 	return func(c echo.Context) error {
+
 		userID := helper.DecodeToken(c)
 		if userID == "" {
 			c.Logger().Error("")
@@ -52,6 +54,7 @@ func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 				"limit must be string",
 				nil, nil))
 		}
+
 		offsetInt, err := strconv.Atoi(offset)
 		if err != nil {
 			c.Logger().Error("cannot convert offset to int")
@@ -63,8 +66,8 @@ func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 		ccDatas, err := ch.ch.GetAllCcLogic(userID)
 		if err != nil {
 			if strings.Contains(err.Error(), "record") {
-				return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError,
-					"server error (record not found)",
+				return c.JSON(helper.ReponseFormatWithMeta(http.StatusNotFound,
+					"record not found",
 					nil, nil))
 			}
 			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError,
@@ -73,37 +76,36 @@ func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 		}
 
 		var filteredData []cc.CcCore
-
-		if searchInTitle != "" {
-			for _, ccData := range ccDatas {
-				if strings.Contains(strings.ToLower(ccData.Title), strings.ToLower(searchInTitle)) {
-					filteredData = append(filteredData, ccData)
+		if searchInFrom != "" {
+			searchInFromLower := strings.ToLower(searchInFrom)
+			for _, v := range ccDatas {
+				if strings.Contains(strings.ToLower(v.From.Name), searchInFromLower) || strings.Contains(strings.ToLower(v.From.Position), searchInFromLower) {
+					filteredData = append(filteredData, v)
+				}
+			}
+		} else if searchInTitle != "" {
+			searchInTitleLower := strings.ToLower(searchInTitle)
+			for _, v := range ccDatas {
+				if strings.Contains(strings.ToLower(v.Title), searchInTitleLower) {
+					filteredData = append(filteredData, v)
+				}
+			}
+		} else if searchInTo != "" {
+			searchInToLower := strings.ToLower(searchInTo)
+			for _, v := range ccDatas {
+				if strings.Contains(strings.ToLower(v.To.Name), searchInToLower) || strings.Contains(strings.ToLower(v.From.Position), searchInToLower) {
+					filteredData = append(filteredData, v)
+				}
+			}
+		} else if searchInType != "" {
+			searchInTypeLower := strings.ToLower(searchInType)
+			for _, v := range ccDatas {
+				if strings.Contains(strings.ToLower(v.SubmissionType), searchInTypeLower) {
+					filteredData = append(filteredData, v)
 				}
 			}
 		} else {
 			filteredData = ccDatas
-		}
-
-		if searchInFrom != "" {
-			for _, ccData := range ccDatas {
-				if strings.Contains(strings.ToLower(ccData.Title), strings.ToLower(searchInFrom)) {
-					filteredData = append(filteredData, ccData)
-				}
-			}
-		}
-		if searchInTo != "" {
-			for _, ccData := range ccDatas {
-				if strings.Contains(strings.ToLower(ccData.Title), strings.ToLower(searchInTo)) {
-					filteredData = append(filteredData, ccData)
-				}
-			}
-		}
-		if searchInType != "" {
-			for _, ccData := range ccDatas {
-				if strings.Contains(strings.ToLower(ccData.Title), strings.ToLower(searchInType)) {
-					filteredData = append(filteredData, ccData)
-				}
-			}
 		}
 
 		for _, data := range filteredData {
@@ -123,10 +125,22 @@ func (ch *ccController) GetAllCcHander() echo.HandlerFunc {
 			}
 			response = append(response, tmp)
 		}
-		if offsetInt+limitInt > len(response) {
-			limitInt = len(filteredData) - offsetInt
-		}
+
+		sort.Slice(response, func(i, j int) bool {
+			return response[j].SubmissionID < response[i].SubmissionID
+		})
+
 		totalData := len(response)
+		if offsetInt < len(response) {
+			endIndex := offsetInt + limitInt
+			if endIndex > len(response) {
+				endIndex = len(response)
+			}
+			response = response[offsetInt:endIndex]
+		} else {
+			response = []Response{}
+		}
+
 		totalPage := 1
 		if len(response) > 0 {
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
