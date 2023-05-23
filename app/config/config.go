@@ -147,5 +147,6 @@ func ReadEnv() *AppConfig {
 		// IdChat = viper.Get("ID_CHAT").(string)
 
 	}
+	log.Println(Email)
 	return &app
 }
