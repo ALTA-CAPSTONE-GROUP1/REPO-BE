@@ -16,11 +16,11 @@ type Repository interface {
 
 type CcCore struct {
 	SubmisisonID   int
-	From           Sender
-	To             Receiver
 	Title          string
 	SubmissionType string
 	Attachment     string
+	From           Sender
+	To             Receiver
 }
 
 type Sender struct {
@@ -31,4 +31,9 @@ type Sender struct {
 type Receiver struct {
 	Name     string
 	Position string
+}
+
+type QueryParams struct {
+	Limit  int
+	Offset int
 }

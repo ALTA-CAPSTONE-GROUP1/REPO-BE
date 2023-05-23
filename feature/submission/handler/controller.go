@@ -245,6 +245,7 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 				Values: v.SubtypeValue,
 			})
 		}
+		totalData := len(submissions)
 		if offsetInt < len(submissions) {
 			endIndex := offsetInt + limitInt
 			if endIndex > len(submissions) {
@@ -254,8 +255,7 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		} else {
 			submissions = []Submission{}
 		}
-
-		totalData := len(submissions)
+		
 		totalPage := 1
 		if len(submissions) > 0 {
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
