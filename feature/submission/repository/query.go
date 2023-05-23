@@ -181,12 +181,12 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 				break
 			}
 		}
-
+		
 		if existingIndex != -1 {
 			for _, detail := range phts {
 				choices[existingIndex].SubtypeValue = append(choices[existingIndex].SubtypeValue, detail.Value)
 			}
-		} else {
+		} else { 
 			subTypeChoices := submission.SubTypeChoices{
 				SubTypeName:  v.Name,
 				SubtypeValue: make([]int, 0, len(phts)),
@@ -194,7 +194,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 			for _, detail := range phts {
 				subTypeChoices.SubtypeValue = append(subTypeChoices.SubtypeValue, detail.Value)
 			}
-			subTypeChoices.SubtypeValue = subTypeChoices.SubtypeValue[:(len(subTypeChoices.SubtypeValue)/2)-1]
+			subTypeChoices.SubtypeValue = subTypeChoices.SubtypeValue[:(len(subTypeChoices.SubtypeValue)/2)-1] 
 			choices = append(choices, subTypeChoices)
 		}
 
