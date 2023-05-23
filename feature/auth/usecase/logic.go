@@ -41,7 +41,7 @@ func (ul *authLogic) LogInLogic(id string, password string) (auth.Core, error) {
 func (ul *authLogic) SignVallidationLogic(signID string) (auth.SignCore, error) {
 	result, err := ul.u.SignVaidation(signID)
 	if err != nil {
-		if strings.Contains(err.Error(), "sign record") {
+		if strings.Contains(err.Error(), "found") {
 			return auth.SignCore{}, errors.New("sign record not found")
 		}
 
