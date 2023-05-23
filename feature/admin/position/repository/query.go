@@ -36,25 +36,30 @@ func (pm *positionModel) InsertPosition(position position.Core) error {
 
 func (pm *positionModel) GetPositions(limit int, offset int, search string) ([]position.Core, int64, error) {
 	var (
-		positions   []position.Core
-		DBpositions []admin.Position
-		count       int64
+		positions []position.Core
+		count     int64
 	)
+	qry := pm.db.Limit(limit).Offset(offset).Select("id, name, tag").Table("positions").Order("id DESC")
 
-	tx := pm.db.Order("id DESC").Find(&DBpositions)
-	if tx.Error != nil {
-		log.Error("get posititons query error without search condition")
-		return nil, 0, tx.Error
-	}
-	tx.Count(&count)
-
-	for _, dbPos := range DBpositions {
-		corePos := position.Core{
-			ID:   dbPos.ID,
-			Name: dbPos.Name,
-			Tag:  dbPos.Tag,
+	if search != "" {
+		search = "%" + search + "%"
+		if err := qry.Where("name LIKE ? OR tag LIKE ?", search, search).Find(&positions).Error; err != nil {
+			log.Errorf("error on finding users with search param")
+			return nil, 0, err
 		}
-		positions = append(positions, corePos)
+		if err := pm.db.Where("name LIKE ? OR tag LIKE ?", search, search).Select("id, name").Table("positions").Count(&count).Error; err != nil {
+			log.Errorf("counting total data %w", err)
+			return nil, 0, err
+		}
+	} else {
+		if err := qry.Find(&positions).Error; err != nil {
+			log.Errorf("error on finding user without search params %w", err)
+			return nil, 0, err
+		}
+		if err := pm.db.Select("id, name, tag").Table("positions").Count(&count).Error; err != nil {
+			log.Errorf("counting total data %w", err)
+			return nil, 0, err
+		}
 	}
 
 	return positions, count, nil
