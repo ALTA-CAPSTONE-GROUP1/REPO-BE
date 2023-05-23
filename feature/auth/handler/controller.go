@@ -62,8 +62,7 @@ func (uc *authController) LoginHandler() echo.HandlerFunc {
 func (uc *authController) SignValidationLogic() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			req     SignVaidation
-			respose SignResponse
+			req SignVaidation
 		)
 
 		if err := c.Bind(&req); err != nil {
@@ -86,7 +85,7 @@ func (uc *authController) SignValidationLogic() echo.HandlerFunc {
 				nil, nil))
 		}
 		response := SignResponse{
-			SubmissionTitle:  respose.SubmissionTitle,
+			SubmissionTitle:  result.Title,
 			OfficialName:     result.Officialname,
 			OfficialPosition: result.Officialposition,
 			Date:             result.Date,

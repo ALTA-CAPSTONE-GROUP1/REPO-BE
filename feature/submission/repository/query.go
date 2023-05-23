@@ -348,7 +348,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
 	if len(toActions) > 0 {
-		result.ActionMessage = toActions[(len(toActions) - 1)].Message
+		result.ActionMessage = toActions[0].Message
 	}
 	result.ActionMessage = toActions[0].Message
 
