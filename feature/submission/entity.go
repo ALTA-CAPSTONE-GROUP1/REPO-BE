@@ -80,6 +80,7 @@ type ApproverActions struct {
 	ApproverName     string
 	ApproverPosition string
 	Message          string
+	To_level         int
 }
 
 type AddSubmissionCore struct {

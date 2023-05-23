@@ -54,7 +54,7 @@ func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCor
 		}
 		if strings.Contains(err.Error(), "duplicate") {
 			log.Errorf("submission title or file is duplicate %w", err)
-			return errors.New("record ")
+			return errors.New("duplicate data for add submission")
 		}
 		if strings.Contains(err.Error(), "syntax") {
 			return errors.New("syntax error")

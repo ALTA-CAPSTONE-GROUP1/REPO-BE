@@ -325,7 +325,6 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 		for _, v := range signs {
 			result.Signs = append(result.Signs, v.Name)
 		}
-
 	}
 	var ccApprover []submission.CcApprover
 	for _, cc := range submissionByID.Ccs {
@@ -352,7 +351,7 @@ func (sm *submissionModel) SelectSubmissionByID(submissionID int, userID string)
 	result.Message = submissionByID.Message
 	result.Status = submissionByID.Status
 	if len(toActions) > 0 {
-		result.ActionMessage = toActions[0].Message
+		result.ActionMessage = toActions[len(toActions)-1].Message
 	}
 	result.ActionMessage = toActions[0].Message
 

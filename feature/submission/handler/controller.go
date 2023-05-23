@@ -183,6 +183,12 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 			if strings.Contains(err.Error(), "record") {
 				return c.JSON(helper.ReponseFormatWithMeta(http.StatusNotFound, "record not found", nil, nil))
 			}
+			if strings.Contains(err.Error(), "duplicate") {
+				return c.JSON(helper.ReponseFormatWithMeta(http.StatusBadRequest, "submission data duplicate", nil, nil))
+			}
+			if strings.Contains(err.Error(), "TLS") {
+				return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "TLS timeout gateway", nil, nil))
+			}
 			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "Server error", nil, nil))
 		}
 
