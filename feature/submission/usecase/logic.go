@@ -39,18 +39,22 @@ func (sr *submissionLogic) FindRequirementLogic(userID string, typeName string, 
 }
 
 func (sr *submissionLogic) AddSubmissionLogic(newSub submission.AddSubmissionCore, subFile *multipart.FileHeader) error {
-		uploadUrl, err := sr.u.UploadFile(subFile, "/"+newSub.OwnerID)
-		if err != nil {
-			log.Errorf("error from third party upload file %w", err)
-			return err
-		}
-		newSub.AttachmentLink = uploadUrl[0]
-		newSub.Attachment = subFile.Filename
+	uploadUrl, err := sr.u.UploadFile(subFile, "/"+newSub.OwnerID)
+	if err != nil {
+		log.Errorf("error from third party upload file %w", err)
+		return err
+	}
+	newSub.AttachmentLink = uploadUrl[0]
+	newSub.Attachment = subFile.Filename
 
 	if err := sr.sl.InsertSubmission(newSub); err != nil {
 		log.Errorf("error on insert submission %w", err)
 		if strings.Contains(err.Error(), "record not found") {
 			return errors.New("record not found")
+		}
+		if strings.Contains(err.Error(), "duplicate") {
+			log.Errorf("submission title or file is duplicate %w", err)
+			return errors.New("duplicate data for add submission")
 		}
 		if strings.Contains(err.Error(), "syntax") {
 			return errors.New("syntax error")
@@ -66,7 +70,8 @@ func (sr *submissionLogic) UpdateDataByOwnerLogic(submission submission.UpdateCo
 	exist := sr.sl.FindFileData(submission.SubmissionID, subFile.Filename)
 
 	if exist {
-		return errors.New("cannot upload same file and same file name to revise")
+		log.Error("file name duplicate for update submissions")
+		return errors.New("cannot upload same file and same file name to revise duplicate")
 	}
 
 	uploadUrl, err := sr.u.UploadFile(subFile, "/"+submission.UserID)
@@ -132,7 +137,7 @@ func (sr *submissionLogic) GetSubmissionByIDLogic(submissionID int, userId strin
 
 func (sr *submissionLogic) DeleteSubmissionLogic(submissionID int, userID string) error {
 	if err := sr.sl.DeleteSubmissionByID(submissionID, userID); err != nil {
-		log.Errorf("error on calling delte submission ID")
+		log.Errorf("error on calling delete submission ID")
 		if strings.Contains(err.Error(), "not found") {
 			return errors.New("data not found")
 		}
