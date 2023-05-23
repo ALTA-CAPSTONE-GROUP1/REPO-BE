@@ -12,6 +12,11 @@
   <img src="https://res.cloudinary.com/dc0wgpho2/image/upload/v1684720861/eproplogo_koyqxz.jpg" alt="Logo">
 </div>
 
+<div align="justify">
+
+Introducing ePropApp - Simplify your administrative process, anytime, anywhere! Our application aims to streamline internal company administration by facilitating seamless submission of requests, especially for companies with multiple branches and employees. With ePropApp, you can easily manage and submit requests across branches and departments, making the entire process efficient and hassle-free.
+
+</div>
 
 
 ## Tech Stack
@@ -37,6 +42,7 @@
   <img src="https://media.discordapp.net/attachments/1105044800769622037/1106171832794632243/ERD.jpg" alt="ERD" width="1032" height="1107">
 </div>
 
+<br>
 
 ## OpenAPI
 Final Project Capstone Program Immersive Alterra Academy
@@ -60,12 +66,13 @@ Final Project Capstone Program Immersive Alterra Academy
 ## Authors
 <div align="center">
   <a href="https://github.com/kristain09">
-    <img src="https://img.shields.io/badge/Kristain%20Putra-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Kristain Putra">
+    <img src="https://img.shields.io/badge/Kristain%20Putra-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Kristain Putra" height="30">
   </a>
   <a href="https://github.com/Adiyuda123">
-    <img src="https://img.shields.io/badge/Adi%20Yuda-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Adi Yuda Pranata">
+    <img src="https://img.shields.io/badge/Adi%20Yuda-%23121011.svg?style=flat&logo=github&logoColor=white" alt="Adi Yuda Pranata" height="30">
   </a>
 </div>
+
 
 
 
@@ -79,5 +86,5 @@ Final Project Capstone Program Immersive Alterra Academy
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 <h3>
-<p align="center">:copyright: May 2023 </p>
+<p align="center"> May 2023 </p>
 </h3>
