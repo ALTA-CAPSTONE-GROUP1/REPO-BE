@@ -73,7 +73,8 @@ func (uc *authController) SignValidationLogic() echo.HandlerFunc {
 		result, err := uc.service.SignVallidationLogic(req.SignID)
 		if err != nil {
 			c.Logger().Error("error on finding sign id data", err.Error())
-			if strings.Contains(err.Error(), "sign record not found") {
+
+			if strings.Contains(err.Error(), "not found") {
 				return c.JSON(helper.ReponseFormatWithMeta(
 					http.StatusNotFound,
 					"sign data not found",
