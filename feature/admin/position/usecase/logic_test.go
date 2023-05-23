@@ -111,6 +111,16 @@ func TestDeletePositionLogic(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 
+	t.Run("countin the datas error", func(t *testing.T) {
+		position := 8
+		repo.On("DeletePosition", position).Return(errors.New("count query error"))
+		err := pl.DeletePositionLogic(position)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "count position query error")
+
+		repo.AssertExpectations(t)
+	})
+
 	t.Run("Data found, but delete query error", func(t *testing.T) {
 		position := 4
 		repo.On("DeletePosition", position).Return(errors.New("delete query error"))

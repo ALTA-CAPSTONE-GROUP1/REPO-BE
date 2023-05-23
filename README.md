@@ -72,7 +72,7 @@ Final Project Capstone Program Immersive Alterra Academy
 
 ## Screenshots
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+![App Screenshot](https://media.discordapp.net/attachments/1105044800769622040/1110393351796183161/image.png?width=1556&height=1107)
 
 
 
