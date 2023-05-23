@@ -10,7 +10,8 @@ import (
 
 func SendSimpleEmail(sign string, subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
 	mailer := gomail.NewDialer("smtp.gmail.com", 465, config.Email, config.EmailSecret)
-
+	log.Error(config.Email)
+	log.Error(config.EmailSecret)
 	for i := 0; i < len(recipientEmail); i++ {
 		var recipientName string
 		if len(recipientNames) <= i {
@@ -32,6 +33,7 @@ WITH SIGN ID : %s
 
 		email := gomail.NewMessage()
 		email.SetHeader("From", config.Email)
+
 		email.SetHeader("To", recipientEmail[i])
 		email.SetHeader("Subject", subject)
 		email.SetBody("text/plain", body)
