@@ -186,8 +186,7 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 			return c.JSON(helper.ReponseFormatWithMeta(http.StatusInternalServerError, "Server error", nil, nil))
 		}
 
-		var submissions []Submission
-		filteredData := submissionDatas
+		filteredData := []submission.AllSubmiisionCore{}
 
 		if searchInTitle != "" {
 			for _, data := range submissionDatas {
@@ -195,19 +194,22 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 					filteredData = append(filteredData, data)
 				}
 			}
-		}
-
-		if searchInTo != "" {
+		} else if searchInTo != "" {
 			for _, data := range submissionDatas {
 				for _, to := range data.Tos {
 					if strings.Contains(strings.ToLower(to.ApproverName), strings.ToLower(searchInTo)) ||
 						strings.Contains(strings.ToLower(to.ApproverId), strings.ToLower(searchInTo)) ||
 						strings.Contains(strings.ToLower(to.ApproverPosition), strings.ToLower(searchInTo)) {
 						filteredData = append(filteredData, data)
+
 					}
 				}
 			}
+		} else {
+			filteredData = submissionDatas
 		}
+
+		var submissions []Submission
 
 		for _, submissionData := range filteredData {
 			var toApprovers []Approver
@@ -255,7 +257,7 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 		} else {
 			submissions = []Submission{}
 		}
-		
+
 		totalPage := 1
 		if len(submissions) > 0 {
 			totalPage = int(math.Ceil(float64(totalData) / float64(limitInt)))
