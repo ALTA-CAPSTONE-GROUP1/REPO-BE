@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	"fmt"
+	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin/subtype"
@@ -20,16 +20,17 @@ import (
 type approverModel struct {
 	db *gorm.DB
 	u  helper.UploadInterface
+	uf helper.UpdateInterface
 }
 
-func New(db *gorm.DB, u helper.UploadInterface) approve.Repository {
+func New(db *gorm.DB, u helper.UploadInterface, uf helper.UpdateInterface) approve.Repository {
 	return &approverModel{
 		db: db,
 		u:  u,
+		uf: uf,
 	}
 }
 
-// UpdateUser implements approve.Repository
 func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core) error {
 	var submission user.Submission
 	var tos []user.To
@@ -44,21 +45,18 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		log.Errorf("error on finding owner%w", tx.Error)
 		return tx.Error
 	}
-	fmt.Println(submission)
 
 	tx = ar.db.Where("id = ?", submission.UserID).First(&owner)
 	if tx.Error != nil {
 		log.Errorf("error on finding owner%w", tx.Error)
 		return tx.Error
 	}
-	fmt.Println(owner)
 
 	tx = ar.db.Where("submission_id = ?", submission.ID).Find(&tos)
 	if tx.Error != nil {
 		log.Errorf("error on finding owner%w", tx.Error)
 		return tx.Error
 	}
-	fmt.Println(tos)
 
 	switch input.Status {
 	case "approve":
@@ -100,11 +98,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 	tx = ar.db.Model(&to).
 		Updates(user.To{Message: input.Message})
-
-	// if tx.RowsAffected == 0 {
-	// 	log.Error("no rows affected on update to message")
-	// 	return errors.New("data is up to date")
-	// }
 
 	if tx.Error != nil {
 		log.Error("error on update to message")
@@ -159,16 +152,38 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		return tx.Error
 	}
 
-	// approverProfile := admin.Users{}
-	// tx = ar.db.Where("id = ?", userID).Find(&approverProfile)
-	// if tx.Error != nil {
-	// 	log.Errorf("error on finding owner%w", tx.Error)
-	// 	return tx.Error
-	// }
-
 	recipient := []string{owner.Email}
 	receiverName := []string{owner.Name}
 	helper.SendSimpleEmail(signdb.Name, submission.Title, "Update on your submission", recipient, receiverName, owner.Email)
+
+	curentLink := file.Link
+	subTitle := submission.Title
+	signName := sign
+	newApproverName := to.User.Name
+	approverPosition := to.User.Position.Name
+	newPath := helper.GenerateIDFromPositionTag(userID)
+	realPath := "/" + newPath + time.Now().Format(time.RFC3339)
+
+	newFileName, newLink, err := ar.uf.UpdateFile(curentLink, newApproverName, approverPosition, subTitle, signName, realPath)
+	if err != nil {
+		log.Errorf("error on creating and uploading pdf stamp %w", err)
+		return err
+	}
+
+	tx = ar.db.Model(&user.File{}).Where("id = ? AND submission_id = ?", file.ID, submission.ID).Updates(user.File{
+		Name: newFileName,
+		Link: newLink[0],
+	})
+
+	if tx.RowsAffected == 0 {
+		log.Warn("no rows affected in updaing file")
+	}
+
+	if tx.Error != nil {
+		log.Errorf("error on updating file link")
+		return err
+	}
+
 	// currentLink := file.Link
 	// currentFileName := file.Name
 	// submissionTitle := submission.Title

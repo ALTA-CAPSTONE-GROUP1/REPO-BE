@@ -82,8 +82,9 @@ func main() {
 	profileMdl := profileRepo.New(db)
 	profileSrv := profileLogic.New(profileMdl)
 	profileCtl := profileHandler.New(profileSrv)
-
-	approveMdl := approveRepo.New(db, helper.New())
+	uploader := helper.New()
+	updaterStamp := helper.NewUpdateInterface(uploader)
+	approveMdl := approveRepo.New(db, uploader, updaterStamp)
 	approveSrv := approveLogic.New(approveMdl)
 	approveCtl := approveHandler.New(approveSrv)
 

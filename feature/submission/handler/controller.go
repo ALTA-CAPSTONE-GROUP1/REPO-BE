@@ -207,7 +207,7 @@ func (sc *submissionController) GetAllSubmissionHandler() echo.HandlerFunc {
 						strings.Contains(strings.ToLower(to.ApproverId), strings.ToLower(searchInTo)) ||
 						strings.Contains(strings.ToLower(to.ApproverPosition), strings.ToLower(searchInTo)) {
 						filteredData = append(filteredData, data)
-
+						break
 					}
 				}
 			}
