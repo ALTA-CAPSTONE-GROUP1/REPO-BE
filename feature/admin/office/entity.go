@@ -17,12 +17,12 @@ type Handler interface {
 
 type UseCase interface {
 	AddOfficeLogic(newOffice Core) error
-	GetAllOfficeLogic(limit int, offset int, search string) ([]Core, error)
+	GetAllOfficeLogic(limit int, offset int, search string) ([]Core, int, error)
 	DeleteOfficeLogic(id uint) error
 }
 
 type Repository interface {
 	InsertOffice(newOffice Core) error
-	GetAllOffice(limit int, offset int, search string) ([]Core, error)
+	GetAllOffice(limit int, offset int, search string) ([]Core, int, error)
 	DeleteOffice(id uint) error
 }

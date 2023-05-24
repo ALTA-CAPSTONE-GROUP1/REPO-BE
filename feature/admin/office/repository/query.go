@@ -34,24 +34,34 @@ func (om *officeModel) DeleteOffice(id uint) error {
 }
 
 // GetAllOffice implements office.Repository
-func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]office.Core, error) {
+func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]office.Core, int, error) {
 	nameSearch := "%" + search + "%"
-	var dbres []admin.Office
+	totalData := int64(-1)
 	var res []office.Core
-	if err := om.db.Limit(limit).Offset(offset).Where("offices.name LIKE ?", nameSearch).Select("offices.id, offices.name").Find(&dbres).Error; err != nil {
-		log.Error("error occurs in finding all office", err.Error())
-		return nil, err
-	}
 
-	for _, v := range dbres {
-		tmp := office.Core{
-			ID:   v.ID,
-			Name: v.Name,
+	qry := om.db.Limit(limit).Offset(offset).Select("id, name").Table("offices").Order("id DESC")
+
+	if search != "" {
+		if err := qry.Where("name LIKE ?", nameSearch).Find(&res).Error; err != nil {
+			log.Errorf("error on finding search %w", err)
+			return []office.Core{}, int(totalData), nil
 		}
-		res = append(res, tmp)
+		if err := om.db.Where("offices.name LIKE = ?", nameSearch).Select("id, name").Table("offices").Count(&totalData).Error; err != nil {
+			log.Errorf("error on count filtered data %w", err)
+			return []office.Core{}, int(totalData), nil
+		}
+	} else {
+		if err := qry.Find(&res).Error; err != nil {
+			log.Errorf("error on finding data without search %w", err)
+			return []office.Core{}, int(totalData), nil
+		}
+		if err := om.db.Select("id, name").Table("offices").Count(&totalData).Error; err != nil {
+			log.Errorf("error on counting data without search %w", err)
+			return []office.Core{}, int(totalData), nil
+		}
 	}
 
-	return res, nil
+	return res, int(totalData), nil
 }
 
 // InsertOffice implements office.Repository

@@ -73,7 +73,7 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 		limitStr := c.QueryParam("limit")
 		offsetStr := c.QueryParam("offset")
 
-		limit := -1
+		limit := 10
 		if limitStr != "" {
 			limitInt, err := strconv.Atoi(limitStr)
 			if err != nil {
@@ -83,7 +83,7 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			limit = limitInt
 		}
 
-		offset := -1
+		offset := 0
 		if offsetStr != "" {
 			offsetInt, err := strconv.Atoi(offsetStr)
 			if err != nil {
@@ -93,13 +93,13 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 			offset = offsetInt
 		}
 
-		office, err := oc.service.GetAllOfficeLogic(limit, offset, search)
+		office, totaldata, err := oc.service.GetAllOfficeLogic(limit, offset, search)
 		if err != nil {
 			c.Logger().Error("error occurs when calling GetAllOfficeLogic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Server Error", nil))
 		}
 
-		pagination := helper.Pagination(limit, offset, len(office))
+		pagination := helper.Pagination(limit, offset, totaldata)
 
 		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "Successfully retrieved office data", office, pagination))
 	}
