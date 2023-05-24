@@ -83,7 +83,7 @@ func main() {
 	profileSrv := profileLogic.New(profileMdl)
 	profileCtl := profileHandler.New(profileSrv)
 
-	approveMdl := approveRepo.New(db, helper.New())
+	approveMdl := approveRepo.New(db, helper.New(), helper.NewUpdateInterface())
 	approveSrv := approveLogic.New(approveMdl)
 	approveCtl := approveHandler.New(approveSrv)
 

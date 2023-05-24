@@ -20,12 +20,14 @@ import (
 type approverModel struct {
 	db *gorm.DB
 	u  helper.UploadInterface
+	uf helper.UpdateInterface
 }
 
-func New(db *gorm.DB, u helper.UploadInterface) approve.Repository {
+func New(db *gorm.DB, u helper.UploadInterface, uf helper.UpdateInterface) approve.Repository {
 	return &approverModel{
 		db: db,
 		u:  u,
+		uf: uf,
 	}
 }
 
