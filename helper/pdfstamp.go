@@ -30,29 +30,37 @@ func NewUpdateInterface(u UploadInterface) UpdateInterface {
 func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, []string, error) {
 	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are approved by %s, %s,
 	SignID = %s`, approverName, approverPosition, signName)
+	outputpdf := "helper/output.pdf"
+	createdPdf := CreatePDF(subTitle, msgBody, outputpdf)
 
-	createdPdf := CreatePDF(subTitle, msgBody)
-
-	downloadedPdf := "downloaded.pdf"
+	downloadedPdf := "helper/downloaded.pdf"
 
 	err := downloadFile(currentLink, downloadedPdf)
 	if err != nil {
 		log.Errorf("error on downoading cloudinary file %w", err)
 		return "", []string{}, err
 	}
-	log.Info("File downloaded successfully!")
-
 	mergedFiles := "mergedfiles.pdf"
-	err = mergePDFs(mergedFiles, createdPdf, downloadedPdf)
+	err = mergePDFs(mergedFiles, downloadedPdf, createdPdf)
 	if err != nil {
 		log.Errorf("error on merging pdf %w", err)
 		return "", []string{}, err
 	}
-	file, err := os.Open(mergedFiles)
+	fmt.Println("merged file berhasil dibuat")
+	file, err := os.OpenFile("helper/mergedfiles.pdf", os.O_RDWR, 0777)
 	if err != nil {
-		log.Errorf("error on opening mergedfile %w", err)
+		if os.IsNotExist(err) {
+			log.Errorf("File does not exist: %s", err)
+		} else {
+			log.Errorf("Error opening file: %s", err)
+		}
 		return "", []string{}, err
 	}
+	// file, err := os.Open("helper/mergedfiles.pdf")
+	// if err != nil {
+	// 	log.Errorf("error on opening mergedfile %w", err)
+	// 	return "", []string{}, err
+	// }
 	defer file.Close()
 
 	fileHead := &multipart.FileHeader{
@@ -65,24 +73,25 @@ func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approv
 		return "", []string{}, err
 	}
 
+	err = os.Remove(outputpdf)
+	if err != nil {
+		log.Errorf("Eerr on on remocing file created")
+	}
+
 	err = os.Remove(mergedFiles)
 	if err != nil {
 		log.Errorf("error on remove mergedfile")
 	}
 
+	err = os.Remove(downloadedPdf)
+	if err != nil {
+		log.Errorf("error on remore downloadedPdf")
+	}
+
 	return file.Name(), url, nil
 }
 
-func CreatePDF(subTitle string, msgBody string) string {
-	outputPath := "output.pdf"
-
-	if _, err := os.Stat(outputPath); err != nil {
-		err := os.Remove(outputPath)
-		if err != nil {
-			log.Errorf("error on deleting outputfile.pdf, %w", err)
-		}
-	}
-
+func CreatePDF(subTitle string, msgBody string, path string) string {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
 	pdf.AddPage()
@@ -102,7 +111,7 @@ func CreatePDF(subTitle string, msgBody string) string {
 
 	pdf.AliasNbPages("")
 
-	err := pdf.OutputFileAndClose(outputPath)
+	err := pdf.OutputFileAndClose(path)
 	if err != nil {
 		log.Errorf("error on creating pdf %w", err)
 		return ""
@@ -110,18 +119,10 @@ func CreatePDF(subTitle string, msgBody string) string {
 
 	fmt.Println("File PDF berhasil dibuat!")
 	pdf.Close()
-	return outputPath
+	return path
 }
 
 func downloadFile(url, downloadPath string) error {
-
-	if _, err := os.Stat(downloadPath); err != nil {
-		err := os.Remove(downloadPath)
-		if err != nil {
-			log.Errorf("error on deleting outputfile.pdf, %w", err)
-		}
-	}
-
 	response, err := http.Get(url)
 	if err != nil {
 		log.Errorf("error on getting cloudinary file")
@@ -149,16 +150,18 @@ func mergePDFs(destMerge string, files ...string) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
 	for _, file := range files {
+		fmt.Println("++++++++++Perulangan merge+++++++++++++")
 		importedFile := fpdi.ImportPage(pdf, file, 1, "/MediaBox")
 		pdf.AddPage()
 		pdf.SetFont("Arial", "", 12)
 		fpdi.UseImportedTemplate(pdf, importedFile, 20, 50, 150, 0)
 	}
+	fmt.Println("++++++++++++ Beres Perulangan +++++++`")
 	err := pdf.OutputFileAndClose(destMerge)
 	if err != nil {
 		log.Errorf("error on creating merged file", err)
 		return err
 	}
-
+	pdf.Close()
 	return nil
 }
