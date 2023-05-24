@@ -18,7 +18,7 @@ type UpdateFile struct {
 }
 
 type UpdateInterface interface {
-	UpdateFile(link string, appName string, appPos string, subTitle string, signName string) ([]string, error)
+	UpdateFile(link string, appName string, appPos string, subTitle string, signName string, path string) (string, []string, error)
 }
 
 func NewUpdateInterface(u UploadInterface) UpdateInterface {
@@ -27,7 +27,7 @@ func NewUpdateInterface(u UploadInterface) UpdateInterface {
 	}
 }
 
-func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approverPosition string, subTitle string, signName string) ([]string, error) {
+func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, []string, error) {
 	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are approved by %s, %s,
 	SignID = %s`, approverName, approverPosition, signName)
 
@@ -38,7 +38,7 @@ func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approv
 	err := downloadFile(currentLink, downloadedPdf)
 	if err != nil {
 		log.Errorf("error on downoading cloudinary file %w", err)
-		return []string{}, err
+		return "", []string{}, err
 	}
 	log.Info("File downloaded successfully!")
 
@@ -46,12 +46,12 @@ func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approv
 	err = mergePDFs(mergedFiles, createdPdf, downloadedPdf)
 	if err != nil {
 		log.Errorf("error on merging pdf %w", err)
-		return []string{}, err
+		return "", []string{}, err
 	}
 	file, err := os.Open(mergedFiles)
 	if err != nil {
 		log.Errorf("error on opening mergedfile %w", err)
-		return []string{}, err
+		return "", []string{}, err
 	}
 	defer file.Close()
 
@@ -62,7 +62,7 @@ func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approv
 	url, err := uf.u.UploadFile(fileHead, "/cobadulu")
 	if err != nil {
 		log.Errorf("error on calling upload file %w", err)
-		return []string{}, err
+		return "", []string{}, err
 	}
 
 	err = os.Remove(mergedFiles)
@@ -70,7 +70,7 @@ func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approv
 		log.Errorf("error on remove mergedfile")
 	}
 
-	return url, nil
+	return file.Name(), url, nil
 }
 
 func CreatePDF(subTitle string, msgBody string) string {
