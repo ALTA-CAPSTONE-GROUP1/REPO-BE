@@ -37,14 +37,14 @@ func (ol *officeLogic) DeleteOfficeLogic(id uint) error {
 }
 
 // GetAllOfficeLogic implements office.UseCase
-func (ol *officeLogic) GetAllOfficeLogic(limit int, offset int, search string) ([]office.Core, error) {
-	result, err := ol.ol.GetAllOffice(limit, offset, search)
+func (ol *officeLogic) GetAllOfficeLogic(limit int, offset int, search string) ([]office.Core, int, error) {
+	result, totaldata, err := ol.ol.GetAllOffice(limit, offset, search)
 	if err != nil {
 		log.Error("failed to find all office", err.Error())
-		return []office.Core{}, errors.New("internal server error")
+		return []office.Core{}, totaldata, errors.New("internal server error")
 	}
 
-	return result, nil
+	return result, totaldata, nil
 }
 
 // AddOfficeLogic implements office.UseCase

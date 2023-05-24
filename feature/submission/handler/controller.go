@@ -135,6 +135,11 @@ func (sc *submissionController) AddSubmissionHandler() echo.HandlerFunc {
 						"internal server error",
 						nil))
 			}
+			if strings.Contains(strings.ToLower(err.Error()), "duplicate") {
+				return c.JSON(helper.ResponseFormat(
+					http.StatusBadRequest, "duplicate data", nil,
+				))
+			}
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "server error", nil))
 		}
 
