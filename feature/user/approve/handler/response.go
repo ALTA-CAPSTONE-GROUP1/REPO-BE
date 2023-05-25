@@ -27,7 +27,7 @@ func CoreToApproveResponse(data approve.Core, userID string) SubmissionResponse 
 		SubmissionType: data.Type.SubmissionTypeName,
 		Status:         "",
 		CreatedAt:      data.CreatedAt.Add(7 * time.Hour).Format("2006-01-02 15:04"),
-		Is_Opened:      false,
+		Is_Opened:      data.Is_Opened,
 	}
 
 	for _, to := range data.Tos {
@@ -179,7 +179,7 @@ func SubmissionToCore(usr admin.Users, file []aMod.File, receivers []admin.Users
 		Title:     subData.Title,
 		Message:   subData.Message,
 		Status:    subData.Status,
-		Is_Opened: false,
+		Is_Opened: subData.Is_Opened,
 		CreatedAt: subData.CreatedAt,
 		Type:      subtype.Core{SubmissionTypeName: subData.Type.Name},
 		Files:     coreFile,
