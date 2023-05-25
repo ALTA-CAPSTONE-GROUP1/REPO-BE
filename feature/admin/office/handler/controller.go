@@ -73,7 +73,7 @@ func (oc *officeController) GetAllOfficeHandler() echo.HandlerFunc {
 		limitStr := c.QueryParam("limit")
 		offsetStr := c.QueryParam("offset")
 
-		limit := 10
+		limit := 5
 		if limitStr != "" {
 			limitInt, err := strconv.Atoi(limitStr)
 			if err != nil {

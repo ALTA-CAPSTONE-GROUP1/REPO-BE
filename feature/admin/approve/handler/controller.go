@@ -39,13 +39,19 @@ func (ac *approveController) GetSubmissionByHyperApprovalHandler() echo.HandlerF
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Submission ID is required", nil))
 		}
 
+		usrId := request.UsrID
+		if usrId == "" {
+			c.Logger().Error("token is missing")
+			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Token is required", nil))
+		}
+
 		token := request.Token
 		if token == "" {
 			c.Logger().Error("token is missing")
 			return c.JSON(helper.ResponseFormat(http.StatusBadRequest, "Token is required", nil))
 		}
 
-		result, err := ac.service.GetSubmissionByHyperApproval(userID, submissionID, token)
+		result, err := ac.service.GetSubmissionByHyperApproval(userID, usrId, submissionID, token)
 		if err != nil {
 			c.Logger().Error("error on calling get submission by hyper approval logic:", err.Error())
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
@@ -92,6 +98,7 @@ func (ac *approveController) UpdateByHyperApprovalHandler() echo.HandlerFunc {
 		input := approve.Core{
 			ID:     updateInput.SubID,
 			Status: updateInput.Action,
+			UserID: updateInput.UsrID,
 		}
 
 		if err := ac.service.UpdateByHyperApproval(userID, input); err != nil {

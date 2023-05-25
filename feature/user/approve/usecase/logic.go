@@ -46,12 +46,12 @@ func (al *approverLogic) GetSubmissionById(userID string, id int) (approve.Core,
 }
 
 // GetSubmissionAprrove implements approve.UseCase
-func (al *approverLogic) GetSubmissionAprrove(userID string, search approve.GetAllQueryParams) ([]approve.Core, error) {
-	result, err := al.a.SelectSubmissionAprrove(userID, search)
+func (al *approverLogic) GetSubmissionAprrove(userID string, search approve.GetAllQueryParams) ([]approve.Core, int, error) {
+	result, totalData, err := al.a.SelectSubmissionAprrove(userID, search)
 	if err != nil {
 		log.Error("failed to find submission for action", err.Error())
-		return []approve.Core{}, errors.New("internal server error")
+		return []approve.Core{}, totalData, errors.New("internal server error")
 	}
 
-	return result, nil
+	return result, totalData, nil
 }
