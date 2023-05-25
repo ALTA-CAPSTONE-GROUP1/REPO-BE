@@ -60,16 +60,15 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	switch input.Status {
 	case "approve":
 		submission.Status = "Waiting"
+		if len(tos) > 0 && tos[len(tos)-1].UserID == userID {
+			submission.Status = "Approved"
+		}
 	case "revise":
 		submission.Status = "Revised"
 	case "reject":
 		submission.Status = "Rejected"
 	default:
 		return errors.New("invalid status")
-	}
-
-	if len(tos) > 0 && tos[len(tos)-1].UserID == userID {
-		submission.Status = "Approved"
 	}
 
 	tx = ar.db.Model(&submission).Updates(user.Submission{Status: submission.Status})
@@ -155,6 +154,7 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	receiverName := []string{owner.Name}
 	helper.SendSimpleEmail(signdb.Name, submission.Title, "Update on your submission", recipient, receiverName, owner.Email)
 
+	action := input.Status
 	curentLink := file.Link
 	subTitle := submission.Title
 	signName := sign
@@ -163,7 +163,7 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	newPath := helper.GenerateIDFromPositionTag(userID)
 	realPath := "/" + newPath + time.Now().Format(time.RFC3339)
 
-	newFileName, newLink, err := helper.UpdateFile(curentLink, newApproverName, approverPosition, subTitle, signName, realPath)
+	newFileName, newLink, err := helper.UpdateFile(action, curentLink, newApproverName, approverPosition, subTitle, signName, realPath)
 	if err != nil {
 		log.Errorf("error on creating and uploading pdf stamp %w", err)
 		return err
@@ -220,7 +220,8 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 	var ccDetails []admin.Users
 	var fileDetails []user.File
 
-	if err := ar.db.Model(&user.To{}).Where("submission_id = ? AND user_id = ?", id, userID).Update("is_opened", 1).Error; err != nil {
+	if err := ar.db.Model(&user.To{}).Where("submission_id = ? AND user_id = ?", id, userID).
+		Update("is_opened", 1).Error; err != nil {
 		log.Errorf("error in update status opened: %v", err)
 		return approve.Core{}, err
 	}

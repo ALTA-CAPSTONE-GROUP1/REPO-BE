@@ -16,9 +16,9 @@ import (
 	fpdi "github.com/phpdave11/gofpdf/contrib/gofpdi"
 )
 
-func UpdateFile(currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, string, error) {
-	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are approved by %s, %s,
-	SignID = %s`, approverName, approverPosition, signName)
+func UpdateFile(action string, currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, string, error) {
+	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are %s by %s, %s,
+	SignID = %s`, action, approverName, approverPosition, signName)
 	outputpdf := "helper/output.pdf"
 	createdPdf := CreatePDF(subTitle, msgBody, outputpdf)
 
@@ -58,7 +58,7 @@ func UpdateFile(currentLink string, approverName string, approverPosition string
 	}
 	fmt.Println("SAMPAI AFTER REMOVE merge")
 	newName, err := GenerateUniqueSign(signName)
-	if err != nil{
+	if err != nil {
 		log.Errorf(err.Error())
 	}
 	return newName, newUrl, nil
