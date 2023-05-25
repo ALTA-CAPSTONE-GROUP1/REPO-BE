@@ -185,9 +185,12 @@ func (ur *usersModel) GetUserById(id string) (user.Core, error) {
 }
 
 // SelectAllUser implements user.Repository
-func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core, error) {
+func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core, int, error) {
 	var users []user.Core
 	var dbusers []admin.Users
+	nameSearch := "%" + name + "%"
+	totalData := int64(-1)
+
 	query := ur.db.Table("users").
 		Preload("Position").
 		Preload("Office").
@@ -195,17 +198,33 @@ func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core
 		Joins("JOIN offices ON offices.id = users.office_id").
 		Select("users.id, users.office_id, users.position_id, users.name, users.email, users.phone_number, users.password, positions.name as position_name, offices.name as office_name").
 		Limit(limit).
-		Offset(offset)
+		Offset(offset).
+		Order("id DESC")
 
 	if name != "" {
-		nameSearch := "%" + name + "%"
-		query = query.Where("users.name LIKE ? OR users.email LIKE ? OR users.phone_number LIKE ? OR positions.name LIKE ? OR offices.name LIKE ?", nameSearch, nameSearch, nameSearch, nameSearch, nameSearch)
-	}
-
-	err := query.Find(&dbusers).Error
-	if err != nil {
-		log.Error("failed to find all users:", err.Error())
-		return nil, errors.New("failed to retrieve users")
+		if err := query.Where("users.name LIKE ? OR users.email LIKE ? OR users.phone_number LIKE ? OR positions.name LIKE ? OR offices.name LIKE ?",
+			nameSearch, nameSearch, nameSearch, nameSearch, nameSearch).Find(&dbusers).Error; err != nil {
+			log.Errorf("error on finding search: %w", err)
+			return []user.Core{}, int(totalData), err
+		}
+		if err := ur.db.Table("users").
+			Joins("JOIN positions ON positions.id = users.position_id").
+			Joins("JOIN offices ON offices.id = users.office_id").
+			Where("users.name LIKE ? OR users.email LIKE ? OR users.phone_number LIKE ? OR positions.name LIKE ? OR offices.name LIKE ?",
+				nameSearch, nameSearch, nameSearch, nameSearch, nameSearch).
+			Count(&totalData).Error; err != nil {
+			log.Errorf("error on count filtered data: %w", err)
+			return []user.Core{}, int(totalData), err
+		}
+	} else {
+		if err := query.Find(&dbusers).Error; err != nil {
+			log.Errorf("error on finding data without search: %w", err)
+			return []user.Core{}, int(totalData), err
+		}
+		if err := ur.db.Table("users").Count(&totalData).Error; err != nil {
+			log.Errorf("error on counting data without search: %w", err)
+			return []user.Core{}, int(totalData), err
+		}
 	}
 
 	for _, dbuser := range dbusers {
@@ -231,7 +250,7 @@ func (ur *usersModel) SelectAllUser(limit, offset int, name string) ([]user.Core
 		users = append(users, user)
 	}
 
-	return users, nil
+	return users, int(totalData), nil
 }
 
 // InsertUser implements user.Repository

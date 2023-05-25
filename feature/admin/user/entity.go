@@ -29,7 +29,7 @@ type Handler interface {
 
 type UseCase interface {
 	RegisterUser(newUser Core) error
-	GetAllUser(limit, offset int, name string) ([]Core, error)
+	GetAllUser(limit, offset int, name string) ([]Core, int, error)
 	GetUserById(id string) (Core, error)
 	UpdateUser(id string, updateUser Core) error
 	DeleteUser(id string) error
@@ -37,7 +37,7 @@ type UseCase interface {
 
 type Repository interface {
 	InsertUser(newUser Core) error
-	SelectAllUser(limit, offset int, name string) ([]Core, error)
+	SelectAllUser(limit, offset int, name string) ([]Core, int, error)
 	GetUserById(id string) (Core, error)
 	UpdateUser(id string, input Core) error
 	DeleteUser(id string) error

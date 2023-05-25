@@ -64,14 +64,14 @@ func (ul *userLogic) GetUserById(id string) (user.Core, error) {
 }
 
 // GetAllUser implements user.UseCase
-func (ul *userLogic) GetAllUser(limit, offset int, name string) ([]user.Core, error) {
-	result, err := ul.u.SelectAllUser(limit, offset, name)
+func (ul *userLogic) GetAllUser(limit, offset int, name string) ([]user.Core, int, error) {
+	result, totaldata, err := ul.u.SelectAllUser(limit, offset, name)
 	if err != nil {
 		log.Error("failed to find all user", err.Error())
-		return []user.Core{}, errors.New("internal server error")
+		return []user.Core{}, totaldata, errors.New("internal server error")
 	}
 
-	return result, nil
+	return result, totaldata, nil
 }
 
 // RegisterUser implements user.UseCase

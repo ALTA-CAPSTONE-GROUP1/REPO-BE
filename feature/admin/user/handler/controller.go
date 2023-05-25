@@ -143,7 +143,7 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 			offset = offsetInt
 		}
 
-		data, err := uc.service.GetAllUser(limit, offset, name)
+		data, totaldata, err := uc.service.GetAllUser(limit, offset, name)
 		if err != nil {
 			c.Logger().Error("error on calling get all user logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
@@ -151,7 +151,7 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 
 		dataResponse := CoreToGetAllUserResponse(data)
 
-		pagination := helper.Pagination(limit, offset, len(data))
+		pagination := helper.Pagination(limit, offset, totaldata)
 
 		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "Successfully retrieved all users", dataResponse, pagination))
 	}
