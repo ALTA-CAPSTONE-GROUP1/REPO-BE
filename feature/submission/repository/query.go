@@ -204,8 +204,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		}
 		choices = append(choices, tmp)
 	}
-
-	if err := sm.db.Where("user_id = ?", userID).Order("created_at DESC").
+	if err := sm.db.Where("user_id = ?", userID).Order("CASE WHEN updated_at IS NULL THEN created_at ELSE updated_at END DESC").
 		Preload("Files").
 		Preload("Tos").
 		Preload("Ccs").
@@ -250,7 +249,7 @@ func (sm *submissionModel) SelectAllSubmissions(userID string, pr submission.Get
 		}
 
 		var attachment File
-		if err := sm.db.Where("submission_id = ?", sub.ID).First(&attachment).Error; err != nil {
+		if err := sm.db.Where("submission_id = ?", sub.ID).Find(&attachment).Error; err != nil {
 			log.Errorf("error getting files for submission %d: %v", sub.ID, err)
 			return []submission.AllSubmiisionCore{}, []submission.SubTypeChoices{}, err
 		}
@@ -424,6 +423,14 @@ func (sm *submissionModel) UpdateDataByOwner(editedData submission.UpdateCore) e
 		tx.Rollback()
 		log.Errorf("error on delete signs data in database")
 		return err
+	}
+
+	if err := tx.Exec(`
+	UPDATE tos
+	SET action_type = ?, is_opened = ?, message = NULL
+	WHERE submission_id = ?
+	`, "", false, editedData.SubmissionID).Error; err != nil {
+		log.Errorf("error on update tos data %s", err.Error())
 	}
 
 	tx.Commit()
