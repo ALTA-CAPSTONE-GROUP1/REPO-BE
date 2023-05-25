@@ -8,6 +8,7 @@ import (
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/labstack/gommon/log"
 )
 
 type Upload struct {
@@ -36,9 +37,11 @@ func (u Upload) doUpload(content *multipart.FileHeader, path string) (*uploader.
 	if err != nil {
 		return nil, err
 	}
+
 	contentmulti, err := content.Open()
 	if err != nil {
-		panic(err)
+		log.Error(err.Error())
+		log.Error(content.Filename)
 	}
 	defer contentmulti.Close()
 

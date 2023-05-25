@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
@@ -20,14 +21,12 @@ import (
 type approverModel struct {
 	db *gorm.DB
 	u  helper.UploadInterface
-	uf helper.UpdateInterface
 }
 
-func New(db *gorm.DB, u helper.UploadInterface, uf helper.UpdateInterface) approve.Repository {
+func New(db *gorm.DB, u helper.UploadInterface) approve.Repository {
 	return &approverModel{
 		db: db,
 		u:  u,
-		uf: uf,
 	}
 }
 
@@ -144,7 +143,7 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 	file := user.File{}
 	tx = ar.db.Model(&user.File{}).
-		Select("link").
+		Select("id, link").
 		Where("submission_id = ?", submission.ID).
 		First(&file)
 	if tx.Error != nil {
@@ -159,65 +158,57 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 	curentLink := file.Link
 	subTitle := submission.Title
 	signName := sign
-	newApproverName := to.User.Name
+	newApproverName := to.UserID
 	approverPosition := to.User.Position.Name
 	newPath := helper.GenerateIDFromPositionTag(userID)
 	realPath := "/" + newPath + time.Now().Format(time.RFC3339)
 
-	newFileName, newLink, err := ar.uf.UpdateFile(curentLink, newApproverName, approverPosition, subTitle, signName, realPath)
+	newFileName, newLink, err := helper.UpdateFile(curentLink, newApproverName, approverPosition, subTitle, signName, realPath)
 	if err != nil {
 		log.Errorf("error on creating and uploading pdf stamp %w", err)
 		return err
 	}
 
-	tx = ar.db.Model(&user.File{}).Where("id = ? AND submission_id = ?", file.ID, submission.ID).Updates(user.File{
-		Name: newFileName,
-		Link: newLink[0],
-	})
+	fmt.Print(newLink)
+	if err := ar.db.Statement.Exec("SET FOREIGN_KEY_CHECKS=?", 0).Error; err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	// saveFile := &user.File{
+	// 	SubmissionID: submission.ID,
+	// 	Link:         newLink,
+	// 	Name:         newFileName,
+	// }
+
+	updateObj := user.File{
+		ID: file.ID,
+	}
+	updates := map[string]interface{}{
+		"Name": newFileName,
+		"Link": newLink,
+	}
+
+	fmt.Printf("FILEID %d\n", file.ID)
+	fmt.Printf("submissionid %d\n", submission.ID)
+	if err := ar.db.Model(&updateObj).Where("id = ? AND submission_id = ?", file.ID, submission.ID).Updates(updates).Error; err != nil {
+		log.Errorf("error on updating file: %s", err.Error())
+		return err
+	}
+
+	if tx.Error != nil {
+		log.Errorf("error on saving file %s", err.Error())
+		return err
+	}
 
 	if tx.RowsAffected == 0 {
 		log.Warn("no rows affected in updaing file")
 	}
 
-	if tx.Error != nil {
-		log.Errorf("error on updating file link")
+	if err := ar.db.Statement.Exec("SET FOREIGN_KEY_CHECKS=?", 0).Error; err != nil {
+		log.Error(err.Error())
 		return err
 	}
-
-	// currentLink := file.Link
-	// currentFileName := file.Name
-	// submissionTitle := submission.Title
-	// signName := sign
-	// action := actionType
-	// actionMessage := input.Message
-	// approverName := to.User.Name
-	// approverPosition := to.User.Position.Name
-
-	// fileHeader, err := helper.UpdateCreateSign(currentLink, currentFileName, approverName, submissionTitle, signName, approverPosition, action, actionMessage)
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Println(fileHeader)
-
-	// newpath := helper.GenerateIDFromPositionTag(userID)
-	// realpath := "/" + newpath + "/" + userID
-	// newLink, err := ar.u.UploadFile(fileHeader, realpath)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(newLink)
-
-	// var newFile user.File
-	// newFile.Link = newLink[0]
-	// newFile.Name = (fileHeader.Filename + newpath)
-	// newFile.SubmissionID = submission.ID
-
-	// tx = ar.db.Where("submission_id = ?, id = ?", submission.ID, file.ID).Update("link", newFile.Link)
-	// time.Sleep(3 * time.Second)
-	// if tx.Error != nil {
-	// 	log.Errorf("errros on updating file lin %w", tx.Error)
-	// 	return tx.Error
-	// }
 
 	return nil
 }
