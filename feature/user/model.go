@@ -34,18 +34,18 @@ type Submission struct {
 	DeletedAt gorm.DeletedAt
 	Type      admin.Type
 	User      admin.Users
-	Files     []File `gorm:"foreignKey:SubmissionID"`
+	Files     []File `gorm:"foreignKey:SubmissionID; constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	Tos       []To   `gorm:"foreignKey:SubmissionID"`
 	Ccs       []Cc   `gorm:"foreignKey:SubmissionID"`
 	Signs     []Sign `gorm:"foreignKey:SubmissionID"`
 }
 
 type File struct {
-	ID           int `gorm:"primaryKey;autoIncrement"`
-	SubmissionID int
+	ID           int        `gorm:"primaryKey;autoIncrement"`
+	SubmissionID int        `gorm:"index;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Name         string     `gorm:"size:50;not null"`
 	Link         string     `gorm:"size:50;not null"`
-	Submission   Submission `gorm:"foreignKey:SubmissionID"`
+	Submission   Submission `gorm:"foreignKey:SubmissionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 type Cc struct {

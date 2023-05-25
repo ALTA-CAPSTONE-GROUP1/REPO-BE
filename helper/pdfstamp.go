@@ -1,33 +1,22 @@
 package helper
 
 import (
+	"context"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/labstack/gommon/log"
 	"github.com/phpdave11/gofpdf"
 	fpdi "github.com/phpdave11/gofpdf/contrib/gofpdi"
 )
 
-type UpdateFile struct {
-	u UploadInterface
-}
-
-type UpdateInterface interface {
-	UpdateFile(link string, appName string, appPos string, subTitle string, signName string, path string) (string, []string, error)
-}
-
-func NewUpdateInterface(u UploadInterface) UpdateInterface {
-	return &UpdateFile{
-		u: u,
-	}
-}
-
-func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, []string, error) {
+func UpdateFile(currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, string, error) {
 	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are approved by %s, %s,
 	SignID = %s`, approverName, approverPosition, signName)
 	outputpdf := "helper/output.pdf"
@@ -38,57 +27,41 @@ func (uf *UpdateFile) UpdateFile(currentLink string, approverName string, approv
 	err := downloadFile(currentLink, downloadedPdf)
 	if err != nil {
 		log.Errorf("error on downoading cloudinary file %w", err)
-		return "", []string{}, err
+		return "", "", err
 	}
 	mergedFiles := "mergedfiles.pdf"
 	err = mergePDFs(mergedFiles, downloadedPdf, createdPdf)
 	if err != nil {
 		log.Errorf("error on merging pdf %w", err)
-		return "", []string{}, err
+		return "", "", err
 	}
 	fmt.Println("merged file berhasil dibuat")
-	file, err := os.OpenFile("helper/mergedfiles.pdf", os.O_RDWR, 0777)
+
+	newUrl, err := UploadNewData("./mergedfiles.pdf", "/"+approverPosition)
 	if err != nil {
-		if os.IsNotExist(err) {
-			log.Errorf("File does not exist: %s", err)
-		} else {
-			log.Errorf("Error opening file: %s", err)
-		}
-		return "", []string{}, err
+		log.Errorf("error on upload pdf %s", err.Error())
+		return "", "", err
 	}
-	// file, err := os.Open("helper/mergedfiles.pdf")
-	// if err != nil {
-	// 	log.Errorf("error on opening mergedfile %w", err)
-	// 	return "", []string{}, err
-	// }
-	defer file.Close()
-
-	fileHead := &multipart.FileHeader{
-		Filename: file.Name(),
-	}
-
-	url, err := uf.u.UploadFile(fileHead, "/cobadulu")
+	fmt.Println("SAMPAI AFTER UPLOAD")
+	err = os.Remove("./helper/downloaded.pdf")
 	if err != nil {
-		log.Errorf("error on calling upload file %w", err)
-		return "", []string{}, err
+		log.Errorf("error on on removing file created %w", err)
 	}
-
-	err = os.Remove(outputpdf)
+	fmt.Println("SAMPAI AFTER REMOVE")
+	err = os.Remove("./helper/output.pdf")
 	if err != nil {
-		log.Errorf("Eerr on on remocing file created")
+		log.Errorf("error on remove downloadedPdf %w", err)
 	}
-
-	err = os.Remove(mergedFiles)
+	err = os.Remove("./mergedfiles.pdf")
 	if err != nil {
-		log.Errorf("error on remove mergedfile")
+		log.Errorf("error on remove downloadedPdf %w", err)
 	}
-
-	err = os.Remove(downloadedPdf)
-	if err != nil {
-		log.Errorf("error on remore downloadedPdf")
+	fmt.Println("SAMPAI AFTER REMOVE merge")
+	newName, err := GenerateUniqueSign(signName)
+	if err != nil{
+		log.Errorf(err.Error())
 	}
-
-	return file.Name(), url, nil
+	return newName, newUrl, nil
 }
 
 func CreatePDF(subTitle string, msgBody string, path string) string {
@@ -164,4 +137,31 @@ func mergePDFs(destMerge string, files ...string) error {
 	}
 	pdf.Close()
 	return nil
+}
+
+func UploadNewData(filePath string, cloudinaryPath string) (string, error) {
+	cld, err := cloudinary.NewFromParams(config.CloudinaryName, config.CloudinaryApiKey, config.CloudinaryApiScret)
+	if err != nil {
+		return "", err
+	}
+
+	overwrite := true
+	useFileName := true
+	useFileNameDisplay := true
+
+	UploadParams := uploader.UploadParams{
+		PublicID:                 "epropProject",
+		Folder:                   config.CloudinaryUploadFolder + cloudinaryPath,
+		UseFilename:              &useFileName,
+		Overwrite:                &overwrite,
+		UseFilenameAsDisplayName: &useFileNameDisplay,
+	}
+
+	resp, err := cld.Upload.Upload(context.Background(), filePath, UploadParams)
+	if err != nil {
+		log.Errorf("error on uploading new pdf %s", err.Error())
+		return "", err
+	}
+
+	return resp.SecureURL, err
 }
