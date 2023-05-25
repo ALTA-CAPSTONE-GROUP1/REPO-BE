@@ -352,11 +352,19 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 
 		for _, to := range v.Tos {
 			if to.UserID == userID {
+				actionType := to.Action_Type
+				if v.Status == "Sent" {
+					actionType = "waiting for you"
+
+					ar.db.Model(&to).Update("Action_Type", actionType)
+					ar.db.Save(&to)
+
+				}
 				tmp.Tos = append(tmp.Tos, approve.ToCore{
 					SubmissionID: to.SubmissionID,
 					UserID:       to.UserID,
 					Name:         to.Name,
-					Action_Type:  to.Action_Type,
+					Action_Type:  actionType,
 				})
 			}
 		}
