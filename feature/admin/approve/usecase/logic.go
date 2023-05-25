@@ -19,8 +19,8 @@ func New(a approve.Repository) approve.UseCase {
 }
 
 // GetSubmissionById implements approve.UseCase
-func (al *approverLogic) GetSubmissionByHyperApproval(userID string, id int, token string) (approve.GetSubmissionByIDCore, error) {
-	result, err := al.a.SelectSubmissionByHyperApproval(userID, id, token)
+func (al *approverLogic) GetSubmissionByHyperApproval(userID string, usrId string, id int, token string) (approve.GetSubmissionByIDCore, error) {
+	result, err := al.a.SelectSubmissionByHyperApproval(userID, usrId, id, token)
 	if err != nil {
 		log.Error("failed to find submission for action", err.Error())
 		return approve.GetSubmissionByIDCore{}, errors.New("internal server error")

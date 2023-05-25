@@ -39,14 +39,14 @@ func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]off
 	totalData := int64(-1)
 	var res []office.Core
 
-	qry := om.db.Limit(limit).Offset(offset).Select("id, name").Table("offices").Order("id DESC")
+	qry := om.db.Limit(limit).Offset(offset).Select("offices.id, offices.name").Table("offices").Order("id ASC")
 
 	if search != "" {
-		if err := qry.Where("name LIKE ?", nameSearch).Find(&res).Error; err != nil {
+		if err := qry.Where("offices.name LIKE ?", nameSearch).Find(&res).Error; err != nil {
 			log.Errorf("error on finding search %w", err)
 			return []office.Core{}, int(totalData), nil
 		}
-		if err := om.db.Where("offices.name LIKE = ?", nameSearch).Select("id, name").Table("offices").Count(&totalData).Error; err != nil {
+		if err := om.db.Where("offices.name LIKE ?", nameSearch).Select("offices.id, offices.name").Table("offices").Count(&totalData).Error; err != nil {
 			log.Errorf("error on count filtered data %w", err)
 			return []office.Core{}, int(totalData), nil
 		}
@@ -55,7 +55,7 @@ func (om *officeModel) GetAllOffice(limit int, offset int, search string) ([]off
 			log.Errorf("error on finding data without search %w", err)
 			return []office.Core{}, int(totalData), nil
 		}
-		if err := om.db.Select("id, name").Table("offices").Count(&totalData).Error; err != nil {
+		if err := om.db.Select("offices.id, offices.name").Table("offices").Count(&totalData).Error; err != nil {
 			log.Errorf("error on counting data without search %w", err)
 			return []office.Core{}, int(totalData), nil
 		}

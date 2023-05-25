@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/app/config"
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
@@ -25,7 +26,7 @@ func New(db *gorm.DB) approve.Repository {
 }
 
 // / SelectSubmissionByHyperApproval implements approve.Repository
-func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, id int, token string) (approve.GetSubmissionByIDCore, error) {
+func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, usrId string, id int, token string) (approve.GetSubmissionByIDCore, error) {
 	var (
 		result         approve.GetSubmissionByIDCore
 		submissionByID sRepo.Submission
@@ -81,75 +82,108 @@ func (ar *approverModel) SelectSubmissionByHyperApproval(userID string, id int, 
 }
 
 // UpdateUser implements approve.Repository
+// UpdateUser implements approve.Repository
 func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core) error {
 	var dbsub user.Submission
 	var owner admin.Users
 	var tos []user.To
 
-	if err := ar.db.Model(&user.Submission{}).Where("id = ?", input.ID).First(&dbsub).Error; err != nil {
-		log.Error("no rows found for the given submission ID")
-		return errors.New("no data found")
+	tx := ar.db.Model(&dbsub).
+		Joins("JOIN tos ON submissions.id = tos.submission_id").
+		Joins("JOIN users ON tos.user_id = users.id").
+		Where("tos.user_id = ? AND submissions.id = ?", input.UserID, input.ID).
+		Find(&dbsub)
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
+	fmt.Println(dbsub)
 
-	if err := ar.db.Where("id = ?", dbsub.UserID).First(&owner).Error; err != nil {
-		log.Error("no rows found for the given user and submission ID")
-		return errors.New("no data found")
+	tx = ar.db.Where("id = ?", dbsub.UserID).First(&owner)
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
+	fmt.Println(owner)
 
-	if err := ar.db.Where("submission_id = ?", dbsub.ID).Find(&tos).Error; err != nil {
-		log.Error("no rows found for the given user and submission ID")
-		return errors.New("no data found")
+	tx = ar.db.Where("submission_id = ?", dbsub.ID).Find(&tos)
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
 	}
+	fmt.Println(tos)
 
 	switch input.Status {
 	case "approve":
-		input.Status = "Approved"
+		dbsub.Status = "Waiting"
 	case "revise":
-		input.Status = "Revised"
+		dbsub.Status = "Revised"
 	case "reject":
-		input.Status = "Rejected"
+		dbsub.Status = "Rejected"
 	default:
 		return errors.New("invalid status")
 	}
 
-	// if len(tos) > 0 && tos[len(tos)-1] == userID {
-	// 	dbsub.Status = "Approved"
-	// }
+	if len(tos) > 0 && tos[len(tos)-1].UserID == input.UserID {
+		dbsub.Status = "Approved"
+	}
 
-	if err := ar.db.Model(&dbsub).Where("id = ?", input.ID).Updates(user.Submission{Status: input.Status}).Error; err != nil {
+	tx = ar.db.Model(&dbsub).Updates(user.Submission{Status: dbsub.Status})
+
+	if tx.RowsAffected == 0 {
 		log.Error("no rows affected on update submission")
 		return errors.New("data is up to date")
 	}
 
-	to := user.To{}
-	if err := ar.db.Model(&user.To{}).Where("submission_id = ?", input.ID).First(&to).Error; err != nil {
-		log.Error("no rows found for the given submission ID in user.To")
-		return errors.New("no data found in user.To")
+	if tx.Error != nil {
+		log.Error("error on update submission")
+		return tx.Error
 	}
 
-	// if to.ID != 0 {
-	// 	if err := ar.db.Model(&user.To{}).Where("submission_id = ?", input.ID).Updates(approve.ToCore{Message: "Action from Admin, thank you!"}).Error; err != nil {
-	// 		log.Error("error on update to message")
-	// 		return err
-	// 	}
+	to := user.To{}
+	tx = ar.db.Model(&user.To{}).
+		Preload("User").
+		Where("user_id = ? AND submission_id = ?", input.UserID, dbsub.ID).
+		First(&to)
+
+	if tx.Error != nil {
+		log.Errorf("error on finding owner%w", tx.Error)
+		return tx.Error
+	}
+
+	tx = ar.db.Model(&to).
+		Updates(user.To{Message: input.Message})
+
+	// if tx.RowsAffected == 0 {
+	// 	log.Error("no rows affected on update to message")
+	// 	return errors.New("data is up to date")
 	// }
 
-	actionType := ""
-	switch input.Status {
-	case "Approved":
-		actionType = "approve from admin"
-	case "Revised":
-		actionType = "revise from admin"
-	case "Rejected":
-		actionType = "reject from admin"
+	if tx.Error != nil {
+		log.Error("error on update to message")
+		return tx.Error
 	}
 
-	if err := ar.db.Model(&user.To{}).
-		Joins("JOIN users ON user_id = users.id").
-		Where("submission_id = ?", input.ID).
-		Update("action_type", actionType).Error; err != nil {
+	actionType := ""
+	switch dbsub.Status {
+	case "Approved":
+		actionType = "approve"
+	case "Waiting":
+		actionType = "approve"
+	case "Revised":
+		actionType = "revise"
+	case "Rejected":
+		actionType = "reject"
+	}
+
+	tx = ar.db.Model(&user.To{}).
+		Joins("JOIN users ON tos.user_id = users.id").
+		Where("tos.user_id = ? AND tos.submission_id = ?", input.UserID, dbsub.ID).
+		Update("action_type", actionType)
+
+	if tx.Error != nil {
 		log.Error("error on update action_type in 'to' table")
-		return err
+		return tx.Error
 	}
 
 	sign, err := helper.GenerateUniqueSign(userID)

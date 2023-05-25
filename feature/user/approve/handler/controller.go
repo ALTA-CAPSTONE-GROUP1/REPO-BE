@@ -91,7 +91,7 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 		fromParam := c.QueryParam("from")
 		types := c.QueryParam("type")
 
-		limit := -1
+		limit := 10
 		if limitStr != "" {
 			limitInt, err := strconv.Atoi(limitStr)
 			if err != nil {
@@ -101,7 +101,7 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 			limit = limitInt
 		}
 
-		offset := -1
+		offset := 0
 		if offsetStr != "" {
 			offsetInt, err := strconv.Atoi(offsetStr)
 			if err != nil {
@@ -119,13 +119,14 @@ func (ac *approveController) GetSubmissionAprroveHandler() echo.HandlerFunc {
 			Offset: offset,
 		}
 
-		data, err := ac.service.GetSubmissionAprrove(userID, search)
+		data, totalData, err := ac.service.GetSubmissionAprrove(userID, search)
 		if err != nil {
 			c.Logger().Error("error on calling get all user logic")
 			return c.JSON(helper.ResponseFormat(http.StatusInternalServerError, "Failed to read data", nil))
 		}
-		pagination := helper.Pagination(limit, offset, len(data))
-		dataResponse := CoreToGetAllApproveResponse(data)
+
+		pagination := helper.Pagination(limit, offset, int(totalData))
+		dataResponse := CoreToGetAllApproveResponse(data, userID)
 		return c.JSON(helper.ReponseFormatWithMeta(http.StatusOK, "Successfully retrieved all submissions", dataResponse, pagination))
 	}
 }

@@ -11,31 +11,43 @@ import (
 )
 
 type SubmissionResponse struct {
-	ID             int    `json:"submission_id"`
-	Title          string `json:"title"`
-	From           string `json:"from"`
-	SubmissionType string `json:"submission_type"`
-	Status         string `json:"status"`
-	CreatedAt      string `json:"receive_date"`
-	Is_Opened      bool   `json:"opened"`
+	ID             int     `json:"submission_id"`
+	Title          string  `json:"title"`
+	From           FromApp `json:"from"`
+	SubmissionType string  `json:"submission_type"`
+	Status         string  `json:"status"`
+	CreatedAt      string  `json:"receive_date"`
+	Is_Opened      bool    `json:"opened"`
 }
 
-func CoreToApproveResponse(data approve.Core) SubmissionResponse {
-	return SubmissionResponse{
+func CoreToApproveResponse(data approve.Core, userID string) SubmissionResponse {
+	result := SubmissionResponse{
 		ID:             data.ID,
 		Title:          data.Title,
-		From:           data.Owner.Name,
 		SubmissionType: data.Type.SubmissionTypeName,
-		Status:         data.Status,
+		Status:         "",
 		CreatedAt:      data.CreatedAt.Add(7 * time.Hour).Format("2006-01-02 15:04"),
 		Is_Opened:      false,
 	}
+
+	for _, to := range data.Tos {
+		if to.UserID == userID {
+			result.Status = to.Action_Type
+			break
+		}
+	}
+
+	result.From = FromApp{
+		Name:     data.Owner.Name,
+		Position: data.Owner.Position,
+	}
+	return result
 }
 
-func CoreToGetAllApproveResponse(data []approve.Core) []SubmissionResponse {
+func CoreToGetAllApproveResponse(data []approve.Core, userID string) []SubmissionResponse {
 	res := make([]SubmissionResponse, len(data))
 	for i, val := range data {
-		res[i] = CoreToApproveResponse(val)
+		res[i] = CoreToApproveResponse(val, userID)
 	}
 	return res
 }

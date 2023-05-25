@@ -103,13 +103,13 @@ type Handler interface {
 }
 
 type UseCase interface {
-	GetSubmissionAprrove(userID string, search GetAllQueryParams) ([]Core, error)
+	GetSubmissionAprrove(userID string, search GetAllQueryParams) ([]Core, int, error)
 	GetSubmissionById(userID string, id int) (Core, error)
 	UpdateApprove(userID string, id int, updateInput Core) error
 }
 
 type Repository interface {
-	SelectSubmissionAprrove(userID string, search GetAllQueryParams) ([]Core, error)
+	SelectSubmissionAprrove(userID string, search GetAllQueryParams) ([]Core, int, error)
 	SelectSubmissionById(userID string, id int) (Core, error)
 	UpdateApprove(userID string, id int, input Core) error
 }

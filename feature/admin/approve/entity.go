@@ -88,11 +88,11 @@ type Handler interface {
 }
 
 type UseCase interface {
-	GetSubmissionByHyperApproval(userID string, id int, token string) (GetSubmissionByIDCore, error)
+	GetSubmissionByHyperApproval(userID string, usrId string, id int, token string) (GetSubmissionByIDCore, error)
 	UpdateByHyperApproval(userID string, updateInput Core) error
 }
 
 type Repository interface {
-	SelectSubmissionByHyperApproval(userID string, id int, token string) (GetSubmissionByIDCore, error)
+	SelectSubmissionByHyperApproval(userID string, usrId string, id int, token string) (GetSubmissionByIDCore, error)
 	UpdateByHyperApproval(userID string, input Core) error
 }

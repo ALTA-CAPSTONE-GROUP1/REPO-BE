@@ -229,10 +229,11 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 	var ccDetails []admin.Users
 	var fileDetails []user.File
 
-	if err := ar.db.Model(&user.To{}).Where("id = ?", id).Update("is_opened", 1).Error; err != nil {
-		log.Errorf("error in update status opened", err)
+	if err := ar.db.Model(&user.To{}).Where("submission_id = ? AND user_id = ?", id, userID).Update("is_opened", 1).Error; err != nil {
+		log.Errorf("error in update status opened: %v", err)
 		return approve.Core{}, err
 	}
+
 	query := ar.db.
 		Table("submissions").
 		Joins("JOIN tos ON submissions.id = tos.submission_id").
@@ -289,9 +290,10 @@ func (ar *approverModel) SelectSubmissionById(userID string, id int) (approve.Co
 }
 
 // SelectSubmissionApprove implements approve.Repository
-func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.GetAllQueryParams) ([]approve.Core, error) {
+func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.GetAllQueryParams) ([]approve.Core, int, error) {
 	var res []approve.Core
 	var dbsub []user.Submission
+	totalData := int64(-1)
 
 	limit := search.Limit
 	offset := search.Offset
@@ -306,8 +308,10 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 		Joins("JOIN positions ON positions.id = users.position_id").
 		Preload("User").
 		Preload("Type").
-		Preload("Tos").
-		Where("tos.user_id = ?", userID)
+		Preload("Tos", "tos.user_id = ?", userID).
+		Preload("User.Position").
+		Where("tos.user_id = ?", userID).
+		Order("created_at DESC")
 
 	if title != "" {
 		query = query.Where("submissions.title LIKE ?", "%"+title+"%")
@@ -321,6 +325,8 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 		query = query.Where("types.name LIKE ?", "%"+types+"%")
 	}
 
+	query.Model(&user.Submission{}).Count(&totalData)
+
 	query = query.Limit(limit).
 		Offset(offset).
 		Preload("Type").
@@ -328,10 +334,10 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 
 	if query.Error != nil {
 		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-			return []approve.Core{}, errors.New("submission not found")
+			return []approve.Core{}, 0, errors.New("submission not found")
 		}
 		log.Error("failed to find all submissions:", query.Error.Error())
-		return []approve.Core{}, errors.New("failed to retrieve all submissions")
+		return []approve.Core{}, 0, errors.New("failed to retrieve all submissions")
 	}
 
 	for _, v := range dbsub {
@@ -339,20 +345,32 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 			ID:     v.ID,
 			UserID: v.UserID,
 			Owner: approve.OwnerCore{
-				Name: v.User.Name,
+				Name:     v.User.Name,
+				Position: v.User.Position.Name,
 			},
 			TypeID:    v.TypeID,
 			Title:     v.Title,
 			Message:   v.Message,
-			Status:    v.Status,
 			Is_Opened: false,
 			CreatedAt: v.CreatedAt,
 			Type: subtype.Core{
 				SubmissionTypeName: v.Type.Name,
 			},
 		}
+
+		for _, to := range v.Tos {
+			if to.UserID == userID {
+				tmp.Tos = append(tmp.Tos, approve.ToCore{
+					SubmissionID: to.SubmissionID,
+					UserID:       to.UserID,
+					Name:         to.Name,
+					Action_Type:  to.Action_Type,
+				})
+			}
+		}
+
 		res = append(res, tmp)
 	}
 
-	return res, nil
+	return res, int(totalData), nil
 }

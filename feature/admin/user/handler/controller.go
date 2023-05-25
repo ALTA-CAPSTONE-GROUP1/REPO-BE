@@ -123,7 +123,7 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 		offsetStr := c.QueryParam("offset")
 		name := c.QueryParam("name")
 
-		limit := -1
+		limit := 5
 		if limitStr != "" {
 			limitInt, err := strconv.Atoi(limitStr)
 			if err != nil {
@@ -133,7 +133,7 @@ func (uc *userController) GetAllUserHandler() echo.HandlerFunc {
 			limit = limitInt
 		}
 
-		offset := -1
+		offset := 0
 		if offsetStr != "" {
 			offsetInt, err := strconv.Atoi(offsetStr)
 			if err != nil {
