@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
@@ -169,17 +168,10 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		return err
 	}
 
-	fmt.Print(newLink)
 	if err := ar.db.Statement.Exec("SET FOREIGN_KEY_CHECKS=?", 0).Error; err != nil {
 		log.Error(err.Error())
 		return err
 	}
-
-	// saveFile := &user.File{
-	// 	SubmissionID: submission.ID,
-	// 	Link:         newLink,
-	// 	Name:         newFileName,
-	// }
 
 	updateObj := user.File{
 		ID: file.ID,
@@ -189,8 +181,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		"Link": newLink,
 	}
 
-	fmt.Printf("FILEID %d\n", file.ID)
-	fmt.Printf("submissionid %d\n", submission.ID)
 	if err := ar.db.Model(&updateObj).Where("id = ? AND submission_id = ?", file.ID, submission.ID).Updates(updates).Error; err != nil {
 		log.Errorf("error on updating file: %s", err.Error())
 		return err

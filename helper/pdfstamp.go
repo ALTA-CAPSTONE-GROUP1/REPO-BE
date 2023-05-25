@@ -19,10 +19,10 @@ import (
 func UpdateFile(action string, currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, string, error) {
 	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are %s by %s, %s,
 	SignID = %s`, action, approverName, approverPosition, signName)
-	outputpdf := "helper/output.pdf"
+	outputpdf := "output.pdf"
 	createdPdf := CreatePDF(subTitle, msgBody, outputpdf)
 
-	downloadedPdf := "helper/downloaded.pdf"
+	downloadedPdf := "downloaded.pdf"
 
 	err := downloadFile(currentLink, downloadedPdf)
 	if err != nil {
@@ -35,28 +35,31 @@ func UpdateFile(action string, currentLink string, approverName string, approver
 		log.Errorf("error on merging pdf %w", err)
 		return "", "", err
 	}
-	fmt.Println("merged file berhasil dibuat")
 
 	newUrl, err := UploadNewData("./mergedfiles.pdf", "/"+approverPosition)
 	if err != nil {
 		log.Errorf("error on upload pdf %s", err.Error())
 		return "", "", err
 	}
-	fmt.Println("SAMPAI AFTER UPLOAD")
-	err = os.Remove("./helper/downloaded.pdf")
+
+	err = os.Remove("./downloaded.pdf")
 	if err != nil {
 		log.Errorf("error on on removing file created %w", err)
 	}
-	fmt.Println("SAMPAI AFTER REMOVE")
-	err = os.Remove("./helper/output.pdf")
+	err = os.Remove("./downloaded.pdf")
 	if err != nil {
-		log.Errorf("error on remove downloadedPdf %w", err)
+		log.Errorf("error on removing downloaded pdf %s", err.Error())
 	}
+	err = os.Remove("./output.pdf")
+	if err != nil {
+		log.Errorf("error on remove output pdf %w", err)
+	}
+
 	err = os.Remove("./mergedfiles.pdf")
 	if err != nil {
 		log.Errorf("error on remove downloadedPdf %w", err)
 	}
-	fmt.Println("SAMPAI AFTER REMOVE merge")
+
 	newName, err := GenerateUniqueSign(signName)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -90,7 +93,6 @@ func CreatePDF(subTitle string, msgBody string, path string) string {
 		return ""
 	}
 
-	fmt.Println("File PDF berhasil dibuat!")
 	pdf.Close()
 	return path
 }
@@ -123,13 +125,13 @@ func mergePDFs(destMerge string, files ...string) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
 	for _, file := range files {
-		fmt.Println("++++++++++Perulangan merge+++++++++++++")
+
 		importedFile := fpdi.ImportPage(pdf, file, 1, "/MediaBox")
 		pdf.AddPage()
 		pdf.SetFont("Arial", "", 12)
 		fpdi.UseImportedTemplate(pdf, importedFile, 20, 50, 150, 0)
 	}
-	fmt.Println("++++++++++++ Beres Perulangan +++++++`")
+
 	err := pdf.OutputFileAndClose(destMerge)
 	if err != nil {
 		log.Errorf("error on creating merged file", err)
