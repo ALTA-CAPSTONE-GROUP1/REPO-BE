@@ -17,6 +17,28 @@ import (
 )
 
 func UpdateFile(action string, currentLink string, approverName string, approverPosition string, subTitle string, signName string, path string) (string, string, error) {
+	pathsDel := []string{
+		"./downloaded.pdf",
+		"./output.pdf",
+		"./mergedfiles.pdf",
+		"./helper/downloaded.pdf",
+		"./helper/output.pdf",
+		"./helper/mergedfiles.pdf",
+	}
+	for _, val := range pathsDel {
+		if _, err := os.Stat("val"); err != nil {
+			err := os.Remove(val)
+			if err != nil {
+				log.Errorf("error on remove download.pdf")
+			}
+			fmt.Println("file berhasil terhapus")
+		} else if os.IsNotExist(err) {
+			log.Info(err)
+		} else {
+			log.Info(err)
+		}
+	}
+
 	msgBody := fmt.Sprintf(`this message us autogenerate from epropApp this submission are %s by %s, %s,
 	SignID = %s`, action, approverName, approverPosition, signName)
 	outputpdf := "output.pdf"
