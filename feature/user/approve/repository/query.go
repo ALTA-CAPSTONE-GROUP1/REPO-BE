@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/ALTA-CAPSTONE-GROUP1/e-proposal-BE/feature/admin"
@@ -44,8 +43,6 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 		log.Errorf("error on finding owner%w", tx.Error)
 		return tx.Error
 	}
-	fmt.Println(submission.UserID)
-	fmt.Println(submission)
 
 	tx = ar.db.Where("id = ?", submission.UserID).First(&owner)
 	if tx.Error != nil {
@@ -348,7 +345,7 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 
 	totalData = int64(len(realDBsub))
 
-	for _, v := range dbsub {
+	for _, v := range realDBsub {
 		tmp := approve.Core{
 			ID:     v.ID,
 			UserID: v.UserID,
