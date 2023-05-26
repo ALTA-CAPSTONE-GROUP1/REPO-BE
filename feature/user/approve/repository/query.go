@@ -314,26 +314,26 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 		Preload("Type").
 		Find(&dbsub)
 
-	var realDBsub []user.Submission
-	added := make(map[int]bool)
-	for _, sub := range dbsub {
-		for i, v := range sub.Tos {
-			if v.UserID == userID && i > 0 && sub.Tos[i-1].Action_Type != "" {
-				if !added[sub.ID] {
-					realDBsub = append(realDBsub, sub)
-					added[sub.ID] = true
-				}
-			} else if i == 0 && v.UserID == userID {
-				if !added[sub.ID] {
-					realDBsub = append(realDBsub, sub)
-					added[sub.ID] = true
-				}
-				continue
-			} else {
-				continue
-			}
-		}
-	}
+	// var realDBsub []user.Submission
+	// added := make(map[int]bool)
+	// for _, sub := range dbsub {
+	// 	for i, v := range sub.Tos {
+	// 		if v.UserID == userID && i > 0 && sub.Tos[i-1].Action_Type != "" {
+	// 			if !added[sub.ID] {
+	// 				realDBsub = append(realDBsub, sub)
+	// 				added[sub.ID] = true
+	// 			}
+	// 		} else if i == 0 && v.UserID == userID {
+	// 			if !added[sub.ID] {
+	// 				realDBsub = append(realDBsub, sub)
+	// 				added[sub.ID] = true
+	// 			}
+	// 			continue
+	// 		} else {
+	// 			continue
+	// 		}
+	// 	}
+	// }
 
 	if query.Error != nil {
 		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
@@ -343,9 +343,9 @@ func (ar *approverModel) SelectSubmissionAprrove(userID string, search approve.G
 		return []approve.Core{}, 0, errors.New("failed to retrieve all submissions")
 	}
 
-	totalData = int64(len(realDBsub))
+	// totalData = int64(len(realDBsub))
 
-	for _, v := range realDBsub {
+	for _, v := range dbsub {
 		tmp := approve.Core{
 			ID:     v.ID,
 			UserID: v.UserID,
