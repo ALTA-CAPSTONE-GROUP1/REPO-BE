@@ -8,7 +8,7 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendSimpleEmail(sign string, subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
+func SendSimpleEmail(action string, sign string, subTitle string, subject string, recipientEmail []string, recipientNames []string, senderName string) {
 	mailer := gomail.NewDialer("smtp.gmail.com", 465, config.Email, config.EmailSecret)
 	log.Error(config.Email)
 	log.Error(config.EmailSecret)
@@ -26,10 +26,12 @@ There is an update for your eProposal Account!
 
 Please check it out.
 
+Your Submission is %s
+
 From: %s
 
 WITH SIGN ID : %s
-`, subTitle, recipientName, senderName, sign)
+`, subTitle, recipientName, action, senderName, sign)
 
 		email := gomail.NewMessage()
 		email.SetHeader("From", config.Email)

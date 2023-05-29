@@ -211,7 +211,7 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 
 	recipient := []string{owner.Email}
 	receiverName := []string{"Admin"}
-	helper.SendSimpleEmail(signdb.Name, dbsub.Title, "Update on your submission", recipient, receiverName, owner.Email)
+	helper.SendSimpleEmail(input.Status, signdb.Name, dbsub.Title, "Update on your submission", recipient, receiverName, owner.Email)
 
 	return nil
 }

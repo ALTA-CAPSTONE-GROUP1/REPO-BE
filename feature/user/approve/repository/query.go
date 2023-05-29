@@ -151,7 +151,7 @@ func (ar *approverModel) UpdateApprove(userID string, id int, input approve.Core
 
 	recipient := []string{owner.Email}
 	receiverName := []string{owner.Name}
-	helper.SendSimpleEmail(signdb.Name, submission.Title, "Update on your submission", recipient, receiverName, owner.Email)
+	helper.SendSimpleEmail(input.Status, signdb.Name, submission.Title, "Update on your submission", recipient, receiverName, owner.Email)
 
 	action := input.Status
 	curentLink := file.Link
