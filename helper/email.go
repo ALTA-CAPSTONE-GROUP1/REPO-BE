@@ -24,7 +24,7 @@ Hello, %s!
 
 There is an update for your eProposal Account!
 
-Please check it out.
+Please check it out!
 
 Your Submission is %s
 
