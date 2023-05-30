@@ -104,7 +104,6 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		log.Errorf("error on finding owner%w", tx.Error)
 		return tx.Error
 	}
-	fmt.Println(owner)
 
 	tx = ar.db.Where("submission_id = ?", dbsub.ID).Find(&tos)
 	if tx.Error != nil {
@@ -186,21 +185,25 @@ func (ar *approverModel) UpdateByHyperApproval(userID string, input approve.Core
 		return tx.Error
 	}
 
-	sign, err := helper.GenerateUniqueSign(userID)
-	if err != nil {
-		log.Error("failed to generate unique sign")
-		return err
-	}
+	var sign string
+	var signdb user.Sign
+	if input.Status == "approve" {
+		var err error
+		sign, err = helper.GenerateUniqueSign(userID)
+		if err != nil {
+			log.Error("failed to generate unique sign")
+			return err
+		}
+		signdb := user.Sign{
+			UserID:       userID,
+			Name:         sign,
+			SubmissionID: dbsub.ID,
+		}
 
-	signdb := user.Sign{
-		UserID:       userID,
-		Name:         sign,
-		SubmissionID: dbsub.ID,
-	}
-
-	if err := ar.db.Create(&signdb).Error; err != nil {
-		log.Error("error on update sign")
-		return err
+		if err := ar.db.Create(&signdb).Error; err != nil {
+			log.Error("error on update sign")
+			return err
+		}
 	}
 
 	file := user.File{}
